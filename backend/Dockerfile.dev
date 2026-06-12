@@ -1,0 +1,18 @@
+# Development image — runs Nest in watch mode. Source is bind-mounted by compose,
+# so code changes hot-reload without rebuilding.
+FROM node:24-alpine
+
+WORKDIR /app
+
+# Install dependencies first for better layer caching.
+COPY package*.json ./
+# esbuild's postinstall (via drizzle-kit) can hit a transient ETXTBSY race on
+# overlay filesystems; retry so the build is deterministic.
+RUN npm ci --no-audit --no-fund || (sleep 3 && npm ci --no-audit --no-fund)
+
+# Source is overlaid by the bind mount at runtime; copying here keeps the image
+# usable standalone too.
+COPY . .
+
+EXPOSE 3001
+CMD ["npm", "run", "start:dev"]

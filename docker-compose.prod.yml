@@ -1,0 +1,33 @@
+# ─────────────────────────────────────────────────────────────
+# جيل العمل / Jeel Alamal — PRODUCTION overrides
+# Uses multi-stage Dockerfiles (no bind mounts, slim runtime images).
+#   docker compose -f docker-compose.yml -f docker-compose.prod.yml up --build -d
+# ─────────────────────────────────────────────────────────────
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    command: sh -c "node dist/database/run-migrations.js && node dist/database/seed.js && node dist/main"
+    environment:
+      NODE_ENV: production
+    volumes: []
+    restart: always
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        # Set this to the PUBLIC backend URL of your deployment before building.
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
+    environment:
+      NODE_ENV: production
+    volumes: []
+    restart: always
+
+  # Adminer should not be exposed in production.
+  adminer:
+    profiles:
+      - donotstart

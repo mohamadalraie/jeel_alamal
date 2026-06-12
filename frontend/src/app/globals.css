@@ -1,0 +1,145 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  /* Cairo is loaded in the locale layout and exposed as --font-cairo.
+     It covers both Arabic and Latin glyphs. */
+  --font-sans: var(--font-cairo), system-ui, sans-serif;
+  --font-heading: var(--font-cairo), system-ui, sans-serif;
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
+}
+
+html {
+  /* Smooth scrolling and a comfortable base size for mobile. */
+  -webkit-text-size-adjust: 100%;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   جيل العمل brand palette — derived from the official logo
+   (Kufic calligraphy: gold #BE9B5F + deep navy #123B50).
+   Components use ONLY these semantic tokens (see constitution VI).
+   ───────────────────────────────────────────────────────────── */
+
+:root {
+  /* Warm ivory surfaces, white cards, navy text, gold actions. */
+  --background: #faf6ef;
+  --foreground: #14303f;
+  --card: #ffffff;
+  --card-foreground: #14303f;
+  --popover: #ffffff;
+  --popover-foreground: #14303f;
+  --primary: #be9b5f;
+  --primary-foreground: #0e2433;
+  --secondary: #123b50;
+  --secondary-foreground: #faf6ef;
+  --muted: #f0e9db;
+  --muted-foreground: #5e6e7a;
+  --accent: #f4eddd;
+  --accent-foreground: #123b50;
+  --destructive: oklch(0.577 0.245 27.325);
+  --border: #e7dec9;
+  --input: #e7dec9;
+  --ring: #be9b5f;
+  --chart-1: #be9b5f;
+  --chart-2: #123b50;
+  --chart-3: #8faebf;
+  --chart-4: #d9c49a;
+  --chart-5: #2e607d;
+  --radius: 0.625rem;
+  /* Navy sidebar with gold accents — the luxury admin look. */
+  --sidebar: #123b50;
+  --sidebar-foreground: #f2ede2;
+  --sidebar-primary: #be9b5f;
+  --sidebar-primary-foreground: #0e2433;
+  --sidebar-accent: #1a4a63;
+  --sidebar-accent-foreground: #f2ede2;
+  --sidebar-border: #1a4a63;
+  --sidebar-ring: #be9b5f;
+}
+
+.dark {
+  /* Navy-black surfaces, ivory text, brighter gold for contrast. */
+  --background: #081a24;
+  --foreground: #f2ede2;
+  --card: #0e2837;
+  --card-foreground: #f2ede2;
+  --popover: #0e2837;
+  --popover-foreground: #f2ede2;
+  --primary: #c9a86c;
+  --primary-foreground: #081a24;
+  --secondary: #17435c;
+  --secondary-foreground: #f2ede2;
+  --muted: #122e3e;
+  --muted-foreground: #98a9b3;
+  --accent: #15384c;
+  --accent-foreground: #e8d9b8;
+  --destructive: oklch(0.704 0.191 22.216);
+  --border: #f2ede21f;
+  --input: #f2ede226;
+  --ring: #c9a86c;
+  --chart-1: #c9a86c;
+  --chart-2: #6fa3c0;
+  --chart-3: #d9c49a;
+  --chart-4: #2e607d;
+  --chart-5: #8faebf;
+  --sidebar: #0e2837;
+  --sidebar-foreground: #f2ede2;
+  --sidebar-primary: #c9a86c;
+  --sidebar-primary-foreground: #081a24;
+  --sidebar-accent: #15384c;
+  --sidebar-accent-foreground: #f2ede2;
+  --sidebar-border: #f2ede21f;
+  --sidebar-ring: #c9a86c;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+  html {
+    @apply font-sans;
+  }
+}
