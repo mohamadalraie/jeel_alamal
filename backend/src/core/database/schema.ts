@@ -8,3 +8,4 @@ export * from '../../modules/users/infrastructure/persistence/user.schema';
 export * from '../../modules/institutes/infrastructure/persistence/manager-assignment.schema';
 export * from '../../modules/classes/infrastructure/persistence/class.schema';
 export * from '../../modules/auth/infrastructure/persistence/refresh-token.schema';
+export * from '../../modules/profiles/infrastructure/persistence/profile.schema';

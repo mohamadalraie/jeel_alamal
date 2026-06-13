@@ -2,9 +2,34 @@ import { randomUUID } from 'node:crypto';
 import { Entity } from '../../../shared/domain/entity.base';
 import { BusinessRuleError } from '../../../shared/domain/domain.error';
 import { UserRole } from '../../../shared/domain/user-role';
+import {
+  StudyDegree,
+  TajweedLevel,
+} from '../../../shared/domain/teacher-attributes';
+import {
+  assertBirthDateNotFuture,
+  assertQuranPartsInRange,
+  assertValidPhone,
+} from '../../../shared/domain/profile-validation';
+import { assertValidGrade } from '../../../shared/domain/student-grade';
 import { Username } from './value-objects/username.vo';
 
 export { UserRole };
+
+/** Teacher extended profile (العلم الشرعي + academic), null for non-teachers. */
+export interface TeacherDetails {
+  studyDegree: StudyDegree | null;
+  studyField: string | null;
+  quranPartsMemorized: number | null;
+  tajweedLevel: TajweedLevel | null;
+}
+
+export const emptyTeacherDetails = (): TeacherDetails => ({
+  studyDegree: null,
+  studyField: null,
+  quranPartsMemorized: null,
+  tajweedLevel: null,
+});
 
 interface UserProps {
   username: Username;
@@ -14,17 +39,16 @@ interface UserProps {
   role: UserRole;
   birthDate: Date | null;
   phone: string | null;
-  /** Student-only field (e.g. "الصف الخامس"). */
   schoolGrade: string | null;
-  /** Home institute for teachers/students. Null for global roles & managers. */
   instituteId: string | null;
+  teacherDetails: TeacherDetails;
   createdAt: Date;
 }
 
 /**
- * User aggregate root — the auth identity + shared profile for every role.
- * Pure business object: no Nest, no Drizzle, no HTTP. Invariants are enforced
- * at construction; persistence goes through the UserRepository port.
+ * User aggregate root — auth identity + shared profile + (for teachers) the
+ * extended Islamic-knowledge details. Pure business object: no Nest, no Drizzle,
+ * no HTTP. Invariants enforced at construction and on every mutation.
  */
 export class User extends Entity<string> {
   private props: UserProps;
@@ -34,7 +58,6 @@ export class User extends Entity<string> {
     this.props = props;
   }
 
-  /** Factory for a brand-new user (generates id + timestamp, checks invariants). */
   static create(input: {
     username: Username;
     firstName: string;
@@ -55,18 +78,18 @@ export class User extends Entity<string> {
     const tenantBound =
       input.role === UserRole.Teacher || input.role === UserRole.Student;
     if (tenantBound && !input.instituteId) {
-      throw new BusinessRuleError(
-        `A ${input.role} must belong to an institute`,
-      );
+      throw new BusinessRuleError(`A ${input.role} must belong to an institute`);
     }
     if (!tenantBound && input.instituteId) {
-      throw new BusinessRuleError(
-        `A ${input.role} is not bound to a single institute`,
-      );
+      throw new BusinessRuleError(`A ${input.role} is not bound to one institute`);
     }
     if (input.schoolGrade && input.role !== UserRole.Student) {
       throw new BusinessRuleError('Only students have a school grade');
     }
+
+    assertValidPhone(input.phone);
+    assertBirthDateNotFuture(input.birthDate ?? null);
+    assertValidGrade(input.schoolGrade);
 
     return new User(randomUUID(), {
       username: input.username,
@@ -78,13 +101,53 @@ export class User extends Entity<string> {
       phone: input.phone ?? null,
       schoolGrade: input.schoolGrade ?? null,
       instituteId: input.instituteId ?? null,
+      teacherDetails: emptyTeacherDetails(),
       createdAt: new Date(),
     });
   }
 
-  /** Rehydrate from persistence (no invariant re-check). */
   static reconstitute(id: string, props: UserProps): User {
     return new User(id, props);
+  }
+
+  /** Edit identity/basic profile fields (manager/super_admin, or staff on students). */
+  editBasicInfo(input: {
+    firstName: string;
+    lastName: string;
+    birthDate: Date | null;
+    phone: string | null;
+    schoolGrade?: string | null;
+  }): void {
+    const firstName = input.firstName.trim();
+    const lastName = input.lastName.trim();
+    if (firstName.length < 1 || lastName.length < 1) {
+      throw new BusinessRuleError('First and last name are required');
+    }
+    assertValidPhone(input.phone);
+    assertBirthDateNotFuture(input.birthDate);
+    assertValidGrade(input.schoolGrade);
+
+    this.props.firstName = firstName;
+    this.props.lastName = lastName;
+    this.props.birthDate = input.birthDate;
+    this.props.phone = input.phone;
+    if (input.schoolGrade !== undefined && this.props.role === UserRole.Student) {
+      this.props.schoolGrade = input.schoolGrade || null;
+    }
+  }
+
+  /** Edit teacher extended details (manager/super_admin only). */
+  editTeacherDetails(details: TeacherDetails): void {
+    if (this.props.role !== UserRole.Teacher) {
+      throw new BusinessRuleError('Only teachers have extended details');
+    }
+    assertQuranPartsInRange(details.quranPartsMemorized);
+    this.props.teacherDetails = {
+      studyDegree: details.studyDegree ?? null,
+      studyField: details.studyField?.trim() || null,
+      quranPartsMemorized: details.quranPartsMemorized ?? null,
+      tajweedLevel: details.tajweedLevel ?? null,
+    };
   }
 
   get username(): Username {
@@ -116,6 +179,9 @@ export class User extends Entity<string> {
   }
   get instituteId(): string | null {
     return this.props.instituteId;
+  }
+  get teacherDetails(): TeacherDetails {
+    return this.props.teacherDetails;
   }
   get createdAt(): Date {
     return this.props.createdAt;

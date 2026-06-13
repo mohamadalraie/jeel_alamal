@@ -6,6 +6,7 @@ import {
   HttpStatus,
   Param,
   ParseUUIDPipe,
+  Patch,
   Post,
 } from '@nestjs/common';
 import { CurrentUser } from '../../../core/auth/current-user.decorator';
@@ -13,6 +14,8 @@ import type { Actor } from '../../../shared/application/actor';
 import { UserRole } from '../../../shared/domain/user-role';
 import { CreateInstituteUseCase } from '../application/use-cases/create-institute.use-case';
 import { ListInstitutesUseCase } from '../application/use-cases/list-institutes.use-case';
+import { UpdateInstituteUseCase } from '../application/use-cases/update-institute.use-case';
+import { UpdateInstituteDto } from '../application/dto/update-institute.dto';
 import {
   AddTeacherUseCase,
   AddStudentUseCase,
@@ -30,6 +33,7 @@ export class InstitutesController {
   constructor(
     private readonly createInstitute: CreateInstituteUseCase,
     private readonly listInstitutes: ListInstitutesUseCase,
+    private readonly updateInstitute: UpdateInstituteUseCase,
     private readonly addTeacher: AddTeacherUseCase,
     private readonly addStudent: AddStudentUseCase,
     private readonly listMembers: ListMembersUseCase,
@@ -44,6 +48,15 @@ export class InstitutesController {
   @Get()
   list(@CurrentUser() actor: Actor) {
     return this.listInstitutes.execute(actor);
+  }
+
+  @Patch(':instituteId')
+  update(
+    @CurrentUser() actor: Actor,
+    @Param('instituteId', ParseUUIDPipe) instituteId: string,
+    @Body() dto: UpdateInstituteDto,
+  ) {
+    return this.updateInstitute.execute(actor, instituteId, dto);
   }
 
   @Post(':instituteId/teachers')

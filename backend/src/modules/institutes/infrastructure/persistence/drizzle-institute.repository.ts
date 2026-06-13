@@ -41,6 +41,14 @@ export class DrizzleInstituteRepository implements InstituteRepository {
     return row ? toDomain(row) : null;
   }
 
+  async save(institute: Institute): Promise<void> {
+    const row = toRow(institute);
+    await this.db
+      .insert(institutes)
+      .values(row)
+      .onConflictDoUpdate({ target: institutes.id, set: row });
+  }
+
   async findAll(): Promise<Institute[]> {
     const rows = await this.db
       .select()

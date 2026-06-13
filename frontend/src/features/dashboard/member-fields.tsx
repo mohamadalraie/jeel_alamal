@@ -3,6 +3,7 @@
 import { useTranslations } from 'next-intl';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { GradeSelect } from '@/features/shared/grade-select';
 
 /**
  * Shared person-account fields (spec 001): used for the manager inside
@@ -28,6 +29,9 @@ export const emptyMember = (): MemberDraft => ({
   password: '',
 });
 
+// Phone: optional +, 7–15 digits (mirrors the backend rule).
+const PHONE_PATTERN = '\\+?[0-9]{7,15}';
+
 export function MemberFields({
   value,
   onChange,
@@ -41,6 +45,8 @@ export function MemberFields({
 }) {
   const t = useTranslations('dashboard');
   const set = (patch: Partial<MemberDraft>) => onChange({ ...value, ...patch });
+  // Birth date cannot be in the future.
+  const todayIso = new Date().toISOString().slice(0, 10);
 
   return (
     <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -68,6 +74,7 @@ export function MemberFields({
           id={`${idPrefix}-birthDate`}
           type="date"
           required
+          max={todayIso}
           value={value.birthDate}
           onChange={(e) => set({ birthDate: e.target.value })}
         />
@@ -79,6 +86,8 @@ export function MemberFields({
           type="tel"
           dir="ltr"
           required
+          pattern={PHONE_PATTERN}
+          title="7–15 digits, optionally starting with +"
           value={value.phone}
           onChange={(e) => set({ phone: e.target.value })}
         />
@@ -86,10 +95,10 @@ export function MemberFields({
       {withSchoolGrade && (
         <div className="flex flex-col gap-1.5">
           <Label htmlFor={`${idPrefix}-schoolGrade`}>{t('schoolGrade')}</Label>
-          <Input
+          <GradeSelect
             id={`${idPrefix}-schoolGrade`}
             value={value.schoolGrade ?? ''}
-            onChange={(e) => set({ schoolGrade: e.target.value })}
+            onChange={(v) => set({ schoolGrade: v })}
           />
         </div>
       )}

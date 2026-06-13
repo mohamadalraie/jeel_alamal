@@ -43,6 +43,10 @@ export class DrizzleUserRepository implements UserRepository {
       .onConflictDoUpdate({ target: users.id, set: row });
   }
 
+  async delete(id: string): Promise<void> {
+    await this.db.delete(users).where(eq(users.id, id));
+  }
+
   async findByInstitute(instituteId: string, role?: UserRole): Promise<User[]> {
     const where = role
       ? and(eq(users.instituteId, instituteId), eq(users.role, role))

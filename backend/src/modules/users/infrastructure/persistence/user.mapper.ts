@@ -1,5 +1,9 @@
 import { User } from '../../domain/user.entity';
 import { UserRole } from '../../../../shared/domain/user-role';
+import {
+  StudyDegree,
+  TajweedLevel,
+} from '../../../../shared/domain/teacher-attributes';
 import { Username } from '../../domain/value-objects/username.vo';
 import type { UserRow } from './user.schema';
 
@@ -19,11 +23,18 @@ export class UserMapper {
       phone: row.phone,
       schoolGrade: row.schoolGrade,
       instituteId: row.instituteId,
+      teacherDetails: {
+        studyDegree: (row.studyDegree as StudyDegree | null) ?? null,
+        studyField: row.studyField,
+        quranPartsMemorized: row.quranParts,
+        tajweedLevel: (row.tajweedLevel as TajweedLevel | null) ?? null,
+      },
       createdAt: row.createdAt,
     });
   }
 
   static toRow(user: User): UserRow {
+    const td = user.teacherDetails;
     return {
       id: user.id,
       username: user.username.toString(),
@@ -37,6 +48,10 @@ export class UserMapper {
       phone: user.phone,
       schoolGrade: user.schoolGrade,
       instituteId: user.instituteId,
+      studyDegree: td.studyDegree,
+      studyField: td.studyField,
+      quranParts: td.quranPartsMemorized,
+      tajweedLevel: td.tajweedLevel,
       createdAt: user.createdAt,
     };
   }

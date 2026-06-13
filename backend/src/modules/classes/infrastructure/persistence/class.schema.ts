@@ -1,5 +1,6 @@
 import {
   boolean,
+  pgEnum,
   pgTable,
   primaryKey,
   text,
@@ -69,4 +70,26 @@ export const classStudents = pgTable(
   (t) => [primaryKey({ columns: [t.classId, t.studentId] })],
 );
 
+/** Weekly attendance / lesson times (أوقات الحضور) — spec 003. */
+export const weekdayEnum = pgEnum('weekday', [
+  'sat',
+  'sun',
+  'mon',
+  'tue',
+  'wed',
+  'thu',
+  'fri',
+]);
+
+export const classSchedule = pgTable('class_schedule', {
+  id: uuid('id').primaryKey(),
+  classId: uuid('class_id')
+    .notNull()
+    .references(() => classes.id, { onDelete: 'cascade' }),
+  dayOfWeek: weekdayEnum('day_of_week').notNull(),
+  startTime: varchar('start_time', { length: 5 }).notNull(), // 'HH:MM'
+  endTime: varchar('end_time', { length: 5 }).notNull(), // 'HH:MM'
+});
+
 export type ClassRow = InferSelectModel<typeof classes>;
+export type ClassScheduleRow = InferSelectModel<typeof classSchedule>;

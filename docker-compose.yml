@@ -48,12 +48,15 @@ services:
       SUPER_ADMIN_USERNAME: ${SUPER_ADMIN_USERNAME}
       SUPER_ADMIN_PASSWORD: ${SUPER_ADMIN_PASSWORD}
       FRONTEND_ORIGIN: http://localhost:${FRONTEND_PORT:-3000}
+      UPLOADS_DIR: /app/uploads
     ports:
       - '${BACKEND_PORT:-3001}:3001'
     volumes:
       # Bind-mount source for hot reload; keep container's node_modules.
       - ./backend:/app
       - /app/node_modules
+      # Persist uploaded files (institute logos, etc.).
+      - uploads:/app/uploads
     depends_on:
       db:
         condition: service_healthy
@@ -93,6 +96,7 @@ services:
 
 volumes:
   pgdata:
+  uploads:
 
 networks:
   jeel_net:

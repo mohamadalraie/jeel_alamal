@@ -47,6 +47,15 @@ export class Class extends Entity<string> {
     return new Class(id, props);
   }
 
+  edit(input: { name: string; description?: string | null }): void {
+    const name = input.name.trim();
+    if (name.length < 2) {
+      throw new BusinessRuleError('Class name must be at least 2 characters');
+    }
+    this.props.name = name;
+    this.props.description = input.description?.trim() || null;
+  }
+
   get instituteId(): string {
     return this.props.instituteId;
   }

@@ -12,6 +12,8 @@ import { UsersModule } from './modules/users/users.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { InstitutesModule } from './modules/institutes/institutes.module';
 import { ClassesModule } from './modules/classes/classes.module';
+import { ProfilesModule } from './modules/profiles/profiles.module';
+import { UploadsModule } from './modules/uploads/uploads.module';
 
 @Module({
   imports: [
@@ -38,6 +40,8 @@ import { ClassesModule } from './modules/classes/classes.module';
     AuthModule,
     InstitutesModule,
     ClassesModule,
+    ProfilesModule,
+    UploadsModule,
   ],
   providers: [
     { provide: APP_GUARD, useClass: ThrottlerGuard },

@@ -17,8 +17,9 @@ export class InstituteAccessPolicy {
     private readonly assignments: ManagerAssignmentRepository,
   ) {}
 
-  /** Manager assigned to the institute. Everyone else is denied. */
+  /** super_admin (platform owner) or the assigned manager. */
   async assertManagerOf(actor: Actor, instituteId: string): Promise<void> {
+    if (actor.role === UserRole.SuperAdmin) return;
     if (
       actor.role === UserRole.InstituteManager &&
       (await this.assignments.isAssigned(actor.userId, instituteId))
@@ -28,8 +29,9 @@ export class InstituteAccessPolicy {
     throw new ForbiddenError('Not a manager of this institute');
   }
 
-  /** Manager assigned to the institute OR teacher belonging to it. */
+  /** super_admin, the assigned manager, OR a teacher belonging to the institute. */
   async assertStaffOf(actor: Actor, instituteId: string): Promise<void> {
+    if (actor.role === UserRole.SuperAdmin) return;
     if (actor.role === UserRole.Teacher && actor.instituteId === instituteId) {
       return;
     }

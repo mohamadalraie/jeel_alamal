@@ -4,6 +4,7 @@ import { UsersModule } from '../users/users.module';
 import { InstitutesController } from './presentation/institutes.controller';
 import { CreateInstituteUseCase } from './application/use-cases/create-institute.use-case';
 import { ListInstitutesUseCase } from './application/use-cases/list-institutes.use-case';
+import { UpdateInstituteUseCase } from './application/use-cases/update-institute.use-case';
 import {
   AddTeacherUseCase,
   AddStudentUseCase,
@@ -21,6 +22,7 @@ import { DrizzleManagerAssignmentRepository } from './infrastructure/persistence
   providers: [
     CreateInstituteUseCase,
     ListInstitutesUseCase,
+    UpdateInstituteUseCase,
     AddTeacherUseCase,
     AddStudentUseCase,
     ListMembersUseCase,

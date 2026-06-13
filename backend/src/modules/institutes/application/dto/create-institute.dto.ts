@@ -4,7 +4,6 @@ import {
   IsNotEmpty,
   IsOptional,
   IsString,
-  IsUrl,
   MinLength,
   ValidateNested,
 } from 'class-validator';
@@ -48,8 +47,9 @@ export class CreateInstituteDto {
   @IsString()
   description?: string;
 
+  // Absolute URL or a relative /uploads path produced by the upload endpoint.
   @IsOptional()
-  @IsUrl({ require_tld: false })
+  @IsString()
   logoUrl?: string;
 
   @ValidateNested()

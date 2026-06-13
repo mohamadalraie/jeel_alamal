@@ -7,6 +7,8 @@ export interface InstituteRepository {
   findById(id: string): Promise<Institute | null>;
   findAll(): Promise<Institute[]>;
   findAllByManager(managerId: string): Promise<Institute[]>;
+  /** Persist changes to an existing institute (e.g. logo, details). */
+  save(institute: Institute): Promise<void>;
   /**
    * Atomically create the institute, its manager user account, and the
    * manager→institute assignment in ONE transaction. Provisioning is a single

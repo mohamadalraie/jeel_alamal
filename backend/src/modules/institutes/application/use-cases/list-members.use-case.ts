@@ -24,6 +24,6 @@ export class ListMembersUseCase {
   ): Promise<UserResponseDto[]> {
     await this.policy.assertStaffOf(actor, instituteId);
     const members = await this.users.findByInstitute(instituteId, role);
-    return members.map(UserResponseDto.fromDomain);
+    return members.map((m) => UserResponseDto.fromDomain(m));
   }
 }

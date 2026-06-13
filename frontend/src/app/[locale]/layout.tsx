@@ -3,14 +3,16 @@ import { notFound } from 'next/navigation';
 import { NextIntlClientProvider, hasLocale } from 'next-intl';
 import { setRequestLocale, getMessages, getTranslations } from 'next-intl/server';
 import { getLangDir } from 'rtl-detect';
-import { Cairo } from 'next/font/google';
+import { Tajawal } from 'next/font/google';
 import { routing } from '@/i18n/routing';
+import { ThemeProvider } from '@/features/layout/theme-provider';
 import '../globals.css';
 
-// Cairo supports both Arabic and Latin — one font for both locales.
-const cairo = Cairo({
+// Tajawal — a friendly, modern family covering Arabic + Latin (spec 003).
+const tajawal = Tajawal({
   subsets: ['arabic', 'latin'],
-  variable: '--font-cairo',
+  weight: ['400', '500', '700', '800'],
+  variable: '--font-tajawal',
 });
 
 // Pre-render both locales at build time.
@@ -63,12 +65,15 @@ export default async function LocaleLayout({
     <html
       lang={locale}
       dir={direction}
-      className={`${cairo.variable} h-full antialiased`}
+      className={`${tajawal.variable} h-full antialiased`}
+      suppressHydrationWarning
     >
       <body className="bg-background text-foreground min-h-full font-sans">
-        <NextIntlClientProvider messages={messages}>
-          {children}
-        </NextIntlClientProvider>
+        <ThemeProvider>
+          <NextIntlClientProvider messages={messages}>
+            {children}
+          </NextIntlClientProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

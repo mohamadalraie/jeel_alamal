@@ -13,6 +13,7 @@ export interface UserRepository {
   findById(id: string): Promise<User | null>;
   findByUsername(username: Username): Promise<User | null>;
   save(user: User): Promise<void>;
+  delete(id: string): Promise<void>;
   /** Users of an institute, optionally filtered by role (tenant-scoped list). */
   findByInstitute(instituteId: string, role?: UserRole): Promise<User[]>;
   /** Ids that exist among the given ids AND belong to the institute+role. */
