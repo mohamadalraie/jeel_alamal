@@ -7,17 +7,17 @@ import type { ClassProfile, User } from '@/lib/types';
 import {
   getClassProfile,
   listTeachers,
-  listStudents,
+  listUnassignedStudents,
   updateClass,
   deleteClass,
-  addClassTeacher,
   removeClassTeacher,
   setClassSupervisor,
-  enrollStudent,
   removeClassStudent,
+  deleteMember,
   ApiError,
 } from '@/lib/api';
 import { Link, useRouter } from '@/i18n/navigation';
+import { notify } from '@/lib/toast';
 import { useInstitute } from '@/features/layout/institute-context';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -25,10 +25,18 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { MoreVertical, Pencil } from 'lucide-react';
 import { ConfirmDialog } from '@/features/shared/confirm-dialog';
 import { GradeLabel } from '@/features/shared/grade-select';
 import { WeeklySchedule } from '@/features/classes/weekly-schedule';
-import { MemberPicker } from '@/features/classes/member-picker';
+import { ClassAddMemberDialog } from '@/features/classes/class-add-member-dialog';
+import { ClassRecitationTab } from '@/features/recitation/class-recitation-tab';
 
 export default function ClassProfilePage({
   params,
@@ -38,6 +46,7 @@ export default function ClassProfilePage({
   const { classId } = use(params);
   const t = useTranslations('dashboard');
   const tc = useTranslations('common');
+  const tRec = useTranslations('recitation');
   const locale = useLocale();
   const router = useRouter();
   const { selected, user } = useInstitute();
@@ -46,14 +55,18 @@ export default function ClassProfilePage({
 
   const [profile, setProfile] = useState<ClassProfile | null>(null);
   const [allTeachers, setAllTeachers] = useState<User[]>([]);
-  const [allStudents, setAllStudents] = useState<User[]>([]);
+  const [unassignedStudents, setUnassignedStudents] = useState<User[]>([]);
   const [notFound, setNotFound] = useState(false);
+  const instituteId = selected?.id ?? '';
 
   const load = useCallback(() => {
     getClassProfile(classId).then(setProfile).catch(() => setNotFound(true));
     if (selected) {
       listTeachers(selected.id).then(setAllTeachers).catch(() => setAllTeachers([]));
-      listStudents(selected.id).then(setAllStudents).catch(() => setAllStudents([]));
+      // Students eligible to enroll: those not in ANY class (one-class rule).
+      listUnassignedStudents(selected.id)
+        .then(setUnassignedStudents)
+        .catch(() => setUnassignedStudents([]));
     }
   }, [classId, selected]);
   useEffect(load, [load]);
@@ -66,13 +79,24 @@ export default function ClassProfilePage({
 
   const { class: klass, teachers, students, schedule } = profile;
   const teacherIds = new Set(teachers.map((x) => x.id));
-  const studentIds = new Set(students.map((x) => x.id));
   const addableTeachers = allTeachers
     .filter((x) => !teacherIds.has(x.id))
     .map((x) => ({ id: x.id, name: `${x.firstName} ${x.lastName}` }));
-  const enrollableStudents = allStudents
-    .filter((x) => !studentIds.has(x.id))
-    .map((x) => ({ id: x.id, name: `${x.firstName} ${x.lastName}` }));
+  const enrollableStudents = unassignedStudents.map((x) => ({
+    id: x.id,
+    name: `${x.firstName} ${x.lastName}`,
+  }));
+
+  // Soft-delete a member from the whole institute.
+  const softDelete = async (memberId: string) => {
+    try {
+      await deleteMember(instituteId, memberId);
+      load();
+      notify.success(t('deleteFromInstitute'));
+    } catch (err) {
+      notify.error(err, tc('error'));
+    }
+  };
 
   return (
     <div className="flex flex-col gap-5">
@@ -90,6 +114,7 @@ export default function ClassProfilePage({
         <TabsList className="flex-wrap">
           <TabsTrigger value="students">{t('tabStudents')}</TabsTrigger>
           <TabsTrigger value="teachers">{t('tabTeachers')}</TabsTrigger>
+          <TabsTrigger value="recitation">{tRec('classTab')}</TabsTrigger>
           <TabsTrigger value="details">{t('tabDetails')}</TabsTrigger>
           <TabsTrigger value="lessons">{t('tabLessons')}</TabsTrigger>
           <TabsTrigger value="activities">{t('tabActivities')}</TabsTrigger>
@@ -102,15 +127,16 @@ export default function ClassProfilePage({
               <CardTitle>{t('tabStudents')}</CardTitle>
             </CardHeader>
             <CardContent className="flex flex-col gap-3">
-              <MemberPicker
-                options={enrollableStudents}
-                placeholder={t('selectStudent')}
-                actionLabel={t('enrollInClass')}
-                onAdd={async (id) => {
-                  await enrollStudent(classId, id);
-                  load();
-                }}
-              />
+              <div className="flex justify-end">
+                <ClassAddMemberDialog
+                  classId={classId}
+                  instituteId={instituteId}
+                  role="student"
+                  options={enrollableStudents}
+                  emptyHint={t('noUnassignedStudents')}
+                  onDone={load}
+                />
+              </div>
               {students.length === 0 ? (
                 <p className="text-muted-foreground text-sm">{tc('noData')}</p>
               ) : (
@@ -127,17 +153,15 @@ export default function ClassProfilePage({
                         <Badge variant="outline">
                           <GradeLabel grade={s.schoolGrade} />
                         </Badge>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          aria-label={t('removeFromClass')}
-                          onClick={async () => {
+                        <MemberRowMenu
+                          memberId={s.id}
+                          onEditHref={`/dashboard/students/${s.id}`}
+                          onRemoveFromClass={async () => {
                             await removeClassStudent(classId, s.id);
                             load();
                           }}
-                        >
-                          <Trash2 className="text-destructive size-4" />
-                        </Button>
+                          onDeleteFromInstitute={() => softDelete(s.id)}
+                        />
                       </span>
                     </li>
                   ))}
@@ -155,15 +179,16 @@ export default function ClassProfilePage({
             </CardHeader>
             <CardContent className="flex flex-col gap-3">
               {canManage && (
-                <MemberPicker
-                  options={addableTeachers}
-                  placeholder={t('selectTeacher')}
-                  actionLabel={t('addTeacherToClass')}
-                  onAdd={async (id) => {
-                    await addClassTeacher(classId, id);
-                    load();
-                  }}
-                />
+                <div className="flex justify-end">
+                  <ClassAddMemberDialog
+                    classId={classId}
+                    instituteId={instituteId}
+                    role="teacher"
+                    options={addableTeachers}
+                    emptyHint={t('noAvailableTeachers')}
+                    onDone={load}
+                  />
+                </div>
               )}
               {teachers.length === 0 ? (
                 <p className="text-muted-foreground text-sm">{tc('noData')}</p>
@@ -194,17 +219,15 @@ export default function ClassProfilePage({
                               {t('makeSupervisor')}
                             </Button>
                           )}
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            aria-label={t('removeFromClass')}
-                            onClick={async () => {
+                          <MemberRowMenu
+                            memberId={te.id}
+                            onEditHref={`/dashboard/teachers/${te.id}`}
+                            onRemoveFromClass={async () => {
                               await removeClassTeacher(classId, te.id);
                               load();
                             }}
-                          >
-                            <Trash2 className="text-destructive size-4" />
-                          </Button>
+                            onDeleteFromInstitute={() => softDelete(te.id)}
+                          />
                         </span>
                       )}
                     </li>
@@ -213,6 +236,11 @@ export default function ClassProfilePage({
               )}
             </CardContent>
           </Card>
+        </TabsContent>
+
+        {/* التسميع — class recitation log */}
+        <TabsContent value="recitation" className="pt-4">
+          <ClassRecitationTab classId={classId} />
         </TabsContent>
 
         {/* 3 — Details + weekly schedule */}
@@ -227,7 +255,7 @@ export default function ClassProfilePage({
           />
           <Card>
             <CardHeader>
-              <CardTitle>{t('attendanceTimes')}</CardTitle>
+              <CardTitle>{t('lessonTimes')}</CardTitle>
             </CardHeader>
             <CardContent>
               <WeeklySchedule
@@ -251,6 +279,53 @@ export default function ClassProfilePage({
         </TabsContent>
       </Tabs>
     </div>
+  );
+}
+
+/** Per-row actions for a class member: edit, remove from class, soft-delete. */
+function MemberRowMenu({
+  onEditHref,
+  onRemoveFromClass,
+  onDeleteFromInstitute,
+}: {
+  memberId: string;
+  onEditHref: string;
+  onRemoveFromClass: () => Promise<void> | void;
+  onDeleteFromInstitute: () => void;
+}) {
+  const t = useTranslations('dashboard');
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" size="icon" aria-label={t('actions')}>
+          <MoreVertical className="size-4" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        <DropdownMenuItem asChild>
+          <Link href={onEditHref}>
+            <Pencil className="size-4" />
+            {t('edit')}
+          </Link>
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => void onRemoveFromClass()}>
+          {t('removeFromClass')}
+        </DropdownMenuItem>
+        <ConfirmDialog
+          title={t('deleteFromInstitute')}
+          message={t('deleteFromInstituteMsg')}
+          onConfirm={onDeleteFromInstitute}
+          trigger={
+            <DropdownMenuItem
+              variant="destructive"
+              onSelect={(e) => e.preventDefault()}
+            >
+              {t('deleteFromInstitute')}
+            </DropdownMenuItem>
+          }
+        />
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }
 

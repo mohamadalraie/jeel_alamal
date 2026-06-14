@@ -14,6 +14,8 @@ import { InstitutesModule } from './modules/institutes/institutes.module';
 import { ClassesModule } from './modules/classes/classes.module';
 import { ProfilesModule } from './modules/profiles/profiles.module';
 import { UploadsModule } from './modules/uploads/uploads.module';
+import { StatisticsModule } from './modules/statistics/statistics.module';
+import { RecitationsModule } from './modules/recitations/recitations.module';
 
 @Module({
   imports: [
@@ -42,6 +44,8 @@ import { UploadsModule } from './modules/uploads/uploads.module';
     ClassesModule,
     ProfilesModule,
     UploadsModule,
+    StatisticsModule,
+    RecitationsModule,
   ],
   providers: [
     { provide: APP_GUARD, useClass: ThrottlerGuard },

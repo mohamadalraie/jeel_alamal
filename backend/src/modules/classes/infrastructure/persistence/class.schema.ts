@@ -70,7 +70,7 @@ export const classStudents = pgTable(
   (t) => [primaryKey({ columns: [t.classId, t.studentId] })],
 );
 
-/** Weekly attendance / lesson times (أوقات الحضور) — spec 003. */
+/** Weekly lesson times (أوقات الدروس) — spec 004 (prayer-aware). */
 export const weekdayEnum = pgEnum('weekday', [
   'sat',
   'sun',
@@ -81,14 +81,19 @@ export const weekdayEnum = pgEnum('weekday', [
   'fri',
 ]);
 
+/** A schedule anchor is either a clock time or a prayer. */
+export const anchorKindEnum = pgEnum('anchor_kind', ['time', 'prayer']);
+
 export const classSchedule = pgTable('class_schedule', {
   id: uuid('id').primaryKey(),
   classId: uuid('class_id')
     .notNull()
     .references(() => classes.id, { onDelete: 'cascade' }),
   dayOfWeek: weekdayEnum('day_of_week').notNull(),
-  startTime: varchar('start_time', { length: 5 }).notNull(), // 'HH:MM'
-  endTime: varchar('end_time', { length: 5 }).notNull(), // 'HH:MM'
+  startKind: anchorKindEnum('start_kind').notNull(),
+  startValue: varchar('start_value', { length: 16 }).notNull(), // 'HH:MM' or prayer key
+  endKind: anchorKindEnum('end_kind'), // optional end (spec 004)
+  endValue: varchar('end_value', { length: 16 }),
 });
 
 export type ClassRow = InferSelectModel<typeof classes>;

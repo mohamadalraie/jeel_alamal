@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
+import { notify } from '@/lib/toast';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -52,6 +53,9 @@ export function ConfirmDialog({
               try {
                 await onConfirm();
                 setOpen(false);
+                notify.success(td('delete'));
+              } catch (err) {
+                notify.error(err, tc('error'));
               } finally {
                 setBusy(false);
               }

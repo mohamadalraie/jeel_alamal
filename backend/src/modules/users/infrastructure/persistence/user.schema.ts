@@ -57,6 +57,8 @@ export const users = pgTable('users', {
   createdAt: timestamp('created_at', { withTimezone: true })
     .notNull()
     .defaultNow(),
+  // Soft delete (spec 004): non-null means the account is removed.
+  deletedAt: timestamp('deleted_at', { withTimezone: true }),
 });
 
 export type UserRow = InferSelectModel<typeof users>;

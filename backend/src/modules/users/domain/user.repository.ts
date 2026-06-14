@@ -18,4 +18,6 @@ export interface UserRepository {
   findByInstitute(instituteId: string, role?: UserRole): Promise<User[]>;
   /** Ids that exist among the given ids AND belong to the institute+role. */
   findManyByIds(ids: string[]): Promise<User[]>;
+  /** Count active users of an institute, optionally by role (stats). */
+  countByInstitute(instituteId: string, role?: UserRole): Promise<number>;
 }

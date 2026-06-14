@@ -4,18 +4,22 @@ import { UserRole } from '../../../../shared/domain/user-role';
 import { NotFoundError } from '../../../../shared/domain/domain.error';
 import { USER_REPOSITORY } from '../../../users/domain/user.repository';
 import type { UserRepository } from '../../../users/domain/user.repository';
+import { CLASS_REPOSITORY } from '../../../classes/domain/class.repository';
+import type { ClassRepository } from '../../../classes/domain/class.repository';
 import { ProfileAccessPolicy } from '../profile-access.policy';
 
 /**
- * Delete a teacher or student account. Deleting a teacher requires
- * manager/super_admin; deleting a student is allowed for any institute staff.
- * FK cascades remove their class memberships, certifications, and notes.
+ * Soft-delete a teacher or student account (spec 004). Deleting a teacher
+ * requires manager/super_admin; deleting a student is allowed for any institute
+ * staff. The account row is preserved (authored notes keep their author), but
+ * the user is detached from all classes and hidden everywhere.
  */
 @Injectable()
 export class DeleteMemberUseCase {
   constructor(
     private readonly policy: ProfileAccessPolicy,
     @Inject(USER_REPOSITORY) private readonly users: UserRepository,
+    @Inject(CLASS_REPOSITORY) private readonly classes: ClassRepository,
   ) {}
 
   async execute(
@@ -37,6 +41,7 @@ export class DeleteMemberUseCase {
     } else {
       await this.policy.assertStaffOfInstitute(actor, instituteId);
     }
+    await this.classes.removeMemberFromAllClasses(memberId);
     await this.users.delete(memberId);
   }
 }

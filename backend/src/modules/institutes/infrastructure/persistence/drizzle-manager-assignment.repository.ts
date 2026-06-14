@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { and, eq } from 'drizzle-orm';
+import { and, count, eq } from 'drizzle-orm';
 import type { ManagerAssignmentRepository } from '../../domain/manager-assignment.repository';
 import { DRIZZLE } from '../../../../core/database/drizzle.provider';
 import type { DrizzleDb } from '../../../../core/database/drizzle.provider';
@@ -30,5 +30,13 @@ export class DrizzleManagerAssignmentRepository
       .insert(managerInstitutes)
       .values({ managerId, instituteId, assignedAt: new Date() })
       .onConflictDoNothing();
+  }
+
+  async countManagers(instituteId: string): Promise<number> {
+    const [row] = await this.db
+      .select({ n: count() })
+      .from(managerInstitutes)
+      .where(eq(managerInstitutes.instituteId, instituteId));
+    return Number(row?.n ?? 0);
   }
 }

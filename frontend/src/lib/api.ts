@@ -5,6 +5,7 @@ import type {
   ClassProfile,
   CreateInstituteInput,
   Institute,
+  InstituteStats,
   MemberInput,
   ScheduleSlot,
   StudentInput,
@@ -14,6 +15,10 @@ import type {
   TeacherProfile,
   UpdateInstituteInput,
   User,
+  Surah,
+  StudentRecitation,
+  ClassRecitation,
+  AddRecitationInput,
 } from './types';
 
 /**
@@ -146,16 +151,27 @@ export const deleteClass = (classId: string) =>
   del<void>(`/api/classes/${classId}`);
 export const setClassSchedule = (classId: string, slots: ScheduleSlot[]) =>
   put<void>(`/api/classes/${classId}/schedule`, {
-    slots: slots.map(({ dayOfWeek, startTime, endTime }) => ({
-      dayOfWeek,
-      startTime,
-      endTime,
-    })),
+    slots: slots.map(({ dayOfWeek, start, end }) => ({ dayOfWeek, start, end })),
   });
 export const removeClassTeacher = (classId: string, teacherId: string) =>
   del<void>(`/api/classes/${classId}/teachers/${teacherId}`);
 export const removeClassStudent = (classId: string, studentId: string) =>
   del<void>(`/api/classes/${classId}/students/${studentId}`);
+export const listUnassignedStudents = (instituteId: string) =>
+  request<User[]>(`/api/institutes/${instituteId}/unassigned-students`);
+
+// ── Statistics (spec 004) ──
+export const getInstituteStats = (instituteId: string) =>
+  request<InstituteStats>(`/api/institutes/${instituteId}/stats`);
+
+// ── Quran recitation (spec 005) ──
+export const listSurahs = () => request<Surah[]>('/api/quran/surahs');
+export const getStudentRecitation = (studentId: string) =>
+  request<StudentRecitation>(`/api/students/${studentId}/recitations`);
+export const addRecitation = (studentId: string, input: AddRecitationInput) =>
+  post<void>(`/api/students/${studentId}/recitations`, input);
+export const getClassRecitation = (classId: string) =>
+  request<ClassRecitation>(`/api/classes/${classId}/recitations`);
 
 // ── Teacher profile (spec 002) ──
 const inst = (id: string) => `/api/institutes/${id}`;

@@ -4,8 +4,10 @@ import { NextIntlClientProvider, hasLocale } from 'next-intl';
 import { setRequestLocale, getMessages, getTranslations } from 'next-intl/server';
 import { getLangDir } from 'rtl-detect';
 import { Tajawal } from 'next/font/google';
+import { Toaster } from 'sonner';
 import { routing } from '@/i18n/routing';
 import { ThemeProvider } from '@/features/layout/theme-provider';
+import { QueryProvider } from '@/features/layout/query-provider';
 import '../globals.css';
 
 // Tajawal — a friendly, modern family covering Arabic + Latin (spec 003).
@@ -70,9 +72,12 @@ export default async function LocaleLayout({
     >
       <body className="bg-background text-foreground min-h-full font-sans">
         <ThemeProvider>
-          <NextIntlClientProvider messages={messages}>
-            {children}
-          </NextIntlClientProvider>
+          <QueryProvider>
+            <NextIntlClientProvider messages={messages}>
+              {children}
+              <Toaster richColors position="top-center" dir={direction} />
+            </NextIntlClientProvider>
+          </QueryProvider>
         </ThemeProvider>
       </body>
     </html>

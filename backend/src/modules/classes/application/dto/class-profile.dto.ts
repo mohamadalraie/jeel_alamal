@@ -4,7 +4,6 @@ import {
   IsIn,
   IsOptional,
   IsString,
-  Matches,
   MinLength,
   ValidateNested,
 } from 'class-validator';
@@ -20,15 +19,26 @@ export class UpdateClassDto {
   description?: string;
 }
 
+export class AnchorDto {
+  @IsIn(['time', 'prayer'])
+  kind: 'time' | 'prayer';
+
+  @IsString()
+  value: string;
+}
+
 export class ScheduleSlotDto {
   @IsIn(WEEKDAYS as unknown as string[])
   dayOfWeek: string;
 
-  @Matches(/^([01]\d|2[0-3]):[0-5]\d$/, { message: 'startTime must be HH:MM' })
-  startTime: string;
+  @ValidateNested()
+  @Type(() => AnchorDto)
+  start: AnchorDto;
 
-  @Matches(/^([01]\d|2[0-3]):[0-5]\d$/, { message: 'endTime must be HH:MM' })
-  endTime: string;
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => AnchorDto)
+  end?: AnchorDto | null;
 }
 
 export class SetScheduleDto {
@@ -38,9 +48,16 @@ export class SetScheduleDto {
   slots: ScheduleSlotDto[];
 }
 
+interface SlotView {
+  id: string;
+  dayOfWeek: string;
+  start: { kind: string; value: string };
+  end: { kind: string; value: string } | null;
+}
+
 export interface ClassProfileResult {
   class: { id: string; name: string; description: string | null; createdAt: string };
-  schedule: { id: string; dayOfWeek: string; startTime: string; endTime: string }[];
+  schedule: SlotView[];
   teachers: { id: string; name: string; isSupervisor: boolean }[];
   students: { id: string; name: string; schoolGrade: string | null }[];
 }

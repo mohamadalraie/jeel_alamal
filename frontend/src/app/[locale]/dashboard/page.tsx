@@ -10,9 +10,8 @@ export default function DashboardIndex() {
   const { user } = useInstitute();
 
   useEffect(() => {
-    router.replace(
-      user.role === 'super_admin' ? '/dashboard/institutes' : '/dashboard/teachers',
-    );
+    // Statistics is the post-login landing for every role (spec 004).
+    router.replace('/dashboard/statistics');
   }, [router, user.role]);
 
   return null;

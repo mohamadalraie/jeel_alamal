@@ -20,6 +20,7 @@ import {
   DeleteClassUseCase,
   SetClassScheduleUseCase,
 } from './application/use-cases/class-profile.use-cases';
+import { ListUnassignedStudentsUseCase } from './application/use-cases/list-unassigned-students.use-case';
 import { CLASS_REPOSITORY } from './domain/class.repository';
 import { DrizzleClassRepository } from './infrastructure/persistence/drizzle-class.repository';
 
@@ -38,6 +39,7 @@ import { DrizzleClassRepository } from './infrastructure/persistence/drizzle-cla
     UpdateClassUseCase,
     DeleteClassUseCase,
     SetClassScheduleUseCase,
+    ListUnassignedStudentsUseCase,
     { provide: CLASS_REPOSITORY, useClass: DrizzleClassRepository },
   ],
   // Exported so the profiles module can read teacher classes / transfer students.

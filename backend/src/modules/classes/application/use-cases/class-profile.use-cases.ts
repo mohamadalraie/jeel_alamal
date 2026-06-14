@@ -4,7 +4,7 @@ import { NotFoundError } from '../../../../shared/domain/domain.error';
 import { CLASS_REPOSITORY } from '../../domain/class.repository';
 import type { ClassRepository } from '../../domain/class.repository';
 import { assertValidSlot } from '../../domain/class-schedule';
-import type { Weekday } from '../../domain/class-schedule';
+import type { AnchorKind, ScheduleSlot, Weekday } from '../../domain/class-schedule';
 import { USER_REPOSITORY } from '../../../users/domain/user.repository';
 import type { UserRepository } from '../../../users/domain/user.repository';
 import { InstituteAccessPolicy } from '../../../institutes/application/institute-access.policy';
@@ -45,8 +45,8 @@ export class GetClassProfileUseCase {
       schedule: schedule.map((s) => ({
         id: s.id,
         dayOfWeek: s.dayOfWeek,
-        startTime: s.startTime,
-        endTime: s.endTime,
+        start: { kind: s.start.kind, value: s.start.value },
+        end: s.end ? { kind: s.end.kind, value: s.end.value } : null,
       })),
       teachers: membership.teacherIds.map((id) => ({
         id,
@@ -106,16 +106,20 @@ export class SetClassScheduleUseCase {
   async execute(
     actor: Actor,
     classId: string,
-    slots: { dayOfWeek: string; startTime: string; endTime: string }[],
+    slots: {
+      dayOfWeek: string;
+      start: { kind: string; value: string };
+      end?: { kind: string; value: string } | null;
+    }[],
   ): Promise<void> {
     const klass = await this.classes.findById(classId);
     if (!klass) throw new NotFoundError('Class not found');
     await this.policy.assertManagerOf(actor, klass.instituteId);
 
-    const typed = slots.map((s) => ({
+    const typed: ScheduleSlot[] = slots.map((s) => ({
       dayOfWeek: s.dayOfWeek as Weekday,
-      startTime: s.startTime,
-      endTime: s.endTime,
+      start: { kind: s.start.kind as AnchorKind, value: s.start.value },
+      end: s.end ? { kind: s.end.kind as AnchorKind, value: s.end.value } : null,
     }));
     typed.forEach(assertValidSlot);
     await this.classes.setSchedule(classId, typed);

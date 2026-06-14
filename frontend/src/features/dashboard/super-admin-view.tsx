@@ -1,16 +1,12 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 import { Plus, Pencil, Building2 } from 'lucide-react';
 import type { Institute } from '@/lib/types';
-import {
-  listInstitutes,
-  createInstitute,
-  updateInstitute,
-  resolveAsset,
-  ApiError,
-} from '@/lib/api';
+import { createInstitute, updateInstitute, resolveAsset, ApiError } from '@/lib/api';
+import { useInstitutes, useQueryClient, qk } from '@/lib/queries';
+import { notify } from '@/lib/toast';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -29,6 +25,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { LogoUpload } from '@/features/shared/logo-upload';
+import { ListSkeleton } from '@/features/shared/skeletons';
 import { MemberFields, emptyMember, type MemberDraft } from './member-fields';
 
 /** Super-admin home: institutes list, create (with manager + logo), and edit. */
@@ -36,7 +33,8 @@ export function SuperAdminView() {
   const t = useTranslations('dashboard');
   const tc = useTranslations('common');
   const locale = useLocale();
-  const [institutes, setInstitutes] = useState<Institute[] | null>(null);
+  const qc = useQueryClient();
+  const { data: institutes, isLoading } = useInstitutes();
   const [createOpen, setCreateOpen] = useState(false);
   const [editing, setEditing] = useState<Institute | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -48,10 +46,7 @@ export function SuperAdminView() {
   const [logoUrl, setLogoUrl] = useState('');
   const [manager, setManager] = useState<MemberDraft>(emptyMember());
 
-  const refresh = useCallback(() => {
-    listInstitutes().then(setInstitutes).catch(() => setInstitutes([]));
-  }, []);
-  useEffect(refresh, [refresh]);
+  const refresh = () => qc.invalidateQueries({ queryKey: qk.institutes });
 
   function resetCreate() {
     setName('');
@@ -76,6 +71,7 @@ export function SuperAdminView() {
       setCreateOpen(false);
       resetCreate();
       refresh();
+      notify.success(t('createInstitute'));
     } catch (err) {
       setError(err instanceof ApiError ? err.message : tc('error'));
     } finally {
@@ -97,6 +93,7 @@ export function SuperAdminView() {
       });
       setEditing(null);
       refresh();
+      notify.success(t('editInstitute'));
     } catch (err) {
       setError(err instanceof ApiError ? err.message : tc('error'));
     } finally {
@@ -114,9 +111,9 @@ export function SuperAdminView() {
         </Button>
       </div>
 
-      {institutes === null ? (
-        <p className="text-muted-foreground">{tc('loading')}</p>
-      ) : institutes.length === 0 ? (
+      {isLoading ? (
+        <ListSkeleton />
+      ) : (institutes ?? []).length === 0 ? (
         <p className="text-muted-foreground">{t('noInstitutes')}</p>
       ) : (
         <div className="border-border overflow-x-auto rounded-lg border">
@@ -131,7 +128,7 @@ export function SuperAdminView() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {institutes.map((inst) => (
+              {(institutes ?? []).map((inst) => (
                 <TableRow key={inst.id}>
                   <TableCell>
                     <InstituteLogo institute={inst} />

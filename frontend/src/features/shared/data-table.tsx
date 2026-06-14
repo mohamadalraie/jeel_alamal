@@ -18,67 +18,96 @@ export interface Column<T> {
   className?: string;
 }
 
+function renderCell<T>(col: Column<T>, row: T): React.ReactNode {
+  return col.cell ? col.cell(row) : String((row as Record<string, unknown>)[col.key] ?? '');
+}
+
 /**
- * One reusable data table for every list page (constitution V — no duplication).
- * Rows are clickable; an optional `actions` column is rendered at the end.
+ * One reusable data table for every list page (constitution V). Renders a
+ * table on ≥sm and stacked cards on mobile (spec 006). Rows are clickable; an
+ * optional `actions` column/footer is rendered per row.
  */
 export function DataTable<T extends { id: string }>({
   columns,
   rows,
   onRowClick,
   actions,
-  empty,
 }: {
   columns: Column<T>[];
   rows: T[];
   onRowClick?: (row: T) => void;
   actions?: (row: T) => React.ReactNode;
-  empty?: string;
 }) {
-  const tc = useTranslations('common');
   const td = useTranslations('dashboard');
 
-  if (rows.length === 0) {
-    return <p className="text-muted-foreground py-8 text-center">{empty ?? tc('noData')}</p>;
-  }
-
   return (
-    <div className="border-border overflow-x-auto rounded-lg border">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            {columns.map((c) => (
-              <TableHead key={c.key} className={c.className}>
-                {c.header}
-              </TableHead>
-            ))}
-            {actions && <TableHead className="text-end">{td('actions')}</TableHead>}
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {rows.map((row) => (
-            <TableRow
-              key={row.id}
-              onClick={() => onRowClick?.(row)}
-              className={onRowClick ? 'cursor-pointer' : undefined}
-            >
+    <>
+      {/* Desktop / tablet: table */}
+      <div className="border-border hidden overflow-x-auto rounded-lg border sm:block">
+        <Table>
+          <TableHeader>
+            <TableRow>
               {columns.map((c) => (
-                <TableCell key={c.key} className={c.className}>
-                  {c.cell ? c.cell(row) : String((row as Record<string, unknown>)[c.key] ?? '')}
-                </TableCell>
+                <TableHead key={c.key} className={c.className}>
+                  {c.header}
+                </TableHead>
               ))}
-              {actions && (
-                <TableCell
-                  className="text-end"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  {actions(row)}
-                </TableCell>
-              )}
+              {actions && <TableHead className="text-end">{td('actions')}</TableHead>}
             </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </div>
+          </TableHeader>
+          <TableBody>
+            {rows.map((row) => (
+              <TableRow
+                key={row.id}
+                onClick={() => onRowClick?.(row)}
+                className={onRowClick ? 'cursor-pointer' : undefined}
+              >
+                {columns.map((c) => (
+                  <TableCell key={c.key} className={c.className}>
+                    {renderCell(c, row)}
+                  </TableCell>
+                ))}
+                {actions && (
+                  <TableCell className="text-end" onClick={(e) => e.stopPropagation()}>
+                    {actions(row)}
+                  </TableCell>
+                )}
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+
+      {/* Mobile: stacked cards */}
+      <div className="flex flex-col gap-3 sm:hidden">
+        {rows.map((row) => (
+          <div
+            key={row.id}
+            onClick={() => onRowClick?.(row)}
+            className={`border-border bg-card flex flex-col gap-2 rounded-xl border p-4 ${
+              onRowClick ? 'active:bg-muted/50' : ''
+            }`}
+          >
+            {columns.map((c, i) => (
+              <div key={c.key} className="flex items-center justify-between gap-3">
+                {i === 0 ? (
+                  <span className="font-semibold">{renderCell(c, row)}</span>
+                ) : (
+                  <>
+                    <span className="text-muted-foreground text-xs">{c.header}</span>
+                    <span className="text-sm">{renderCell(c, row)}</span>
+                  </>
+                )}
+              </div>
+            ))}
+            {actions && (
+              <div className="flex justify-end pt-1" onClick={(e) => e.stopPropagation()}>
+                {actions(row)}
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+    </>
   );
 }

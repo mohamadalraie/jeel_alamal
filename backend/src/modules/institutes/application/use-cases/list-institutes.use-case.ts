@@ -1,14 +1,15 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { Actor } from '../../../../shared/application/actor';
 import { UserRole } from '../../../../shared/domain/user-role';
-import { ForbiddenError } from '../../../../shared/domain/domain.error';
 import { INSTITUTE_REPOSITORY } from '../../domain/institute.repository';
 import type { InstituteRepository } from '../../domain/institute.repository';
 import { InstituteResponseDto } from '../dto/institute-response.dto';
 
 /**
- * super_admin sees all institutes; a manager sees only the institutes assigned
- * to them. Other roles are denied (deny by default, spec 001 matrix).
+ * Institutes the actor may operate within (drives the topbar picker):
+ * - super_admin: all institutes
+ * - manager: the institutes assigned to them
+ * - teacher/student: their single home institute
  */
 @Injectable()
 export class ListInstitutesUseCase {
@@ -26,6 +27,11 @@ export class ListInstitutesUseCase {
       const mine = await this.institutes.findAllByManager(actor.userId);
       return mine.map(InstituteResponseDto.fromDomain);
     }
-    throw new ForbiddenError('Not allowed to list institutes');
+    // teacher / student → their own institute
+    if (actor.instituteId) {
+      const inst = await this.institutes.findById(actor.instituteId);
+      return inst ? [InstituteResponseDto.fromDomain(inst)] : [];
+    }
+    return [];
   }
 }

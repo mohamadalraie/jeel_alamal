@@ -15,6 +15,7 @@ import { CurrentUser } from '../../../core/auth/current-user.decorator';
 import type { Actor } from '../../../shared/application/actor';
 import { CreateClassUseCase } from '../application/use-cases/create-class.use-case';
 import { ListClassesUseCase } from '../application/use-cases/list-classes.use-case';
+import { ListUnassignedStudentsUseCase } from '../application/use-cases/list-unassigned-students.use-case';
 import {
   AddClassTeacherUseCase,
   SetClassSupervisorUseCase,
@@ -47,7 +48,16 @@ export class ClassesController {
     private readonly updateClass: UpdateClassUseCase,
     private readonly deleteClass: DeleteClassUseCase,
     private readonly setSchedule: SetClassScheduleUseCase,
+    private readonly listUnassignedStudents: ListUnassignedStudentsUseCase,
   ) {}
+
+  @Get('institutes/:instituteId/unassigned-students')
+  unassignedStudents(
+    @CurrentUser() actor: Actor,
+    @Param('instituteId', ParseUUIDPipe) instituteId: string,
+  ) {
+    return this.listUnassignedStudents.execute(actor, instituteId);
+  }
 
   @Post('institutes/:instituteId/classes')
   @HttpCode(HttpStatus.CREATED)

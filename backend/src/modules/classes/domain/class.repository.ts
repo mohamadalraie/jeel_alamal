@@ -9,9 +9,7 @@ export interface ClassMembership {
   studentIds: string[];
 }
 
-export interface StoredSlot extends ScheduleSlot {
-  id: string;
-}
+export type StoredSlot = ScheduleSlot & { id: string };
 
 export interface ClassRepository {
   save(klass: Class): Promise<void>;
@@ -41,4 +39,12 @@ export interface ClassRepository {
   getSchedule(classId: string): Promise<StoredSlot[]>;
   /** Replace the whole weekly schedule for a class (transactional). */
   setSchedule(classId: string, slots: ScheduleSlot[]): Promise<void>;
+
+  // ── spec 004 ──
+  /** Detach a user from every class (used on soft-delete). */
+  removeMemberFromAllClasses(userId: string): Promise<void>;
+  /** Student ids of an institute that are not enrolled in any class. */
+  findStudentIdsWithoutClass(instituteId: string): Promise<string[]>;
+  /** Counts for the institute statistics page. */
+  countClasses(instituteId: string): Promise<number>;
 }

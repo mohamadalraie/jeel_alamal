@@ -1,13 +1,17 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { randomUUID } from 'node:crypto';
-import { and, desc, eq } from 'drizzle-orm';
+import { and, count, desc, eq, isNull, notInArray } from 'drizzle-orm';
 import { Class } from '../../domain/class.entity';
 import type {
   ClassMembership,
   ClassRepository,
   StoredSlot,
 } from '../../domain/class.repository';
-import type { ScheduleSlot, Weekday } from '../../domain/class-schedule';
+import type {
+  AnchorKind,
+  ScheduleSlot,
+  Weekday,
+} from '../../domain/class-schedule';
 import { DRIZZLE } from '../../../../core/database/drizzle.provider';
 import type { DrizzleDb } from '../../../../core/database/drizzle.provider';
 import {
@@ -17,6 +21,7 @@ import {
   classTeachers,
   type ClassRow,
 } from './class.schema';
+import { users } from '../../../users/infrastructure/persistence/user.schema';
 
 const toDomain = (row: ClassRow): Class =>
   Class.reconstitute(row.id, {
@@ -214,8 +219,10 @@ export class DrizzleClassRepository implements ClassRepository {
     return rows.map((r) => ({
       id: r.id,
       dayOfWeek: r.dayOfWeek as Weekday,
-      startTime: r.startTime,
-      endTime: r.endTime,
+      start: { kind: r.startKind as AnchorKind, value: r.startValue },
+      end: r.endKind
+        ? { kind: r.endKind as AnchorKind, value: r.endValue ?? '' }
+        : null,
     }));
   }
 
@@ -228,11 +235,47 @@ export class DrizzleClassRepository implements ClassRepository {
             id: randomUUID(),
             classId,
             dayOfWeek: s.dayOfWeek,
-            startTime: s.startTime,
-            endTime: s.endTime,
+            startKind: s.start.kind,
+            startValue: s.start.value,
+            endKind: s.end?.kind ?? null,
+            endValue: s.end?.value ?? null,
           })),
         );
       }
     });
+  }
+
+  async removeMemberFromAllClasses(userId: string): Promise<void> {
+    await this.db.transaction(async (tx) => {
+      await tx.delete(classTeachers).where(eq(classTeachers.teacherId, userId));
+      await tx.delete(classStudents).where(eq(classStudents.studentId, userId));
+    });
+  }
+
+  async findStudentIdsWithoutClass(instituteId: string): Promise<string[]> {
+    // Institute students whose id is absent from class_students.
+    const enrolled = this.db
+      .select({ id: classStudents.studentId })
+      .from(classStudents);
+    const rows = await this.db
+      .select({ id: users.id })
+      .from(users)
+      .where(
+        and(
+          eq(users.instituteId, instituteId),
+          eq(users.role, 'student'),
+          isNull(users.deletedAt),
+          notInArray(users.id, enrolled),
+        ),
+      );
+    return rows.map((r) => r.id);
+  }
+
+  async countClasses(instituteId: string): Promise<number> {
+    const [row] = await this.db
+      .select({ n: count() })
+      .from(classes)
+      .where(eq(classes.instituteId, instituteId));
+    return Number(row?.n ?? 0);
   }
 }

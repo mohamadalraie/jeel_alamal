@@ -8,4 +8,6 @@ export const MANAGER_ASSIGNMENTS = Symbol('MANAGER_ASSIGNMENTS');
 export interface ManagerAssignmentRepository {
   isAssigned(managerId: string, instituteId: string): Promise<boolean>;
   assign(managerId: string, instituteId: string): Promise<void>;
+  /** Number of managers assigned to an institute ("employees" stat). */
+  countManagers(instituteId: string): Promise<number>;
 }

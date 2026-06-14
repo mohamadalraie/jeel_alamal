@@ -1,3 +1,7 @@
+CREATE TYPE "public"."anchor_kind" AS ENUM('time', 'prayer');--> statement-breakpoint
+CREATE TYPE "public"."weekday" AS ENUM('sat', 'sun', 'mon', 'tue', 'wed', 'thu', 'fri');--> statement-breakpoint
+CREATE TYPE "public"."study_degree" AS ENUM('secondary', 'diploma', 'bachelor', 'master', 'phd');--> statement-breakpoint
+CREATE TYPE "public"."tajweed_level" AS ENUM('excellent', 'very_good', 'good', 'acceptable', 'weak');--> statement-breakpoint
 CREATE TYPE "public"."user_role" AS ENUM('super_admin', 'institute_manager', 'teacher', 'student');--> statement-breakpoint
 CREATE TABLE "refresh_tokens" (
 	"id" uuid PRIMARY KEY NOT NULL,
@@ -6,6 +10,16 @@ CREATE TABLE "refresh_tokens" (
 	"expires_at" timestamp with time zone NOT NULL,
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
 	CONSTRAINT "refresh_tokens_token_hash_unique" UNIQUE("token_hash")
+);
+--> statement-breakpoint
+CREATE TABLE "class_schedule" (
+	"id" uuid PRIMARY KEY NOT NULL,
+	"class_id" uuid NOT NULL,
+	"day_of_week" "weekday" NOT NULL,
+	"start_kind" "anchor_kind" NOT NULL,
+	"start_value" varchar(16) NOT NULL,
+	"end_kind" "anchor_kind",
+	"end_value" varchar(16)
 );
 --> statement-breakpoint
 CREATE TABLE "class_students" (
@@ -47,6 +61,22 @@ CREATE TABLE "manager_institutes" (
 	CONSTRAINT "manager_institutes_manager_id_institute_id_pk" PRIMARY KEY("manager_id","institute_id")
 );
 --> statement-breakpoint
+CREATE TABLE "student_notes" (
+	"id" uuid PRIMARY KEY NOT NULL,
+	"student_id" uuid NOT NULL,
+	"author_id" uuid NOT NULL,
+	"body" text NOT NULL,
+	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
+	"updated_at" timestamp with time zone DEFAULT now() NOT NULL
+);
+--> statement-breakpoint
+CREATE TABLE "teacher_certifications" (
+	"id" uuid PRIMARY KEY NOT NULL,
+	"teacher_id" uuid NOT NULL,
+	"title" varchar(200) NOT NULL,
+	"created_at" timestamp with time zone DEFAULT now() NOT NULL
+);
+--> statement-breakpoint
 CREATE TABLE "users" (
 	"id" uuid PRIMARY KEY NOT NULL,
 	"username" varchar(30) NOT NULL,
@@ -58,11 +88,17 @@ CREATE TABLE "users" (
 	"phone" varchar(30),
 	"school_grade" varchar(50),
 	"institute_id" uuid,
+	"study_degree" "study_degree",
+	"study_field" varchar(150),
+	"quran_parts" smallint,
+	"tajweed_level" "tajweed_level",
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
+	"deleted_at" timestamp with time zone,
 	CONSTRAINT "users_username_unique" UNIQUE("username")
 );
 --> statement-breakpoint
 ALTER TABLE "refresh_tokens" ADD CONSTRAINT "refresh_tokens_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "class_schedule" ADD CONSTRAINT "class_schedule_class_id_classes_id_fk" FOREIGN KEY ("class_id") REFERENCES "public"."classes"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "class_students" ADD CONSTRAINT "class_students_class_id_classes_id_fk" FOREIGN KEY ("class_id") REFERENCES "public"."classes"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "class_students" ADD CONSTRAINT "class_students_student_id_users_id_fk" FOREIGN KEY ("student_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "class_teachers" ADD CONSTRAINT "class_teachers_class_id_classes_id_fk" FOREIGN KEY ("class_id") REFERENCES "public"."classes"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
@@ -70,5 +106,8 @@ ALTER TABLE "class_teachers" ADD CONSTRAINT "class_teachers_teacher_id_users_id_
 ALTER TABLE "classes" ADD CONSTRAINT "classes_institute_id_institutes_id_fk" FOREIGN KEY ("institute_id") REFERENCES "public"."institutes"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "manager_institutes" ADD CONSTRAINT "manager_institutes_manager_id_users_id_fk" FOREIGN KEY ("manager_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "manager_institutes" ADD CONSTRAINT "manager_institutes_institute_id_institutes_id_fk" FOREIGN KEY ("institute_id") REFERENCES "public"."institutes"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "student_notes" ADD CONSTRAINT "student_notes_student_id_users_id_fk" FOREIGN KEY ("student_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "student_notes" ADD CONSTRAINT "student_notes_author_id_users_id_fk" FOREIGN KEY ("author_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "teacher_certifications" ADD CONSTRAINT "teacher_certifications_teacher_id_users_id_fk" FOREIGN KEY ("teacher_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "users" ADD CONSTRAINT "users_institute_id_institutes_id_fk" FOREIGN KEY ("institute_id") REFERENCES "public"."institutes"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 CREATE UNIQUE INDEX "one_supervisor_per_class" ON "class_teachers" USING btree ("class_id") WHERE "class_teachers"."is_supervisor" = true;

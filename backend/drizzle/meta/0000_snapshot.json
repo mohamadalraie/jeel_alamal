@@ -1,5 +1,5 @@
 {
-  "id": "d8cbf1b7-5efe-4027-8534-369384a7ba1e",
+  "id": "9a9a66cc-175c-4dd8-b67a-308ac267ea9f",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -66,6 +66,78 @@
           ]
         }
       },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.class_schedule": {
+      "name": "class_schedule",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "class_id": {
+          "name": "class_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "day_of_week": {
+          "name": "day_of_week",
+          "type": "weekday",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "start_kind": {
+          "name": "start_kind",
+          "type": "anchor_kind",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "start_value": {
+          "name": "start_value",
+          "type": "varchar(16)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "end_kind": {
+          "name": "end_kind",
+          "type": "anchor_kind",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "end_value": {
+          "name": "end_value",
+          "type": "varchar(16)",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "class_schedule_class_id_classes_id_fk": {
+          "name": "class_schedule_class_id_classes_id_fk",
+          "tableFrom": "class_schedule",
+          "tableTo": "classes",
+          "columnsFrom": [
+            "class_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
       "policies": {},
       "checkConstraints": {},
       "isRLSEnabled": false
@@ -403,6 +475,136 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
+    "public.student_notes": {
+      "name": "student_notes",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "student_id": {
+          "name": "student_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "author_id": {
+          "name": "author_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "body": {
+          "name": "body",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "student_notes_student_id_users_id_fk": {
+          "name": "student_notes_student_id_users_id_fk",
+          "tableFrom": "student_notes",
+          "tableTo": "users",
+          "columnsFrom": [
+            "student_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "student_notes_author_id_users_id_fk": {
+          "name": "student_notes_author_id_users_id_fk",
+          "tableFrom": "student_notes",
+          "tableTo": "users",
+          "columnsFrom": [
+            "author_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.teacher_certifications": {
+      "name": "teacher_certifications",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "teacher_id": {
+          "name": "teacher_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "title": {
+          "name": "title",
+          "type": "varchar(200)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "teacher_certifications_teacher_id_users_id_fk": {
+          "name": "teacher_certifications_teacher_id_users_id_fk",
+          "tableFrom": "teacher_certifications",
+          "tableTo": "users",
+          "columnsFrom": [
+            "teacher_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
     "public.users": {
       "name": "users",
       "schema": "",
@@ -468,12 +670,44 @@
           "primaryKey": false,
           "notNull": false
         },
+        "study_degree": {
+          "name": "study_degree",
+          "type": "study_degree",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "study_field": {
+          "name": "study_field",
+          "type": "varchar(150)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "quran_parts": {
+          "name": "quran_parts",
+          "type": "smallint",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "tajweed_level": {
+          "name": "tajweed_level",
+          "type": "tajweed_level",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": false
+        },
         "created_at": {
           "name": "created_at",
           "type": "timestamp with time zone",
           "primaryKey": false,
           "notNull": true,
           "default": "now()"
+        },
+        "deleted_at": {
+          "name": "deleted_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
         }
       },
       "indexes": {},
@@ -508,6 +742,49 @@
     }
   },
   "enums": {
+    "public.anchor_kind": {
+      "name": "anchor_kind",
+      "schema": "public",
+      "values": [
+        "time",
+        "prayer"
+      ]
+    },
+    "public.weekday": {
+      "name": "weekday",
+      "schema": "public",
+      "values": [
+        "sat",
+        "sun",
+        "mon",
+        "tue",
+        "wed",
+        "thu",
+        "fri"
+      ]
+    },
+    "public.study_degree": {
+      "name": "study_degree",
+      "schema": "public",
+      "values": [
+        "secondary",
+        "diploma",
+        "bachelor",
+        "master",
+        "phd"
+      ]
+    },
+    "public.tajweed_level": {
+      "name": "tajweed_level",
+      "schema": "public",
+      "values": [
+        "excellent",
+        "very_good",
+        "good",
+        "acceptable",
+        "weak"
+      ]
+    },
     "public.user_role": {
       "name": "user_role",
       "schema": "public",

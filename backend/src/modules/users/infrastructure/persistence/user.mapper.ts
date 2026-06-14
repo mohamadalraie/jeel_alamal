@@ -53,6 +53,9 @@ export class UserMapper {
       quranParts: td.quranPartsMemorized,
       tajweedLevel: td.tajweedLevel,
       createdAt: user.createdAt,
+      // Soft-delete is applied via a dedicated UPDATE; saving an entity always
+      // represents an active account.
+      deletedAt: null,
     };
   }
 }

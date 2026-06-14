@@ -22,6 +22,7 @@ import {
 } from '@/components/ui/dialog';
 import { ProfileField } from './profile-field';
 import { GradeSelect, GradeLabel } from '@/features/shared/grade-select';
+import { notify } from '@/lib/toast';
 
 const PHONE_PATTERN = '\\+?[0-9]{7,15}';
 
@@ -62,6 +63,7 @@ export function BasicInfoCard({
     try {
       await onSave(form);
       setOpen(false);
+      notify.success(tc('save'));
     } catch (err) {
       setError(err instanceof ApiError ? err.message : tc('error'));
     } finally {

@@ -68,12 +68,19 @@ export interface StudentProfile {
 }
 
 export type Weekday = 'sat' | 'sun' | 'mon' | 'tue' | 'wed' | 'thu' | 'fri';
+export type Prayer = 'fajr' | 'dhuhr' | 'asr' | 'maghrib' | 'isha';
+export type AnchorKind = 'time' | 'prayer';
+
+export interface Anchor {
+  kind: AnchorKind;
+  value: string; // 'HH:MM' when time, prayer key when prayer
+}
 
 export interface ScheduleSlot {
   id?: string;
   dayOfWeek: Weekday;
-  startTime: string; // 'HH:MM'
-  endTime: string; // 'HH:MM'
+  start: Anchor;
+  end: Anchor | null;
 }
 
 export interface ClassProfile {
@@ -81,6 +88,72 @@ export interface ClassProfile {
   schedule: (ScheduleSlot & { id: string })[];
   teachers: { id: string; name: string; isSupervisor: boolean }[];
   students: { id: string; name: string; schoolGrade: string | null }[];
+}
+
+export interface InstituteStats {
+  employees: number;
+  teachers: number;
+  students: number;
+  classes: number;
+}
+
+export type RecitationRating =
+  | 'excellent'
+  | 'very_good'
+  | 'good'
+  | 'acceptable'
+  | 'weak';
+
+export interface Surah {
+  number: number;
+  name: string;
+  ayahCount: number;
+}
+
+export interface RecitationLogItem {
+  id: string;
+  studentId: string;
+  studentName?: string;
+  surahNumber: number;
+  surahName: string;
+  fromAyah: number;
+  toAyah: number;
+  rating: RecitationRating;
+  recitedByName: string;
+  createdAt: string;
+}
+
+export type SurahStatus = 'none' | 'partial' | 'full';
+
+export interface HeartCell {
+  number: number;
+  name: string;
+  ayahCount: number;
+  status: SurahStatus;
+  rating: RecitationRating | null;
+}
+
+export interface StudentRecitation {
+  summary: {
+    lastRecitation: RecitationLogItem | null;
+    fullCount: number;
+    partialCount: number;
+    totalRecitations: number;
+  };
+  heart: HeartCell[];
+  log: RecitationLogItem[];
+}
+
+export interface ClassRecitation {
+  log: RecitationLogItem[];
+  students: { id: string; name: string }[];
+}
+
+export interface AddRecitationInput {
+  surahNumber: number;
+  fromAyah: number;
+  toAyah: number;
+  rating: RecitationRating;
 }
 
 export interface UpdateInstituteInput {

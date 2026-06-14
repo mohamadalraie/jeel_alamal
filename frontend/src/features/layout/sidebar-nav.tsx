@@ -1,7 +1,7 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
-import { GraduationCap, Users, BookOpen, Building2 } from 'lucide-react';
+import { GraduationCap, Users, BookOpen, Building2, BarChart3 } from 'lucide-react';
 import { Link, usePathname } from '@/i18n/navigation';
 import { cn } from '@/lib/utils';
 import { useInstitute } from './institute-context';
@@ -14,6 +14,7 @@ interface NavItem {
 }
 
 const ITEMS: NavItem[] = [
+  { href: '/dashboard/statistics', labelKey: 'statistics', icon: BarChart3 },
   { href: '/dashboard/institutes', labelKey: 'institutes', icon: Building2, superAdminOnly: true },
   { href: '/dashboard/teachers', labelKey: 'teachers', icon: GraduationCap },
   { href: '/dashboard/students', labelKey: 'students', icon: Users },

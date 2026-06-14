@@ -1,12 +1,13 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { Plus, Users, GraduationCap, BookOpen } from 'lucide-react';
-import type { ClassItem } from '@/lib/types';
-import { listClasses, createClass, ApiError } from '@/lib/api';
+import { createClass } from '@/lib/api';
 import { Link } from '@/i18n/navigation';
 import { useInstitute } from '@/features/layout/institute-context';
+import { useClasses, useQueryClient, qk } from '@/lib/queries';
+import { notify } from '@/lib/toast';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -18,44 +19,46 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
+import { EmptyState } from '@/features/shared/empty-state';
+import { SearchInput } from '@/features/shared/search-input';
+import { CardsSkeleton } from '@/features/shared/skeletons';
 
-/** Classes (حلقات) of the selected institute — list + create; click → profile. */
 export default function ClassesPage() {
   const t = useTranslations('dashboard');
   const tc = useTranslations('common');
   const { selected, loading, user } = useInstitute();
   const canManage = user.role === 'super_admin' || user.role === 'institute_manager';
+  const qc = useQueryClient();
+  const { data: classes, isLoading } = useClasses(selected?.id);
 
-  const [classes, setClasses] = useState<ClassItem[] | null>(null);
+  const [search, setSearch] = useState('');
   const [open, setOpen] = useState(false);
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
-  const refresh = useCallback(() => {
-    if (!selected) return;
-    listClasses(selected.id).then(setClasses).catch(() => setClasses([]));
-  }, [selected]);
-  useEffect(refresh, [refresh]);
+  const filtered = useMemo(() => {
+    const list = classes ?? [];
+    const q = search.trim();
+    return q ? list.filter((c) => c.name.includes(q)) : list;
+  }, [classes, search]);
 
-  if (loading) return <p className="text-muted-foreground">{tc('loading')}</p>;
-  if (!selected)
-    return <p className="text-muted-foreground">{t('selectInstituteFirst')}</p>;
+  if (loading) return <CardsSkeleton />;
+  if (!selected) return <p className="text-muted-foreground">{t('selectInstituteFirst')}</p>;
 
   async function onCreate(e: React.FormEvent) {
     e.preventDefault();
     if (!selected) return;
     setBusy(true);
-    setError(null);
     try {
       await createClass(selected.id, { name, description: description || undefined });
       setOpen(false);
       setName('');
       setDescription('');
-      refresh();
+      qc.invalidateQueries({ queryKey: qk.classes(selected.id) });
+      notify.success(t('createClass'));
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : tc('error'));
+      notify.error(err, tc('error'));
     } finally {
       setBusy(false);
     }
@@ -63,7 +66,7 @@ export default function ClassesPage() {
 
   return (
     <div className="flex flex-col gap-5">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-2xl font-bold">{t('classes')}</h1>
         {canManage && (
           <Dialog open={open} onOpenChange={setOpen}>
@@ -86,7 +89,6 @@ export default function ClassesPage() {
                   <Label htmlFor="new-class-desc">{t('classDescription')}</Label>
                   <Input id="new-class-desc" value={description} onChange={(e) => setDescription(e.target.value)} />
                 </div>
-                {error && <p role="alert" className="text-destructive text-sm">{error}</p>}
                 <Button type="submit" disabled={busy} className="w-full">
                   {busy ? tc('loading') : tc('create')}
                 </Button>
@@ -96,13 +98,15 @@ export default function ClassesPage() {
         )}
       </div>
 
-      {classes === null ? (
-        <p className="text-muted-foreground">{tc('loading')}</p>
-      ) : classes.length === 0 ? (
-        <p className="text-muted-foreground">{tc('noData')}</p>
+      <SearchInput value={search} onChange={setSearch} />
+
+      {isLoading ? (
+        <CardsSkeleton count={6} />
+      ) : filtered.length === 0 ? (
+        <EmptyState icon={BookOpen} title={tc('noData')} />
       ) : (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {classes.map((c) => (
+          {filtered.map((c) => (
             <Link key={c.id} href={`/dashboard/classes/${c.id}`}>
               <Card className="hover:border-primary/50 h-full transition-colors">
                 <CardHeader>
@@ -111,9 +115,7 @@ export default function ClassesPage() {
                     {c.name}
                   </CardTitle>
                   {c.description && (
-                    <p className="text-muted-foreground line-clamp-2 text-sm">
-                      {c.description}
-                    </p>
+                    <p className="text-muted-foreground line-clamp-2 text-sm">{c.description}</p>
                   )}
                 </CardHeader>
                 <CardContent className="text-muted-foreground flex gap-4 text-sm">

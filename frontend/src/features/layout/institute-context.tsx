@@ -1,14 +1,8 @@
 'use client';
 
-import {
-  createContext,
-  useContext,
-  useEffect,
-  useMemo,
-  useState,
-} from 'react';
+import { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import type { Institute, User } from '@/lib/types';
-import { listInstitutes } from '@/lib/api';
+import { useInstitutes } from '@/lib/queries';
 
 interface InstituteContextValue {
   user: User;
@@ -23,9 +17,9 @@ const Ctx = createContext<InstituteContextValue | null>(null);
 const storageKey = (userId: string) => `jeel.institute.${userId}`;
 
 /**
- * Holds the authenticated user, their institutes, and the currently selected
- * one. The selection is persisted per user in localStorage (spec 001 FR-3) and
- * restored on next login. Consumed by the topbar picker and all staff pages.
+ * Holds the authenticated user, their institutes (via React Query so mutations
+ * elsewhere refresh the topbar), and the currently selected one — persisted per
+ * user in localStorage (spec 001 FR-3, refactored for spec 006).
  */
 export function InstituteProvider({
   user,
@@ -34,28 +28,21 @@ export function InstituteProvider({
   user: User;
   children: React.ReactNode;
 }) {
-  const [institutes, setInstitutes] = useState<Institute[]>([]);
+  const { data: institutes = [], isLoading } = useInstitutes();
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    let active = true;
-    listInstitutes()
-      .then((list) => {
-        if (!active) return;
-        setInstitutes(list);
-        const saved = localStorage.getItem(storageKey(user.id));
-        if (saved && list.some((i) => i.id === saved)) {
-          setSelectedId(saved);
-        } else if (list.length > 0) {
-          setSelectedId(list[0].id);
-        }
-      })
-      .finally(() => active && setLoading(false));
-    return () => {
-      active = false;
-    };
-  }, [user.id]);
+    if (institutes.length === 0) return;
+    setSelectedId((current) => {
+      if (current && institutes.some((i) => i.id === current)) return current;
+      const saved =
+        typeof window !== 'undefined'
+          ? localStorage.getItem(storageKey(user.id))
+          : null;
+      if (saved && institutes.some((i) => i.id === saved)) return saved;
+      return institutes[0].id;
+    });
+  }, [institutes, user.id]);
 
   function selectInstitute(id: string) {
     setSelectedId(id);
@@ -68,9 +55,9 @@ export function InstituteProvider({
       institutes,
       selected: institutes.find((i) => i.id === selectedId) ?? null,
       selectInstitute,
-      loading,
+      loading: isLoading,
     }),
-    [user, institutes, selectedId, loading],
+    [user, institutes, selectedId, isLoading],
   );
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;

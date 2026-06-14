@@ -9,3 +9,4 @@ export * from '../../modules/institutes/infrastructure/persistence/manager-assig
 export * from '../../modules/classes/infrastructure/persistence/class.schema';
 export * from '../../modules/auth/infrastructure/persistence/refresh-token.schema';
 export * from '../../modules/profiles/infrastructure/persistence/profile.schema';
+export * from '../../modules/recitations/infrastructure/persistence/recitation.schema';
