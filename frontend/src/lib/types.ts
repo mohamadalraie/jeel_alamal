@@ -131,6 +131,10 @@ export interface HeartCell {
   ayahCount: number;
   status: SurahStatus;
   rating: RecitationRating | null;
+  coveredAyahs: number;
+  percent: number;
+  nextAyah: number | null;
+  ranges: [number, number][];
 }
 
 export interface StudentRecitation {
@@ -154,6 +158,61 @@ export interface AddRecitationInput {
   fromAyah: number;
   toAyah: number;
   rating: RecitationRating;
+}
+
+// ── Attendance (الحضور) — spec 007 ──
+export type AttendanceStatus = 'present' | 'absent' | 'justified' | 'late';
+
+export interface AttendanceCounts {
+  present: number;
+  absent: number;
+  justified: number;
+  late: number;
+}
+
+export interface StudentAttendanceStats {
+  studentId: string;
+  studentName: string;
+  counts: AttendanceCounts;
+  total: number;
+  rate: number;
+}
+
+export interface AttendanceSessionSummary {
+  date: string;
+  counts: AttendanceCounts;
+  total: number;
+}
+
+export interface ClassAttendance {
+  totals: AttendanceCounts;
+  rate: number;
+  sessionCount: number;
+  sessions: AttendanceSessionSummary[];
+  students: StudentAttendanceStats[];
+  roster: { id: string; name: string }[];
+}
+
+export interface StudentAttendanceItem {
+  date: string;
+  status: AttendanceStatus;
+}
+
+export interface StudentAttendance {
+  counts: AttendanceCounts;
+  total: number;
+  rate: number;
+  log: StudentAttendanceItem[];
+}
+
+export interface SessionDetail {
+  date: string;
+  entries: { studentId: string; status: AttendanceStatus }[];
+}
+
+export interface TakeAttendanceInput {
+  date: string;
+  entries: { studentId: string; status: AttendanceStatus }[];
 }
 
 export interface UpdateInstituteInput {

@@ -12,6 +12,7 @@ import { ChangeClassCard } from '@/features/profiles/change-class-card';
 import { StudentNotesCard } from '@/features/profiles/student-notes-card';
 import { ProfileHeader } from '@/features/profiles/profile-header';
 import { StudentRecitationTab } from '@/features/recitation/student-recitation-tab';
+import { StudentAttendanceView } from '@/features/attendance/student-attendance-view';
 
 export default function StudentProfilePage({
   params,
@@ -22,6 +23,7 @@ export default function StudentProfilePage({
   const t = useTranslations('dashboard');
   const tc = useTranslations('common');
   const tRec = useTranslations('recitation');
+  const tAtt = useTranslations('attendance');
   const router = useRouter();
   const { selected } = useInstitute();
   const [profile, setProfile] = useState<StudentProfile | null>(null);
@@ -56,9 +58,10 @@ export default function StudentProfilePage({
       />
 
       <Tabs defaultValue="info">
-        <TabsList>
+        <TabsList className="flex-wrap">
           <TabsTrigger value="info">{t('basicInfo')}</TabsTrigger>
           <TabsTrigger value="recitation">{tRec('tab')}</TabsTrigger>
+          <TabsTrigger value="attendance">{tAtt('tab')}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="info" className="flex flex-col gap-4 pt-4">
@@ -82,6 +85,10 @@ export default function StudentProfilePage({
 
         <TabsContent value="recitation" className="pt-4">
           <StudentRecitationTab studentId={studentId} />
+        </TabsContent>
+
+        <TabsContent value="attendance" className="pt-4">
+          <StudentAttendanceView studentId={studentId} />
         </TabsContent>
       </Tabs>
     </div>

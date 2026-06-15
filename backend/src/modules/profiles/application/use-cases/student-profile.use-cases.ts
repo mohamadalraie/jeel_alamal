@@ -18,7 +18,7 @@ export interface StudentProfileResult {
   currentClass: { id: string; name: string } | null;
 }
 
-/** Load a student's profile + current class. Staff only (spec 002). */
+/** Load a student's profile + current class. Staff or the student themselves. */
 @Injectable()
 export class GetStudentProfileUseCase {
   constructor(
@@ -32,7 +32,10 @@ export class GetStudentProfileUseCase {
     instituteId: string,
     studentId: string,
   ): Promise<StudentProfileResult> {
-    await this.policy.assertStaffOfInstitute(actor, instituteId);
+    const isSelf = actor.role === UserRole.Student && actor.userId === studentId;
+    if (!isSelf) {
+      await this.policy.assertStaffOfInstitute(actor, instituteId);
+    }
     const student = await loadStudent(this.users, instituteId, studentId);
     const current = await this.classes.findCurrentClassOfStudent(studentId);
     return {

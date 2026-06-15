@@ -85,7 +85,7 @@ export class AddRecitationUseCase {
   }
 }
 
-/** Student recitation tab payload: summary + heart + log (institute staff). */
+/** Student recitation tab payload: summary + heart + log. Staff or student themselves. */
 @Injectable()
 export class GetStudentRecitationUseCase {
   constructor(
@@ -103,7 +103,10 @@ export class GetStudentRecitationUseCase {
     if (!student || student.role !== UserRole.Student || !student.instituteId) {
       throw new NotFoundError('Student not found');
     }
-    await this.policy.assertStaffOf(actor, student.instituteId);
+    const isSelf = actor.role === UserRole.Student && actor.userId === studentId;
+    if (!isSelf) {
+      await this.policy.assertStaffOf(actor, student.instituteId);
+    }
 
     const recs = await this.recitations.findByStudent(studentId); // newest-first
     const authorIds = [...new Set(recs.map((r) => r.recitedBy))];

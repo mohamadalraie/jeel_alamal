@@ -16,6 +16,7 @@ import { ProfilesModule } from './modules/profiles/profiles.module';
 import { UploadsModule } from './modules/uploads/uploads.module';
 import { StatisticsModule } from './modules/statistics/statistics.module';
 import { RecitationsModule } from './modules/recitations/recitations.module';
+import { AttendanceModule } from './modules/attendance/attendance.module';
 
 @Module({
   imports: [
@@ -46,6 +47,7 @@ import { RecitationsModule } from './modules/recitations/recitations.module';
     UploadsModule,
     StatisticsModule,
     RecitationsModule,
+    AttendanceModule,
   ],
   providers: [
     { provide: APP_GUARD, useClass: ThrottlerGuard },

@@ -1,6 +1,10 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { Actor } from '../../../../shared/application/actor';
-import { NotFoundError } from '../../../../shared/domain/domain.error';
+import { UserRole } from '../../../../shared/domain/user-role';
+import {
+  ForbiddenError,
+  NotFoundError,
+} from '../../../../shared/domain/domain.error';
 import { CLASS_REPOSITORY } from '../../domain/class.repository';
 import type { ClassRepository } from '../../domain/class.repository';
 import { assertValidSlot } from '../../domain/class-schedule';
@@ -25,7 +29,16 @@ export class GetClassProfileUseCase {
   async execute(actor: Actor, classId: string): Promise<ClassProfileResult> {
     const klass = await this.classes.findById(classId);
     if (!klass) throw new NotFoundError('Class not found');
-    await this.policy.assertStaffOf(actor, klass.instituteId);
+
+    if (actor.role === UserRole.Student) {
+      // Students may only view the class they are enrolled in.
+      const current = await this.classes.findCurrentClassOfStudent(actor.userId);
+      if (!current || current.id !== classId) {
+        throw new ForbiddenError('You are not enrolled in this class');
+      }
+    } else {
+      await this.policy.assertStaffOf(actor, klass.instituteId);
+    }
 
     const [membership, schedule] = await Promise.all([
       this.classes.getMembership(classId),

@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import { Briefcase, GraduationCap, Users, BookOpen } from 'lucide-react';
 import {
@@ -13,6 +14,7 @@ import {
   XAxis,
   YAxis,
 } from 'recharts';
+import { useRouter } from '@/i18n/navigation';
 import { useInstitute } from '@/features/layout/institute-context';
 import { useStats, useClasses } from '@/lib/queries';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -24,10 +26,17 @@ const BRAND = ['#BE9B5F', '#123B50', '#8FAEBF', '#D9C49A'];
 export default function StatisticsPage() {
   const t = useTranslations('dashboard');
   const tc = useTranslations('common');
-  const { selected, loading } = useInstitute();
+  const router = useRouter();
+  const { selected, loading, user } = useInstitute();
   const { data: stats, isLoading } = useStats(selected?.id);
   const { data: classes } = useClasses(selected?.id);
 
+  // Students don't have access to institute statistics.
+  useEffect(() => {
+    if (user.role === 'student') router.replace('/dashboard/my-profile');
+  }, [user.role, router]);
+
+  if (user.role === 'student') return null;
   if (loading) return <CardsSkeleton />;
   if (!selected) return <p className="text-muted-foreground">{t('selectInstituteFirst')}</p>;
 

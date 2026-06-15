@@ -29,18 +29,20 @@ export function ProfileHeader({
   name: string;
   username: string;
   badge: string;
-  backHref: string;
+  backHref?: string;
 }) {
   const locale = useLocale();
   const Back = locale === 'ar' ? ArrowRight : ArrowLeft;
 
   return (
     <div className="flex items-center gap-3">
-      <Button variant="ghost" size="icon" asChild aria-label="back">
-        <Link href={backHref}>
-          <Back />
-        </Link>
-      </Button>
+      {backHref && (
+        <Button variant="ghost" size="icon" asChild aria-label="back">
+          <Link href={backHref}>
+            <Back />
+          </Link>
+        </Button>
+      )}
       <div className="bg-primary/15 text-primary grid size-14 shrink-0 place-items-center rounded-2xl text-lg font-bold">
         {initials(name)}
       </div>

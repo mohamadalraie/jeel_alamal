@@ -1,7 +1,7 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
-import { GraduationCap, Users, BookOpen, Building2, BarChart3 } from 'lucide-react';
+import { GraduationCap, Users, BookOpen, Building2, BarChart3, UserCircle } from 'lucide-react';
 import { Link, usePathname } from '@/i18n/navigation';
 import { cn } from '@/lib/utils';
 import { useInstitute } from './institute-context';
@@ -11,14 +11,17 @@ interface NavItem {
   labelKey: string;
   icon: React.ComponentType<{ className?: string }>;
   superAdminOnly?: boolean;
+  studentOnly?: boolean;
+  hideForStudent?: boolean;
 }
 
 const ITEMS: NavItem[] = [
-  { href: '/dashboard/statistics', labelKey: 'statistics', icon: BarChart3 },
+  { href: '/dashboard/my-profile', labelKey: 'myProfile', icon: UserCircle, studentOnly: true },
+  { href: '/dashboard/statistics', labelKey: 'statistics', icon: BarChart3, hideForStudent: true },
   { href: '/dashboard/institutes', labelKey: 'institutes', icon: Building2, superAdminOnly: true },
-  { href: '/dashboard/teachers', labelKey: 'teachers', icon: GraduationCap },
-  { href: '/dashboard/students', labelKey: 'students', icon: Users },
-  { href: '/dashboard/classes', labelKey: 'classes', icon: BookOpen },
+  { href: '/dashboard/teachers', labelKey: 'teachers', icon: GraduationCap, hideForStudent: true },
+  { href: '/dashboard/students', labelKey: 'students', icon: Users, hideForStudent: true },
+  { href: '/dashboard/classes', labelKey: 'classes', icon: BookOpen, hideForStudent: true },
 ];
 
 /**
@@ -29,10 +32,14 @@ export function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
   const t = useTranslations('dashboard');
   const pathname = usePathname();
   const { user } = useInstitute();
+  const isStudent = user.role === 'student';
 
-  const items = ITEMS.filter(
-    (i) => !i.superAdminOnly || user.role === 'super_admin',
-  );
+  const items = ITEMS.filter((i) => {
+    if (i.superAdminOnly && user.role !== 'super_admin') return false;
+    if (i.studentOnly && !isStudent) return false;
+    if (i.hideForStudent && isStudent) return false;
+    return true;
+  });
 
   return (
     <nav className="flex flex-col gap-1 p-3">

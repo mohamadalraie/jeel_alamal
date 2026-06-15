@@ -15,6 +15,13 @@
       "when": 1781374556567,
       "tag": "0001_volatile_taskmaster",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1781535870948,
+      "tag": "0002_powerful_grandmaster",
+      "breakpoints": true
     }
   ]
 }

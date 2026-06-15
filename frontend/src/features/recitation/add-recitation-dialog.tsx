@@ -6,6 +6,7 @@ import { Plus, Check, Search } from 'lucide-react';
 import type { RecitationRating, Surah } from '@/lib/types';
 import { addRecitation, ApiError } from '@/lib/api';
 import { notify } from '@/lib/toast';
+import { useStudentRecitation, useQueryClient, qk } from '@/lib/queries';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -28,9 +29,9 @@ import { cn } from '@/lib/utils';
 const RATINGS: RecitationRating[] = ['excellent', 'very_good', 'good', 'acceptable', 'weak'];
 
 /**
- * Add-recitation dialog (spec 005): searchable surah list → from/to ayah
- * (defaults to the whole surah) → rating. Used from a student's recitation tab
- * (fixed student) and from a class tab (with a student picker).
+ * Add-recitation dialog (spec 005 + 006): searchable surah → from/to ayah that
+ * AUTO-CONTINUES from where the student last reached → rating. Shows the
+ * student's progress for the chosen surah so the teacher knows what's left.
  */
 export function AddRecitationDialog({
   surahs,
@@ -46,6 +47,7 @@ export function AddRecitationDialog({
   const t = useTranslations('recitation');
   const tc = useTranslations('common');
   const tr = useTranslations('ratings');
+  const qc = useQueryClient();
 
   const [open, setOpen] = useState(false);
   const [student, setStudent] = useState(studentId ?? '');
@@ -57,6 +59,13 @@ export function AddRecitationDialog({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // The selected student's current progress (to auto-continue + show what's left).
+  const { data: recitation } = useStudentRecitation(open ? student : undefined);
+  const cell = useMemo(
+    () => (surah ? recitation?.heart.find((c) => c.number === surah.number) : undefined),
+    [recitation, surah],
+  );
+
   const filtered = useMemo(
     () => (query ? surahs.filter((s) => s.name.includes(query.trim())) : surahs),
     [surahs, query],
@@ -64,8 +73,10 @@ export function AddRecitationDialog({
 
   function pickSurah(s: Surah) {
     setSurah(s);
-    setFrom(1);
-    setTo(s.ayahCount); // default: whole surah
+    // Continue from where the student reached; full/none → start at 1.
+    const next = recitation?.heart.find((c) => c.number === s.number)?.nextAyah;
+    setFrom(next && next <= s.ayahCount ? next : 1);
+    setTo(s.ayahCount);
     setQuery('');
   }
 
@@ -86,6 +97,7 @@ export function AddRecitationDialog({
     setError(null);
     try {
       await addRecitation(student, { surahNumber: surah.number, fromAyah: from, toAyah: to, rating });
+      qc.invalidateQueries({ queryKey: qk.studentRecitation(student) });
       setOpen(false);
       reset();
       onDone();
@@ -119,7 +131,13 @@ export function AddRecitationDialog({
           {students && (
             <div className="flex flex-col gap-1.5">
               <Label>{t('selectStudent')}</Label>
-              <Select value={student} onValueChange={setStudent}>
+              <Select
+                value={student}
+                onValueChange={(v) => {
+                  setStudent(v);
+                  setSurah(null);
+                }}
+              >
                 <SelectTrigger>
                   <SelectValue placeholder={t('selectStudent')} />
                 </SelectTrigger>
@@ -149,30 +167,52 @@ export function AddRecitationDialog({
               </div>
               {(query || !surah) && (
                 <ul className="max-h-44 overflow-y-auto border-t">
-                  {filtered.map((s) => (
-                    <li key={s.number}>
-                      <button
-                        type="button"
-                        onClick={() => pickSurah(s)}
-                        className={cn(
-                          'hover:bg-muted flex w-full items-center justify-between px-3 py-2 text-start text-sm',
-                          surah?.number === s.number && 'bg-muted',
-                        )}
-                      >
-                        <span>
-                          {s.number}. {s.name}
-                        </span>
-                        <span className="text-muted-foreground text-xs">
-                          {s.ayahCount}
-                          {surah?.number === s.number && <Check className="ms-1 inline size-3.5" />}
-                        </span>
-                      </button>
-                    </li>
-                  ))}
+                  {filtered.map((s) => {
+                    const sc = recitation?.heart.find((c) => c.number === s.number);
+                    return (
+                      <li key={s.number}>
+                        <button
+                          type="button"
+                          onClick={() => pickSurah(s)}
+                          className={cn(
+                            'hover:bg-muted flex w-full items-center justify-between px-3 py-2 text-start text-sm',
+                            surah?.number === s.number && 'bg-muted',
+                          )}
+                        >
+                          <span>
+                            {s.number}. {s.name}
+                          </span>
+                          <span className="text-muted-foreground flex items-center gap-1.5 text-xs">
+                            {sc && sc.percent > 0 && <span>٪{sc.percent}</span>}
+                            <span>{s.ayahCount}</span>
+                            {surah?.number === s.number && <Check className="size-3.5" />}
+                          </span>
+                        </button>
+                      </li>
+                    );
+                  })}
                 </ul>
               )}
             </div>
           </div>
+
+          {/* Progress for the chosen surah */}
+          {surah && cell && cell.coveredAyahs > 0 && (
+            <div className="bg-muted/40 flex flex-col gap-1 rounded-lg p-2.5 text-xs">
+              <div className="flex items-center justify-between">
+                <span className="text-muted-foreground">{t('progress')}</span>
+                <span className="font-medium">
+                  {cell.coveredAyahs}/{surah.ayahCount} · ٪{cell.percent}
+                </span>
+              </div>
+              <div className="bg-border h-1.5 overflow-hidden rounded-full">
+                <div className="bg-primary h-full" style={{ width: `${cell.percent}%` }} />
+              </div>
+              {cell.status !== 'full' && cell.nextAyah && (
+                <span className="text-muted-foreground">{t('continueFrom', { n: cell.nextAyah })}</span>
+              )}
+            </div>
+          )}
 
           {surah && (
             <div className="grid grid-cols-2 gap-3">

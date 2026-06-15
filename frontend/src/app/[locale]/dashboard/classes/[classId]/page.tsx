@@ -2,7 +2,7 @@
 
 import { use, useCallback, useEffect, useState } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
-import { ArrowRight, ArrowLeft, Star, Trash2, UserPlus } from 'lucide-react';
+import { ArrowRight, ArrowLeft, ChevronLeft, ChevronRight, Star, Trash2, UserPlus } from 'lucide-react';
 import type { ClassProfile, User } from '@/lib/types';
 import {
   getClassProfile,
@@ -37,6 +37,7 @@ import { GradeLabel } from '@/features/shared/grade-select';
 import { WeeklySchedule } from '@/features/classes/weekly-schedule';
 import { ClassAddMemberDialog } from '@/features/classes/class-add-member-dialog';
 import { ClassRecitationTab } from '@/features/recitation/class-recitation-tab';
+import { ClassAttendanceTab } from '@/features/attendance/class-attendance-tab';
 
 export default function ClassProfilePage({
   params,
@@ -47,6 +48,7 @@ export default function ClassProfilePage({
   const t = useTranslations('dashboard');
   const tc = useTranslations('common');
   const tRec = useTranslations('recitation');
+  const tAtt = useTranslations('attendance');
   const locale = useLocale();
   const router = useRouter();
   const { selected, user } = useInstitute();
@@ -115,6 +117,7 @@ export default function ClassProfilePage({
           <TabsTrigger value="students">{t('tabStudents')}</TabsTrigger>
           <TabsTrigger value="teachers">{t('tabTeachers')}</TabsTrigger>
           <TabsTrigger value="recitation">{tRec('classTab')}</TabsTrigger>
+          <TabsTrigger value="attendance">{tAtt('tab')}</TabsTrigger>
           <TabsTrigger value="details">{t('tabDetails')}</TabsTrigger>
           <TabsTrigger value="lessons">{t('tabLessons')}</TabsTrigger>
           <TabsTrigger value="activities">{t('tabActivities')}</TabsTrigger>
@@ -141,30 +144,40 @@ export default function ClassProfilePage({
                 <p className="text-muted-foreground text-sm">{tc('noData')}</p>
               ) : (
                 <ul className="flex flex-col divide-y">
-                  {students.map((s) => (
-                    <li key={s.id} className="flex items-center justify-between gap-2 py-2">
-                      <Link
-                        href={`/dashboard/students/${s.id}`}
-                        className="hover:text-primary text-sm font-medium"
+                  {students.map((s) => {
+                    const Chevron = locale === 'ar' ? ChevronLeft : ChevronRight;
+                    return (
+                      <li
+                        key={s.id}
+                        className="hover:bg-muted/50 flex cursor-pointer items-center justify-between gap-2 rounded-lg px-2 py-2 transition-colors"
+                        onClick={() => router.push(`/dashboard/students/${s.id}`)}
                       >
-                        {s.name}
-                      </Link>
-                      <span className="flex items-center gap-2">
-                        <Badge variant="outline">
-                          <GradeLabel grade={s.schoolGrade} />
-                        </Badge>
-                        <MemberRowMenu
-                          memberId={s.id}
-                          onEditHref={`/dashboard/students/${s.id}`}
-                          onRemoveFromClass={async () => {
-                            await removeClassStudent(classId, s.id);
-                            load();
-                          }}
-                          onDeleteFromInstitute={() => softDelete(s.id)}
-                        />
-                      </span>
-                    </li>
-                  ))}
+                        <span className="flex items-center gap-2 text-sm font-medium">
+                          <Chevron className="text-muted-foreground size-3.5 shrink-0" />
+                          {s.name}
+                        </span>
+                        <span
+                          className="flex items-center gap-2"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <Badge variant="outline">
+                            <GradeLabel grade={s.schoolGrade} />
+                          </Badge>
+                          {canManage && (
+                            <MemberRowMenu
+                              memberId={s.id}
+                              onEditHref={`/dashboard/students/${s.id}`}
+                              onRemoveFromClass={async () => {
+                                await removeClassStudent(classId, s.id);
+                                load();
+                              }}
+                              onDeleteFromInstitute={() => softDelete(s.id)}
+                            />
+                          )}
+                        </span>
+                      </li>
+                    );
+                  })}
                 </ul>
               )}
             </CardContent>
@@ -194,44 +207,56 @@ export default function ClassProfilePage({
                 <p className="text-muted-foreground text-sm">{tc('noData')}</p>
               ) : (
                 <ul className="flex flex-col divide-y">
-                  {teachers.map((te) => (
-                    <li key={te.id} className="flex items-center justify-between gap-2 py-2">
-                      <Link
-                        href={`/dashboard/teachers/${te.id}`}
-                        className="hover:text-primary flex items-center gap-1.5 text-sm font-medium"
+                  {teachers.map((te) => {
+                    const Chevron = locale === 'ar' ? ChevronLeft : ChevronRight;
+                    return (
+                      <li
+                        key={te.id}
+                        className="hover:bg-muted/50 flex cursor-pointer items-center justify-between gap-2 rounded-lg px-2 py-2 transition-colors"
+                        onClick={() => router.push(`/dashboard/teachers/${te.id}`)}
                       >
-                        {te.isSupervisor && <Star className="text-primary size-3.5 fill-current" />}
-                        {te.name}
-                      </Link>
-                      {canManage && (
-                        <span className="flex items-center gap-1">
-                          {te.isSupervisor ? (
-                            <Badge>{t('supervisorBadge')}</Badge>
-                          ) : (
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={async () => {
-                                await setClassSupervisor(classId, te.id);
-                                load();
-                              }}
-                            >
-                              {t('makeSupervisor')}
-                            </Button>
-                          )}
-                          <MemberRowMenu
-                            memberId={te.id}
-                            onEditHref={`/dashboard/teachers/${te.id}`}
-                            onRemoveFromClass={async () => {
-                              await removeClassTeacher(classId, te.id);
-                              load();
-                            }}
-                            onDeleteFromInstitute={() => softDelete(te.id)}
-                          />
+                        <span className="flex items-center gap-1.5 text-sm font-medium">
+                          <Chevron className="text-muted-foreground size-3.5 shrink-0" />
+                          {te.isSupervisor && <Star className="text-primary size-3.5 fill-current" />}
+                          {te.name}
                         </span>
-                      )}
-                    </li>
-                  ))}
+                        <span
+                          className="flex items-center gap-1"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          {canManage ? (
+                            <>
+                              {te.isSupervisor ? (
+                                <Badge>{t('supervisorBadge')}</Badge>
+                              ) : (
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={async () => {
+                                    await setClassSupervisor(classId, te.id);
+                                    load();
+                                  }}
+                                >
+                                  {t('makeSupervisor')}
+                                </Button>
+                              )}
+                              <MemberRowMenu
+                                memberId={te.id}
+                                onEditHref={`/dashboard/teachers/${te.id}`}
+                                onRemoveFromClass={async () => {
+                                  await removeClassTeacher(classId, te.id);
+                                  load();
+                                }}
+                                onDeleteFromInstitute={() => softDelete(te.id)}
+                              />
+                            </>
+                          ) : (
+                            te.isSupervisor && <Badge>{t('supervisorBadge')}</Badge>
+                          )}
+                        </span>
+                      </li>
+                    );
+                  })}
                 </ul>
               )}
             </CardContent>
@@ -241,6 +266,11 @@ export default function ClassProfilePage({
         {/* التسميع — class recitation log */}
         <TabsContent value="recitation" className="pt-4">
           <ClassRecitationTab classId={classId} />
+        </TabsContent>
+
+        {/* الحضور — class attendance */}
+        <TabsContent value="attendance" className="pt-4">
+          <ClassAttendanceTab classId={classId} />
         </TabsContent>
 
         {/* 3 — Details + weekly schedule */}

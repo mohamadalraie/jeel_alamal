@@ -45,6 +45,10 @@ export interface HeartCell {
   ayahCount: number;
   status: SurahStatus;
   rating: RecitationRating | null; // latest rating, when any recitation exists
+  coveredAyahs: number; // distinct ayahs memorized
+  percent: number; // 0..100 completion of the surah
+  nextAyah: number | null; // first not-yet-memorized ayah (where to continue); null if full
+  ranges: [number, number][]; // merged memorized ranges
 }
 
 export interface StudentRecitationResult {

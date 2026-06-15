@@ -17,6 +17,8 @@ export const qk = {
   studentRecitation: (id: string) => ['student-recitation', id] as const,
   classRecitation: (id: string) => ['class-recitation', id] as const,
   surahs: ['surahs'] as const,
+  classAttendance: (id: string) => ['class-attendance', id] as const,
+  studentAttendance: (id: string) => ['student-attendance', id] as const,
 };
 
 export const useInstitutes = () =>
@@ -58,7 +60,7 @@ export const useUnassignedStudents = (instituteId?: string) =>
   });
 
 export const useClassProfile = (classId: string) =>
-  useQuery({ queryKey: qk.classProfile(classId), queryFn: () => api.getClassProfile(classId) });
+  useQuery({ queryKey: qk.classProfile(classId), queryFn: () => api.getClassProfile(classId), enabled: !!classId });
 
 export const useTeacherProfile = (instituteId: string, teacherId: string) =>
   useQuery({
@@ -74,10 +76,11 @@ export const useStudentProfile = (instituteId: string, studentId: string) =>
     enabled: !!instituteId,
   });
 
-export const useStudentRecitation = (studentId: string) =>
+export const useStudentRecitation = (studentId?: string) =>
   useQuery({
-    queryKey: qk.studentRecitation(studentId),
-    queryFn: () => api.getStudentRecitation(studentId),
+    queryKey: qk.studentRecitation(studentId ?? ''),
+    queryFn: () => api.getStudentRecitation(studentId!),
+    enabled: !!studentId,
   });
 
 export const useClassRecitation = (classId: string) =>
@@ -88,5 +91,19 @@ export const useClassRecitation = (classId: string) =>
 
 export const useSurahs = () =>
   useQuery({ queryKey: qk.surahs, queryFn: api.listSurahs, staleTime: Infinity });
+
+export const useClassAttendance = (classId: string) =>
+  useQuery({
+    queryKey: qk.classAttendance(classId),
+    queryFn: () => api.getClassAttendance(classId),
+    enabled: !!classId,
+  });
+
+export const useStudentAttendance = (studentId?: string) =>
+  useQuery({
+    queryKey: qk.studentAttendance(studentId ?? ''),
+    queryFn: () => api.getStudentAttendance(studentId!),
+    enabled: !!studentId,
+  });
 
 export { useQueryClient };

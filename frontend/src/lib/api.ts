@@ -19,6 +19,10 @@ import type {
   StudentRecitation,
   ClassRecitation,
   AddRecitationInput,
+  ClassAttendance,
+  StudentAttendance,
+  SessionDetail,
+  TakeAttendanceInput,
 } from './types';
 
 /**
@@ -82,8 +86,10 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
     throw new ApiError(res.status, message);
   }
 
-  if (res.status === 204) return undefined as T;
-  return (await res.json()) as T;
+  // Handle empty bodies (204, or 201/200 with no content) without throwing on
+  // an empty res.json() — this was surfacing as a false "error" toast.
+  const text = await res.text();
+  return (text ? JSON.parse(text) : undefined) as T;
 }
 
 const post = <T>(path: string, body?: unknown) =>
@@ -172,6 +178,16 @@ export const addRecitation = (studentId: string, input: AddRecitationInput) =>
   post<void>(`/api/students/${studentId}/recitations`, input);
 export const getClassRecitation = (classId: string) =>
   request<ClassRecitation>(`/api/classes/${classId}/recitations`);
+
+// ── Attendance (الحضور) — spec 007 ──
+export const getClassAttendance = (classId: string) =>
+  request<ClassAttendance>(`/api/classes/${classId}/attendance`);
+export const getSessionAttendance = (classId: string, date: string) =>
+  request<SessionDetail | null>(`/api/classes/${classId}/attendance/${date}`);
+export const takeAttendance = (classId: string, input: TakeAttendanceInput) =>
+  post<void>(`/api/classes/${classId}/attendance`, input);
+export const getStudentAttendance = (studentId: string) =>
+  request<StudentAttendance>(`/api/students/${studentId}/attendance`);
 
 // ── Teacher profile (spec 002) ──
 const inst = (id: string) => `/api/institutes/${id}`;
