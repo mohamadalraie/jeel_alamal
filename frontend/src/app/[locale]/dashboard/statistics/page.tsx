@@ -2,7 +2,7 @@
 
 import { useEffect } from 'react';
 import { useTranslations } from 'next-intl';
-import { Briefcase, GraduationCap, Users, BookOpen } from 'lucide-react';
+import { GraduationCap, Users, BookOpen } from 'lucide-react';
 import {
   Bar,
   BarChart,
@@ -41,7 +41,6 @@ export default function StatisticsPage() {
   if (!selected) return <p className="text-muted-foreground">{t('selectInstituteFirst')}</p>;
 
   const cards = [
-    { label: t('employees'), value: stats?.employees, icon: Briefcase },
     { label: t('teachers'), value: stats?.teachers, icon: GraduationCap },
     { label: t('students'), value: stats?.students, icon: Users },
     { label: t('classes'), value: stats?.classes, icon: BookOpen },
@@ -49,7 +48,6 @@ export default function StatisticsPage() {
 
   const donut = stats
     ? [
-        { name: t('employees'), value: stats.employees },
         { name: t('teachers'), value: stats.teachers },
         { name: t('students'), value: stats.students },
         { name: t('classes'), value: stats.classes },
@@ -71,7 +69,7 @@ export default function StatisticsPage() {
       {isLoading ? (
         <CardsSkeleton />
       ) : (
-        <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+        <div className="grid grid-cols-2 gap-4 lg:grid-cols-3">
           {cards.map(({ label, value, icon: Icon }) => (
             <Card key={label}>
               <CardContent className="flex items-center gap-4 py-6">

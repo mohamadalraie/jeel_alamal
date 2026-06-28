@@ -58,7 +58,7 @@ export default function StudentProfilePage({
       />
 
       <Tabs defaultValue="info">
-        <TabsList className="flex-wrap">
+        <TabsList className="w-full max-w-full justify-start overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden [&_[data-slot=tabs-trigger]]:flex-none sm:w-fit">
           <TabsTrigger value="info">{t('basicInfo')}</TabsTrigger>
           <TabsTrigger value="recitation">{tRec('tab')}</TabsTrigger>
           <TabsTrigger value="attendance">{tAtt('tab')}</TabsTrigger>
@@ -88,7 +88,7 @@ export default function StudentProfilePage({
         </TabsContent>
 
         <TabsContent value="attendance" className="pt-4">
-          <StudentAttendanceView studentId={studentId} />
+          <StudentAttendanceView studentId={studentId} classId={currentClass?.id} />
         </TabsContent>
       </Tabs>
     </div>

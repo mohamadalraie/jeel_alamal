@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   HttpCode,
   HttpStatus,
@@ -20,6 +21,11 @@ import {
   AddTeacherUseCase,
   AddStudentUseCase,
 } from '../application/use-cases/add-member.use-cases';
+import {
+  AddManagerUseCase,
+  ListManagersUseCase,
+  RemoveManagerUseCase,
+} from '../application/use-cases/manage-managers.use-cases';
 import { ListMembersUseCase } from '../application/use-cases/list-members.use-case';
 import { CreateInstituteDto } from '../application/dto/create-institute.dto';
 import { CreateTeacherDto, CreateStudentDto } from '../application/dto/create-member.dto';
@@ -37,6 +43,9 @@ export class InstitutesController {
     private readonly addTeacher: AddTeacherUseCase,
     private readonly addStudent: AddStudentUseCase,
     private readonly listMembers: ListMembersUseCase,
+    private readonly addManager: AddManagerUseCase,
+    private readonly listManagers: ListManagersUseCase,
+    private readonly removeManager: RemoveManagerUseCase,
   ) {}
 
   @Post()
@@ -93,5 +102,34 @@ export class InstitutesController {
     @Param('instituteId', ParseUUIDPipe) instituteId: string,
   ) {
     return this.listMembers.execute(actor, instituteId, UserRole.Student);
+  }
+
+  // ── Managers (an institute may have several) ──
+  @Post(':instituteId/managers')
+  @HttpCode(HttpStatus.CREATED)
+  createManager(
+    @CurrentUser() actor: Actor,
+    @Param('instituteId', ParseUUIDPipe) instituteId: string,
+    @Body() dto: CreateTeacherDto,
+  ) {
+    return this.addManager.execute(actor, instituteId, dto);
+  }
+
+  @Get(':instituteId/managers')
+  listInstituteManagers(
+    @CurrentUser() actor: Actor,
+    @Param('instituteId', ParseUUIDPipe) instituteId: string,
+  ) {
+    return this.listManagers.execute(actor, instituteId);
+  }
+
+  @Delete(':instituteId/managers/:managerId')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async removeInstituteManager(
+    @CurrentUser() actor: Actor,
+    @Param('instituteId', ParseUUIDPipe) instituteId: string,
+    @Param('managerId', ParseUUIDPipe) managerId: string,
+  ) {
+    await this.removeManager.execute(actor, instituteId, managerId);
   }
 }

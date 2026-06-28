@@ -5,12 +5,9 @@ import { USER_REPOSITORY } from '../../users/domain/user.repository';
 import type { UserRepository } from '../../users/domain/user.repository';
 import { CLASS_REPOSITORY } from '../../classes/domain/class.repository';
 import type { ClassRepository } from '../../classes/domain/class.repository';
-import { MANAGER_ASSIGNMENTS } from '../../institutes/domain/manager-assignment.repository';
-import type { ManagerAssignmentRepository } from '../../institutes/domain/manager-assignment.repository';
 import { InstituteAccessPolicy } from '../../institutes/application/institute-access.policy';
 
 export interface InstituteStats {
-  employees: number; // managers of the institute
   teachers: number;
   students: number;
   classes: number;
@@ -26,18 +23,15 @@ export class GetInstituteStatsUseCase {
     private readonly policy: InstituteAccessPolicy,
     @Inject(USER_REPOSITORY) private readonly users: UserRepository,
     @Inject(CLASS_REPOSITORY) private readonly classes: ClassRepository,
-    @Inject(MANAGER_ASSIGNMENTS)
-    private readonly assignments: ManagerAssignmentRepository,
   ) {}
 
   async execute(actor: Actor, instituteId: string): Promise<InstituteStats> {
     await this.policy.assertStaffOf(actor, instituteId);
-    const [employees, teachers, students, classes] = await Promise.all([
-      this.assignments.countManagers(instituteId),
+    const [teachers, students, classes] = await Promise.all([
       this.users.countByInstitute(instituteId, UserRole.Teacher),
       this.users.countByInstitute(instituteId, UserRole.Student),
       this.classes.countClasses(instituteId),
     ]);
-    return { employees, teachers, students, classes };
+    return { teachers, students, classes };
   }
 }

@@ -9,6 +9,7 @@ export const qk = {
   stats: (id: string) => ['stats', id] as const,
   teachers: (id: string) => ['teachers', id] as const,
   students: (id: string) => ['students', id] as const,
+  managers: (id: string) => ['managers', id] as const,
   classes: (id: string) => ['classes', id] as const,
   unassignedStudents: (id: string) => ['unassigned-students', id] as const,
   classProfile: (id: string) => ['class-profile', id] as const,
@@ -42,6 +43,13 @@ export const useStudents = (instituteId?: string) =>
   useQuery({
     queryKey: qk.students(instituteId ?? ''),
     queryFn: () => api.listStudents(instituteId!),
+    enabled: !!instituteId,
+  });
+
+export const useManagers = (instituteId?: string) =>
+  useQuery({
+    queryKey: qk.managers(instituteId ?? ''),
+    queryFn: () => api.listManagers(instituteId!),
     enabled: !!instituteId,
   });
 

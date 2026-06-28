@@ -32,11 +32,30 @@ export class DrizzleManagerAssignmentRepository
       .onConflictDoNothing();
   }
 
+  async unassign(managerId: string, instituteId: string): Promise<void> {
+    await this.db
+      .delete(managerInstitutes)
+      .where(
+        and(
+          eq(managerInstitutes.managerId, managerId),
+          eq(managerInstitutes.instituteId, instituteId),
+        ),
+      );
+  }
+
   async countManagers(instituteId: string): Promise<number> {
     const [row] = await this.db
       .select({ n: count() })
       .from(managerInstitutes)
       .where(eq(managerInstitutes.instituteId, instituteId));
     return Number(row?.n ?? 0);
+  }
+
+  async findManagerIdsByInstitute(instituteId: string): Promise<string[]> {
+    const rows = await this.db
+      .select({ managerId: managerInstitutes.managerId })
+      .from(managerInstitutes)
+      .where(eq(managerInstitutes.instituteId, instituteId));
+    return rows.map((r) => r.managerId);
   }
 }

@@ -13,6 +13,8 @@ import type { ClassRepository } from '../../domain/class.repository';
 import { USER_REPOSITORY } from '../../../users/domain/user.repository';
 import type { UserRepository } from '../../../users/domain/user.repository';
 import { InstituteAccessPolicy } from '../../../institutes/application/institute-access.policy';
+import { MANAGER_ASSIGNMENTS } from '../../../institutes/domain/manager-assignment.repository';
+import type { ManagerAssignmentRepository } from '../../../institutes/domain/manager-assignment.repository';
 
 /**
  * Class membership management (spec 001). Shared guards:
@@ -47,13 +49,19 @@ abstract class ClassMembershipBase {
   }
 }
 
-/** Add a teacher to a class. Permission: assigned manager. */
+/**
+ * Add a teacher to a class. Permission: assigned manager. The person added may
+ * be a teacher of the institute OR one of its managers — a manager can also
+ * teach/supervise a class (spec 007 enhancement).
+ */
 @Injectable()
 export class AddClassTeacherUseCase extends ClassMembershipBase {
   constructor(
     policy: InstituteAccessPolicy,
     @Inject(CLASS_REPOSITORY) classes: ClassRepository,
     @Inject(USER_REPOSITORY) users: UserRepository,
+    @Inject(MANAGER_ASSIGNMENTS)
+    private readonly assignments: ManagerAssignmentRepository,
   ) {
     super(policy, classes, users);
   }
@@ -61,11 +69,27 @@ export class AddClassTeacherUseCase extends ClassMembershipBase {
   async execute(actor: Actor, classId: string, teacherId: string): Promise<void> {
     const klass = await this.getClassOrFail(classId);
     await this.policy.assertManagerOf(actor, klass.instituteId);
-    await this.getMemberOrFail(teacherId, UserRole.Teacher, klass.instituteId);
+    await this.assertCanTeach(teacherId, klass.instituteId);
     if (await this.classes.isTeacherOfClass(classId, teacherId)) {
       throw new ConflictError('Teacher is already in this class');
     }
     await this.classes.addTeacher(classId, teacherId);
+  }
+
+  /** The target must be a teacher of the institute or a manager assigned to it. */
+  private async assertCanTeach(userId: string, instituteId: string): Promise<void> {
+    const user = await this.users.findById(userId);
+    if (!user) throw new BusinessRuleError('Target user not found');
+    if (user.role === UserRole.Teacher && user.instituteId === instituteId) return;
+    if (
+      user.role === UserRole.InstituteManager &&
+      (await this.assignments.isAssigned(userId, instituteId))
+    ) {
+      return;
+    }
+    throw new BusinessRuleError(
+      'Only a teacher or a manager of this institute can be added to a class',
+    );
   }
 }
 

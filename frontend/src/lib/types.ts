@@ -91,7 +91,6 @@ export interface ClassProfile {
 }
 
 export interface InstituteStats {
-  employees: number;
   teachers: number;
   students: number;
   classes: number;

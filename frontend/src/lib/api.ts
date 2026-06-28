@@ -131,6 +131,12 @@ export const listStudents = (instituteId: string) =>
   request<User[]>(`/api/institutes/${instituteId}/students`);
 export const createStudent = (instituteId: string, input: StudentInput) =>
   post<User>(`/api/institutes/${instituteId}/students`, input);
+export const listManagers = (instituteId: string) =>
+  request<User[]>(`/api/institutes/${instituteId}/managers`);
+export const createManager = (instituteId: string, input: MemberInput) =>
+  post<User>(`/api/institutes/${instituteId}/managers`, input);
+export const removeManager = (instituteId: string, managerId: string) =>
+  del<void>(`/api/institutes/${instituteId}/managers/${managerId}`);
 
 // ── Classes (حلقات) ──
 export const listClasses = (instituteId: string) =>

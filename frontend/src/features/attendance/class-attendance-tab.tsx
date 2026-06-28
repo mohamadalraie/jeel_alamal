@@ -1,7 +1,8 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
+import { AlertTriangle, Download } from 'lucide-react';
 import {
   Bar,
   BarChart,
@@ -11,9 +12,17 @@ import {
   XAxis,
   YAxis,
 } from 'recharts';
-import type { AttendanceCounts } from '@/lib/types';
+import type { AttendanceCounts, StudentAttendanceStats } from '@/lib/types';
 import { useClassAttendance } from '@/lib/queries';
+import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import {
   Table,
   TableBody,
@@ -26,32 +35,40 @@ import { ListSkeleton } from '@/features/shared/skeletons';
 import { TakeAttendanceDialog } from './take-attendance-dialog';
 import { STATUS_COLOR, STATUS_ORDER } from './attendance-colors';
 
+/** Students at/under this rate (with at least one record) are flagged. */
+const LOW_RATE = 50;
+
+type Range = 'all' | '4w' | '12w';
+
 /** Class profile "الحضور" tab: stats overview + per-session chart + per-student table. */
 export function ClassAttendanceTab({ classId }: { classId: string }) {
   const t = useTranslations('attendance');
   const locale = useLocale();
   const { data, isLoading } = useClassAttendance(classId);
+  const [range, setRange] = useState<Range>('all');
 
-  // Attendance rate per session, oldest→newest, for the trend chart.
+  // Attendance rate per session within the selected window, oldest→newest.
   const rateData = useMemo(() => {
+    const cutoff = rangeCutoff(range);
     return [...(data?.sessions ?? [])]
+      .filter((s) => !cutoff || s.date.slice(0, 10) >= cutoff)
       .reverse()
       .map((s) => ({
         date: new Date(s.date).toLocaleDateString(locale, { month: 'short', day: 'numeric' }),
         rate: rateOf(s.counts),
       }));
-  }, [data?.sessions, locale]);
+  }, [data?.sessions, locale, range]);
 
   if (isLoading || !data) return <ListSkeleton />;
 
-  const refresh = () => {};
+  const exportCsv = () => downloadCsv(data.students, t, classId);
 
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between gap-2">
         <h2 className="text-lg font-semibold">{t('tab')}</h2>
         {data.roster.length > 0 ? (
-          <TakeAttendanceDialog classId={classId} roster={data.roster} onDone={refresh} />
+          <TakeAttendanceDialog classId={classId} roster={data.roster} onDone={() => {}} />
         ) : null}
       </div>
 
@@ -89,8 +106,18 @@ export function ClassAttendanceTab({ classId }: { classId: string }) {
           {/* Attendance rate over sessions */}
           {rateData.length > 0 && (
             <Card>
-              <CardHeader>
+              <CardHeader className="flex-row items-center justify-between gap-2">
                 <CardTitle>{t('rateChart')}</CardTitle>
+                <Select value={range} onValueChange={(v) => setRange(v as Range)}>
+                  <SelectTrigger className="h-8 w-auto text-xs">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">{t('rangeAll')}</SelectItem>
+                    <SelectItem value="4w">{t('range4w')}</SelectItem>
+                    <SelectItem value="12w">{t('range12w')}</SelectItem>
+                  </SelectContent>
+                </Select>
               </CardHeader>
               <CardContent className="h-56">
                 <ResponsiveContainer width="100%" height="100%">
@@ -111,8 +138,12 @@ export function ClassAttendanceTab({ classId }: { classId: string }) {
 
           {/* Per-student table */}
           <Card>
-            <CardHeader>
+            <CardHeader className="flex-row items-center justify-between gap-2">
               <CardTitle>{t('byStudent')}</CardTitle>
+              <Button variant="outline" size="sm" onClick={exportCsv}>
+                <Download data-icon="inline-start" />
+                {t('exportCsv')}
+              </Button>
             </CardHeader>
             <CardContent>
               <Table>
@@ -128,23 +159,43 @@ export function ClassAttendanceTab({ classId }: { classId: string }) {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {data.students.map((st) => (
-                    <TableRow key={st.studentId}>
-                      <TableCell className="font-medium">{st.studentName}</TableCell>
-                      {STATUS_ORDER.map((s) => (
-                        <TableCell key={s} className="text-center tabular-nums">
-                          <span style={{ color: st.counts[s] > 0 ? STATUS_COLOR[s] : undefined }}>
-                            {st.counts[s]}
+                  {data.students.map((st) => {
+                    const low = st.total > 0 && st.rate < LOW_RATE;
+                    return (
+                      <TableRow key={st.studentId}>
+                        <TableCell className="font-medium">
+                          <span className="flex items-center gap-1.5">
+                            {low && (
+                              <AlertTriangle
+                                className="size-3.5 shrink-0"
+                                style={{ color: STATUS_COLOR.absent }}
+                                aria-label={t('lowAttendance')}
+                              />
+                            )}
+                            {st.studentName}
                           </span>
                         </TableCell>
-                      ))}
-                      <TableCell className="text-center font-semibold tabular-nums">
-                        ٪{st.rate}
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                        {STATUS_ORDER.map((s) => (
+                          <TableCell key={s} className="text-center tabular-nums">
+                            <span style={{ color: st.counts[s] > 0 ? STATUS_COLOR[s] : undefined }}>
+                              {st.counts[s]}
+                            </span>
+                          </TableCell>
+                        ))}
+                        <TableCell
+                          className="text-center font-semibold tabular-nums"
+                          style={low ? { color: STATUS_COLOR.absent } : undefined}
+                        >
+                          ٪{st.rate}
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
                 </TableBody>
               </Table>
+              <p className="text-muted-foreground mt-2 text-xs">
+                {t('lowAttendanceHint', { n: LOW_RATE })}
+              </p>
             </CardContent>
           </Card>
         </>
@@ -173,4 +224,40 @@ function rateOf(c: AttendanceCounts): number {
   if (total === 0) return 0;
   const attended = ATTENDED.reduce((sum, k) => sum + c[k], 0);
   return Math.round((attended / total) * 100);
+}
+
+/** ISO cutoff for the chart window, or null for "all". */
+function rangeCutoff(range: Range): string | null {
+  if (range === 'all') return null;
+  const weeks = range === '4w' ? 4 : 12;
+  const d = new Date();
+  d.setDate(d.getDate() - weeks * 7);
+  return d.toISOString().slice(0, 10);
+}
+
+/** Build + download a per-student attendance CSV (BOM for Excel Arabic). */
+function downloadCsv(
+  students: StudentAttendanceStats[],
+  t: (k: string) => string,
+  classId: string,
+) {
+  const header = [t('student'), t('present'), t('late'), t('justified'), t('absent'), t('rate')];
+  const rows = students.map((s) => [
+    s.studentName,
+    s.counts.present,
+    s.counts.late,
+    s.counts.justified,
+    s.counts.absent,
+    `${s.rate}%`,
+  ]);
+  const csv = [header, ...rows]
+    .map((r) => r.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(','))
+    .join('\r\n');
+  const blob = new Blob([`﻿${csv}`], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `attendance-${classId.slice(0, 8)}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
 }

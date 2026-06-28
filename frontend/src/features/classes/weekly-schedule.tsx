@@ -25,62 +25,46 @@ function AnchorText({ anchor }: { anchor: Anchor }) {
   return <span dir="ltr">{anchor.value}</span>;
 }
 
-/** Editor for a single anchor: choose time-or-prayer, then the value. */
-function AnchorEditor({
+/** A sensible default anchor when the user switches the kind. */
+const anchorFor = (kind: 'time' | 'prayer'): Anchor =>
+  kind === 'prayer' ? { kind: 'prayer', value: 'dhuhr' } : { kind: 'time', value: '16:00' };
+
+/**
+ * The value control for an anchor (the kind is chosen separately so rows don't
+ * carry a redundant time/prayer toggle): a clock input or a prayer picker.
+ */
+function ValueEditor({
   anchor,
   onChange,
 }: {
   anchor: Anchor;
   onChange: (a: Anchor) => void;
 }) {
-  const t = useTranslations('dashboard');
   const tp = useTranslations('prayers');
+  if (anchor.kind === 'time') {
+    return (
+      <Input
+        type="time"
+        dir="ltr"
+        value={anchor.value}
+        onChange={(e) => onChange({ kind: 'time', value: e.target.value })}
+        className="h-8 min-w-0 flex-1 px-2 text-xs"
+      />
+    );
+  }
   return (
-    <div className="flex items-center gap-1.5">
-      <Select
-        value={anchor.kind}
-        onValueChange={(k) =>
-          onChange(
-            k === 'prayer'
-              ? { kind: 'prayer', value: 'dhuhr' }
-              : { kind: 'time', value: '16:00' },
-          )
-        }
-      >
-        <SelectTrigger className="h-8 w-28 text-xs">
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="time">{t('byTime')}</SelectItem>
-          <SelectItem value="prayer">{t('byPrayer')}</SelectItem>
-        </SelectContent>
-      </Select>
-      {anchor.kind === 'time' ? (
-        <Input
-          type="time"
-          dir="ltr"
-          value={anchor.value}
-          onChange={(e) => onChange({ kind: 'time', value: e.target.value })}
-          className="h-8 px-2 text-xs"
-        />
-      ) : (
-        <Select
-          value={anchor.value}
-          onValueChange={(v) => onChange({ kind: 'prayer', value: v })}
-        >
-          <SelectTrigger className="h-8 w-28 text-xs">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {PRAYERS.map((p) => (
-              <SelectItem key={p} value={p}>
-                {tp(p)}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      )}
-    </div>
+    <Select value={anchor.value} onValueChange={(v) => onChange({ kind: 'prayer', value: v })}>
+      <SelectTrigger className="h-8 min-w-0 flex-1 px-2 text-xs">
+        <SelectValue />
+      </SelectTrigger>
+      <SelectContent>
+        {PRAYERS.map((p) => (
+          <SelectItem key={p} value={p}>
+            {tp(p)}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
   );
 }
 
@@ -156,40 +140,47 @@ export function WeeklySchedule({
               ) : (
                 daySlots.map(({ s, i }) =>
                   canEdit ? (
-                    <div key={i} className="flex flex-col gap-1.5 rounded-md bg-muted/40 p-2">
-                      <div className="flex items-center justify-between gap-1">
-                        <span className="text-muted-foreground w-12 text-xs">{t('startsAt')}</span>
-                        <AnchorEditor anchor={s.start} onChange={(a) => patch(i, { start: a })} />
-                        <Button variant="ghost" size="icon" aria-label={tc('cancel')} onClick={() => removeSlot(i)}>
+                    <div key={i} className="bg-muted/40 flex flex-col gap-2 rounded-md p-2">
+                      {/* Start: kind + value */}
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-muted-foreground w-9 shrink-0 text-xs">{t('startsAt')}</span>
+                        <Select
+                          value={s.start.kind}
+                          onValueChange={(k) => patch(i, { start: anchorFor(k as 'time' | 'prayer') })}
+                        >
+                          <SelectTrigger className="h-8 shrink-0 px-2 text-xs">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="time">{t('anchorTime')}</SelectItem>
+                            <SelectItem value="prayer">{t('anchorPrayer')}</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <ValueEditor anchor={s.start} onChange={(a) => patch(i, { start: a })} />
+                        <Button variant="ghost" size="icon" className="size-8 shrink-0" aria-label={tc('cancel')} onClick={() => removeSlot(i)}>
                           <Trash2 className="text-destructive size-3.5" />
                         </Button>
                       </div>
-                      <div className="flex items-center gap-1">
-                        <span className="text-muted-foreground w-12 text-xs">{t('endsAt')}</span>
+                      {/* End: kind (incl. none) + value */}
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-muted-foreground w-9 shrink-0 text-xs">{t('endsAt')}</span>
                         <Select
                           value={s.end ? s.end.kind : 'none'}
                           onValueChange={(v) =>
-                            patch(i, {
-                              end:
-                                v === 'none'
-                                  ? null
-                                  : v === 'prayer'
-                                    ? { kind: 'prayer', value: 'asr' }
-                                    : { kind: 'time', value: '17:00' },
-                            })
+                            patch(i, { end: v === 'none' ? null : anchorFor(v as 'time' | 'prayer') })
                           }
                         >
-                          <SelectTrigger className="h-8 w-28 text-xs">
+                          <SelectTrigger className="h-8 shrink-0 px-2 text-xs">
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
                             <SelectItem value="none">{t('noEnd')}</SelectItem>
-                            <SelectItem value="time">{t('byTime')}</SelectItem>
-                            <SelectItem value="prayer">{t('byPrayer')}</SelectItem>
+                            <SelectItem value="time">{t('anchorTime')}</SelectItem>
+                            <SelectItem value="prayer">{t('anchorPrayer')}</SelectItem>
                           </SelectContent>
                         </Select>
                         {s.end && (
-                          <AnchorEditor anchor={s.end} onChange={(a) => patch(i, { end: a })} />
+                          <ValueEditor anchor={s.end} onChange={(a) => patch(i, { end: a })} />
                         )}
                       </div>
                     </div>

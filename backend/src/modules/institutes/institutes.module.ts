@@ -9,6 +9,11 @@ import {
   AddTeacherUseCase,
   AddStudentUseCase,
 } from './application/use-cases/add-member.use-cases';
+import {
+  AddManagerUseCase,
+  ListManagersUseCase,
+  RemoveManagerUseCase,
+} from './application/use-cases/manage-managers.use-cases';
 import { ListMembersUseCase } from './application/use-cases/list-members.use-case';
 import { InstituteAccessPolicy } from './application/institute-access.policy';
 import { INSTITUTE_REPOSITORY } from './domain/institute.repository';
@@ -26,6 +31,9 @@ import { DrizzleManagerAssignmentRepository } from './infrastructure/persistence
     AddTeacherUseCase,
     AddStudentUseCase,
     ListMembersUseCase,
+    AddManagerUseCase,
+    ListManagersUseCase,
+    RemoveManagerUseCase,
     InstituteAccessPolicy,
     { provide: INSTITUTE_REPOSITORY, useClass: DrizzleInstituteRepository },
     {

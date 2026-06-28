@@ -1,7 +1,7 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
-import { GraduationCap, Users, BookOpen, Building2, BarChart3, UserCircle } from 'lucide-react';
+import { GraduationCap, Users, BookOpen, Building2, BarChart3, UserCircle, ShieldCheck } from 'lucide-react';
 import { Link, usePathname } from '@/i18n/navigation';
 import { cn } from '@/lib/utils';
 import { useInstitute } from './institute-context';
@@ -13,12 +13,15 @@ interface NavItem {
   superAdminOnly?: boolean;
   studentOnly?: boolean;
   hideForStudent?: boolean;
+  /** Visible only to managers and the super admin. */
+  managersOnly?: boolean;
 }
 
 const ITEMS: NavItem[] = [
   { href: '/dashboard/my-profile', labelKey: 'myProfile', icon: UserCircle, studentOnly: true },
   { href: '/dashboard/statistics', labelKey: 'statistics', icon: BarChart3, hideForStudent: true },
   { href: '/dashboard/institutes', labelKey: 'institutes', icon: Building2, superAdminOnly: true },
+  { href: '/dashboard/managers', labelKey: 'managers', icon: ShieldCheck, managersOnly: true },
   { href: '/dashboard/teachers', labelKey: 'teachers', icon: GraduationCap, hideForStudent: true },
   { href: '/dashboard/students', labelKey: 'students', icon: Users, hideForStudent: true },
   { href: '/dashboard/classes', labelKey: 'classes', icon: BookOpen, hideForStudent: true },
@@ -38,6 +41,8 @@ export function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
     if (i.superAdminOnly && user.role !== 'super_admin') return false;
     if (i.studentOnly && !isStudent) return false;
     if (i.hideForStudent && isStudent) return false;
+    if (i.managersOnly && user.role !== 'super_admin' && user.role !== 'institute_manager')
+      return false;
     return true;
   });
 

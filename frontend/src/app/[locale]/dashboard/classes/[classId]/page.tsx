@@ -7,6 +7,7 @@ import type { ClassProfile, User } from '@/lib/types';
 import {
   getClassProfile,
   listTeachers,
+  listManagers,
   listUnassignedStudents,
   updateClass,
   deleteClass,
@@ -38,6 +39,7 @@ import { WeeklySchedule } from '@/features/classes/weekly-schedule';
 import { ClassAddMemberDialog } from '@/features/classes/class-add-member-dialog';
 import { ClassRecitationTab } from '@/features/recitation/class-recitation-tab';
 import { ClassAttendanceTab } from '@/features/attendance/class-attendance-tab';
+import { ClassLessonsCalendar } from '@/features/attendance/class-lessons-calendar';
 
 export default function ClassProfilePage({
   params,
@@ -57,6 +59,7 @@ export default function ClassProfilePage({
 
   const [profile, setProfile] = useState<ClassProfile | null>(null);
   const [allTeachers, setAllTeachers] = useState<User[]>([]);
+  const [allManagers, setAllManagers] = useState<User[]>([]);
   const [unassignedStudents, setUnassignedStudents] = useState<User[]>([]);
   const [notFound, setNotFound] = useState(false);
   const instituteId = selected?.id ?? '';
@@ -65,6 +68,8 @@ export default function ClassProfilePage({
     getClassProfile(classId).then(setProfile).catch(() => setNotFound(true));
     if (selected) {
       listTeachers(selected.id).then(setAllTeachers).catch(() => setAllTeachers([]));
+      // Managers can also teach/supervise a class (spec 007).
+      listManagers(selected.id).then(setAllManagers).catch(() => setAllManagers([]));
       // Students eligible to enroll: those not in ANY class (one-class rule).
       listUnassignedStudents(selected.id)
         .then(setUnassignedStudents)
@@ -81,9 +86,15 @@ export default function ClassProfilePage({
 
   const { class: klass, teachers, students, schedule } = profile;
   const teacherIds = new Set(teachers.map((x) => x.id));
-  const addableTeachers = allTeachers
-    .filter((x) => !teacherIds.has(x.id))
-    .map((x) => ({ id: x.id, name: `${x.firstName} ${x.lastName}` }));
+  // Candidates = institute teachers + managers, not already in the class.
+  const addableTeachers = [
+    ...allTeachers
+      .filter((x) => !teacherIds.has(x.id))
+      .map((x) => ({ id: x.id, name: `${x.firstName} ${x.lastName}` })),
+    ...allManagers
+      .filter((x) => !teacherIds.has(x.id))
+      .map((x) => ({ id: x.id, name: `${x.firstName} ${x.lastName} (${t('manager')})` })),
+  ];
   const enrollableStudents = unassignedStudents.map((x) => ({
     id: x.id,
     name: `${x.firstName} ${x.lastName}`,
@@ -113,7 +124,7 @@ export default function ClassProfilePage({
       </div>
 
       <Tabs defaultValue="students">
-        <TabsList className="flex-wrap">
+        <TabsList className="w-full max-w-full justify-start overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden [&_[data-slot=tabs-trigger]]:flex-none sm:w-fit">
           <TabsTrigger value="students">{t('tabStudents')}</TabsTrigger>
           <TabsTrigger value="teachers">{t('tabTeachers')}</TabsTrigger>
           <TabsTrigger value="recitation">{tRec('classTab')}</TabsTrigger>
@@ -298,9 +309,9 @@ export default function ClassProfilePage({
           </Card>
         </TabsContent>
 
-        {/* 4 — Lessons (placeholder) */}
+        {/* 4 — Lessons: attendance calendar */}
         <TabsContent value="lessons" className="pt-4">
-          <Placeholder icon={<UserPlus />} text={t('lessonsComingSoon')} />
+          <ClassLessonsCalendar classId={classId} schedule={schedule} />
         </TabsContent>
 
         {/* 5 — Activities (placeholder) */}

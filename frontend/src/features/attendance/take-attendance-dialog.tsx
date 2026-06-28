@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { ClipboardCheck } from 'lucide-react';
 import type { AttendanceStatus } from '@/lib/types';
@@ -26,22 +26,38 @@ const todayISO = () => new Date().toISOString().slice(0, 10);
  * Take-attendance screen (spec 007): pick the lesson date, then mark every
  * student present/late/justified/absent. Pre-fills from an existing session for
  * the chosen date so a teacher can correct a prior take.
+ *
+ * Uncontrolled by default (renders its own button). Pass `open`/`onOpenChange`
+ * to drive it from elsewhere (e.g. the calendar), and `initialDate` to open it
+ * on a specific day.
  */
 export function TakeAttendanceDialog({
   classId,
   roster,
   onDone,
+  open: openProp,
+  onOpenChange,
+  initialDate,
+  withTrigger = true,
 }: {
   classId: string;
   roster: { id: string; name: string }[];
   onDone: () => void;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  initialDate?: string;
+  withTrigger?: boolean;
 }) {
   const t = useTranslations('attendance');
   const tc = useTranslations('common');
   const qc = useQueryClient();
 
-  const [open, setOpen] = useState(false);
-  const [date, setDate] = useState(todayISO());
+  const [internalOpen, setInternalOpen] = useState(false);
+  const isControlled = openProp !== undefined;
+  const open = isControlled ? openProp : internalOpen;
+  const setOpen = (v: boolean) => (isControlled ? onOpenChange?.(v) : setInternalOpen(v));
+
+  const [date, setDate] = useState(initialDate ?? todayISO());
   const [statuses, setStatuses] = useState<Record<string, AttendanceStatus>>({});
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -52,6 +68,13 @@ export function TakeAttendanceDialog({
     for (const s of roster) next[s.id] = 'present';
     setStatuses(next);
   };
+
+  // On each open transition, jump to the requested date (or today).
+  const prevOpen = useRef(false);
+  useEffect(() => {
+    if (open && !prevOpen.current) setDate(initialDate ?? todayISO());
+    prevOpen.current = open;
+  }, [open, initialDate]);
 
   useEffect(() => {
     if (!open) return;
@@ -108,12 +131,14 @@ export function TakeAttendanceDialog({
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button>
-          <ClipboardCheck data-icon="inline-start" />
-          {t('takeAttendance')}
-        </Button>
-      </DialogTrigger>
+      {withTrigger && (
+        <DialogTrigger asChild>
+          <Button>
+            <ClipboardCheck data-icon="inline-start" />
+            {t('takeAttendance')}
+          </Button>
+        </DialogTrigger>
+      )}
       <DialogContent className="flex max-h-[90vh] flex-col gap-3 sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>{t('takeTitle')}</DialogTitle>

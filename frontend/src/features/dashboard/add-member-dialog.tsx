@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { Plus } from 'lucide-react';
-import { createTeacher, createStudent, ApiError } from '@/lib/api';
+import { createTeacher, createStudent, createManager, ApiError } from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -14,14 +14,14 @@ import {
 } from '@/components/ui/dialog';
 import { MemberFields, emptyMember, type MemberDraft } from './member-fields';
 
-/** Reused for both teachers and students (constitution V). */
+/** Reused for teachers, students, and managers (constitution V). */
 export function AddMemberDialog({
   instituteId,
   role,
   onCreated,
 }: {
   instituteId: string;
-  role: 'teacher' | 'student';
+  role: 'teacher' | 'student' | 'manager';
   onCreated: () => void;
 }) {
   const t = useTranslations('dashboard');
@@ -38,7 +38,8 @@ export function AddMemberDialog({
     setBusy(true);
     setError(null);
     try {
-      if (isStudent) await createStudent(instituteId, draft);
+      if (role === 'student') await createStudent(instituteId, draft);
+      else if (role === 'manager') await createManager(instituteId, draft);
       else await createTeacher(instituteId, draft);
       setOpen(false);
       setDraft(emptyMember());
@@ -50,7 +51,7 @@ export function AddMemberDialog({
     }
   }
 
-  const label = isStudent ? t('addStudent') : t('addTeacher');
+  const label = role === 'student' ? t('addStudent') : role === 'manager' ? t('addManager') : t('addTeacher');
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
