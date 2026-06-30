@@ -40,6 +40,7 @@ import { ClassAddMemberDialog } from '@/features/classes/class-add-member-dialog
 import { ClassRecitationTab } from '@/features/recitation/class-recitation-tab';
 import { ClassAttendanceTab } from '@/features/attendance/class-attendance-tab';
 import { ClassLessonsCalendar } from '@/features/attendance/class-lessons-calendar';
+import { LessonProgram } from '@/features/lessons/lesson-program';
 
 export default function ClassProfilePage({
   params,
@@ -279,9 +280,10 @@ export default function ClassProfilePage({
           <ClassRecitationTab classId={classId} />
         </TabsContent>
 
-        {/* الحضور — class attendance */}
-        <TabsContent value="attendance" className="pt-4">
+        {/* الحضور — class attendance (analytics + lesson-day calendar) */}
+        <TabsContent value="attendance" className="flex flex-col gap-4 pt-4">
           <ClassAttendanceTab classId={classId} />
+          <ClassLessonsCalendar classId={classId} schedule={schedule} />
         </TabsContent>
 
         {/* 3 — Details + weekly schedule */}
@@ -309,9 +311,9 @@ export default function ClassProfilePage({
           </Card>
         </TabsContent>
 
-        {/* 4 — Lessons: attendance calendar */}
+        {/* 4 — Lessons program (الدروس) */}
         <TabsContent value="lessons" className="pt-4">
-          <ClassLessonsCalendar classId={classId} schedule={schedule} />
+          <LessonProgram classId={classId} instituteId={instituteId} canManage={canManage} />
         </TabsContent>
 
         {/* 5 — Activities (placeholder) */}

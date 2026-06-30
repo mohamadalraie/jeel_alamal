@@ -28,6 +28,7 @@ const toDomain = (row: ClassRow): Class =>
     instituteId: row.instituteId,
     name: row.name,
     description: row.description,
+    lessonsVisibleToStudents: row.lessonsVisibleToStudents,
     createdAt: row.createdAt,
   });
 
@@ -41,6 +42,7 @@ export class DrizzleClassRepository implements ClassRepository {
       instituteId: klass.instituteId,
       name: klass.name,
       description: klass.description,
+      lessonsVisibleToStudents: klass.lessonsVisibleToStudents,
       createdAt: klass.createdAt,
     };
     await this.db

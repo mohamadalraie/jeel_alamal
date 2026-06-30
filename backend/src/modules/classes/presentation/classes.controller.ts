@@ -30,9 +30,14 @@ import {
   UpdateClassUseCase,
   DeleteClassUseCase,
   SetClassScheduleUseCase,
+  SetClassLessonsVisibilityUseCase,
 } from '../application/use-cases/class-profile.use-cases';
 import { CreateClassDto, MemberIdDto } from '../application/dto/class.dto';
-import { SetScheduleDto, UpdateClassDto } from '../application/dto/class-profile.dto';
+import {
+  SetScheduleDto,
+  UpdateClassDto,
+  SetLessonsVisibilityDto,
+} from '../application/dto/class-profile.dto';
 
 @Controller()
 export class ClassesController {
@@ -48,6 +53,7 @@ export class ClassesController {
     private readonly updateClass: UpdateClassUseCase,
     private readonly deleteClass: DeleteClassUseCase,
     private readonly setSchedule: SetClassScheduleUseCase,
+    private readonly setLessonsVisibility: SetClassLessonsVisibilityUseCase,
     private readonly listUnassignedStudents: ListUnassignedStudentsUseCase,
   ) {}
 
@@ -113,6 +119,16 @@ export class ClassesController {
     @Body() dto: SetScheduleDto,
   ) {
     await this.setSchedule.execute(actor, classId, dto.slots);
+  }
+
+  @Put('classes/:classId/lessons-visibility')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async lessonsVisibility(
+    @CurrentUser() actor: Actor,
+    @Param('classId', ParseUUIDPipe) classId: string,
+    @Body() dto: SetLessonsVisibilityDto,
+  ) {
+    await this.setLessonsVisibility.execute(actor, classId, dto.visible);
   }
 
   // ── Teachers ──

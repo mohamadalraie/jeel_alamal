@@ -21,6 +21,10 @@ export const classes = pgTable('classes', {
     .references(() => institutes.id, { onDelete: 'cascade' }),
   name: varchar('name', { length: 150 }).notNull(),
   description: text('description'),
+  // Spec 008: managers may let a class's students view its past lessons program.
+  lessonsVisibleToStudents: boolean('lessons_visible_to_students')
+    .notNull()
+    .default(false),
   createdAt: timestamp('created_at', { withTimezone: true })
     .notNull()
     .defaultNow(),

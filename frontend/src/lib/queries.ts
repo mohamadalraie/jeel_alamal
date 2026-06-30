@@ -20,6 +20,10 @@ export const qk = {
   surahs: ['surahs'] as const,
   classAttendance: (id: string) => ['class-attendance', id] as const,
   studentAttendance: (id: string) => ['student-attendance', id] as const,
+  lessonCategories: (id: string) => ['lesson-categories', id] as const,
+  classLessons: (id: string) => ['class-lessons', id] as const,
+  studentClassLessons: (id: string) => ['student-class-lessons', id] as const,
+  myLessons: ['my-lessons'] as const,
 };
 
 export const useInstitutes = () =>
@@ -99,6 +103,31 @@ export const useClassRecitation = (classId: string) =>
 
 export const useSurahs = () =>
   useQuery({ queryKey: qk.surahs, queryFn: api.listSurahs, staleTime: Infinity });
+
+// ── Lessons program (الدروس) — spec 008 ──
+export const useLessonCategories = (instituteId?: string) =>
+  useQuery({
+    queryKey: qk.lessonCategories(instituteId ?? ''),
+    queryFn: () => api.listLessonCategories(instituteId!),
+    enabled: !!instituteId,
+  });
+
+export const useClassLessons = (classId?: string) =>
+  useQuery({
+    queryKey: qk.classLessons(classId ?? ''),
+    queryFn: () => api.getClassLessons(classId!),
+    enabled: !!classId,
+  });
+
+export const useStudentClassLessons = (classId?: string, enabled = true) =>
+  useQuery({
+    queryKey: qk.studentClassLessons(classId ?? ''),
+    queryFn: () => api.getStudentClassLessons(classId!),
+    enabled: !!classId && enabled,
+  });
+
+export const useMyLessons = (enabled = true) =>
+  useQuery({ queryKey: qk.myLessons, queryFn: api.getMyLessons, enabled });
 
 export const useClassAttendance = (classId: string) =>
   useQuery({

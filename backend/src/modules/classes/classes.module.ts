@@ -19,6 +19,7 @@ import {
   UpdateClassUseCase,
   DeleteClassUseCase,
   SetClassScheduleUseCase,
+  SetClassLessonsVisibilityUseCase,
 } from './application/use-cases/class-profile.use-cases';
 import { ListUnassignedStudentsUseCase } from './application/use-cases/list-unassigned-students.use-case';
 import { CLASS_REPOSITORY } from './domain/class.repository';
@@ -39,6 +40,7 @@ import { DrizzleClassRepository } from './infrastructure/persistence/drizzle-cla
     UpdateClassUseCase,
     DeleteClassUseCase,
     SetClassScheduleUseCase,
+    SetClassLessonsVisibilityUseCase,
     ListUnassignedStudentsUseCase,
     { provide: CLASS_REPOSITORY, useClass: DrizzleClassRepository },
   ],

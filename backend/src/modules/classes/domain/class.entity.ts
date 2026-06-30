@@ -6,6 +6,7 @@ interface ClassProps {
   instituteId: string;
   name: string;
   description: string | null;
+  lessonsVisibleToStudents: boolean;
   createdAt: Date;
 }
 
@@ -39,6 +40,7 @@ export class Class extends Entity<string> {
       instituteId: input.instituteId,
       name,
       description: input.description?.trim() || null,
+      lessonsVisibleToStudents: false,
       createdAt: new Date(),
     });
   }
@@ -54,6 +56,14 @@ export class Class extends Entity<string> {
     }
     this.props.name = name;
     this.props.description = input.description?.trim() || null;
+  }
+
+  setLessonsVisibility(visible: boolean): void {
+    this.props.lessonsVisibleToStudents = visible;
+  }
+
+  get lessonsVisibleToStudents(): boolean {
+    return this.props.lessonsVisibleToStudents;
   }
 
   get instituteId(): string {

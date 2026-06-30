@@ -53,6 +53,7 @@ export class GetClassProfileUseCase {
         id: klass.id,
         name: klass.name,
         description: klass.description,
+        lessonsVisibleToStudents: klass.lessonsVisibleToStudents,
         createdAt: klass.createdAt.toISOString(),
       },
       schedule: schedule.map((s) => ({
@@ -88,6 +89,23 @@ export class UpdateClassUseCase {
     if (!klass) throw new NotFoundError('Class not found');
     await this.policy.assertManagerOf(actor, klass.instituteId);
     klass.edit({ name: dto.name, description: dto.description });
+    await this.classes.save(klass);
+  }
+}
+
+/** Toggle whether a class's students may view its lessons program (spec 008). Manager. */
+@Injectable()
+export class SetClassLessonsVisibilityUseCase {
+  constructor(
+    private readonly policy: InstituteAccessPolicy,
+    @Inject(CLASS_REPOSITORY) private readonly classes: ClassRepository,
+  ) {}
+
+  async execute(actor: Actor, classId: string, visible: boolean): Promise<void> {
+    const klass = await this.classes.findById(classId);
+    if (!klass) throw new NotFoundError('Class not found');
+    await this.policy.assertManagerOf(actor, klass.instituteId);
+    klass.setLessonsVisibility(visible);
     await this.classes.save(klass);
   }
 }

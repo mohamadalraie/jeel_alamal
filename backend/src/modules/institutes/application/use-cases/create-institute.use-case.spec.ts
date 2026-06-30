@@ -38,6 +38,12 @@ class InMemoryUserRepository implements UserRepository {
   findManyByIds() {
     return Promise.resolve([]);
   }
+  delete() {
+    return Promise.resolve();
+  }
+  countByInstitute() {
+    return Promise.resolve(0);
+  }
 }
 
 const fakeHasher: PasswordHasher = {
@@ -58,6 +64,9 @@ class FakeInstituteRepository implements InstituteRepository {
   }
   provisionWithManager(institute: Institute, manager: User) {
     this.provisioned.push({ institute, manager });
+    return Promise.resolve();
+  }
+  save() {
     return Promise.resolve();
   }
 }

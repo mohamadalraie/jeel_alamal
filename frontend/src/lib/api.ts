@@ -23,6 +23,12 @@ import type {
   StudentAttendance,
   SessionDetail,
   TakeAttendanceInput,
+  LessonCategory,
+  ClassProgram,
+  TeacherLessonEntry,
+  StudentLessonEntry,
+  CreateLessonInput,
+  UpdateLessonInput,
 } from './types';
 
 /**
@@ -40,15 +46,30 @@ export function resolveAsset(url: string | null | undefined): string | null {
 
 /** Upload an image file; returns the stored relative URL. */
 export async function uploadImage(file: File): Promise<{ url: string }> {
+  return uploadTo('/api/uploads/image', file);
+}
+
+export async function uploadPdf(file: File): Promise<{ url: string }> {
+  return uploadTo('/api/uploads/pdf', file);
+}
+
+async function uploadTo(path: string, file: File): Promise<{ url: string }> {
   const body = new FormData();
   body.append('file', file);
-  const res = await fetch(`${API_URL}/api/uploads/image`, {
+  const res = await fetch(`${API_URL}${path}`, {
     method: 'POST',
     credentials: 'include',
     body,
   });
   if (!res.ok) {
-    throw new ApiError(res.status, `Upload failed (${res.status})`);
+    let message = `Upload failed (${res.status})`;
+    try {
+      const b = (await res.json()) as { message?: string };
+      message = b.message ?? message;
+    } catch {
+      /* keep default */
+    }
+    throw new ApiError(res.status, message);
   }
   return res.json() as Promise<{ url: string }>;
 }
@@ -247,3 +268,44 @@ export const deleteNote = (instituteId: string, noteId: string) =>
 // ── Delete member (spec 002) ──
 export const deleteMember = (instituteId: string, memberId: string) =>
   del<void>(`${inst(instituteId)}/members/${memberId}`);
+
+// ── Lessons program (الدروس) — spec 008 ──
+export const listLessonCategories = (instituteId: string) =>
+  request<LessonCategory[]>(`/api/institutes/${instituteId}/lesson-categories`);
+export const createLessonCategory = (
+  instituteId: string,
+  input: { name: string; color: string },
+) => post<LessonCategory>(`/api/institutes/${instituteId}/lesson-categories`, input);
+export const updateLessonCategory = (
+  categoryId: string,
+  input: { name: string; color: string },
+) => patch<void>(`/api/lesson-categories/${categoryId}`, input);
+export const deleteLessonCategory = (categoryId: string) =>
+  del<void>(`/api/lesson-categories/${categoryId}`);
+
+export const createLesson = (instituteId: string, input: CreateLessonInput) =>
+  post<{ lessonId: string }>(`/api/institutes/${instituteId}/lessons`, input);
+export const updateLesson = (lessonId: string, input: UpdateLessonInput) =>
+  patch<void>(`/api/lessons/${lessonId}`, input);
+export const deleteLesson = (lessonId: string) => del<void>(`/api/lessons/${lessonId}`);
+export const removeLessonClass = (lessonClassId: string) =>
+  del<void>(`/api/lesson-classes/${lessonClassId}`);
+export const reorderClassDay = (
+  classId: string,
+  input: { date: string; orderedLessonClassIds: string[] },
+) => put<void>(`/api/classes/${classId}/lessons/order`, input);
+
+export const getClassLessons = (classId: string, from?: string, to?: string) => {
+  const q = new URLSearchParams();
+  if (from) q.set('from', from);
+  if (to) q.set('to', to);
+  const qs = q.toString();
+  return request<ClassProgram>(`/api/classes/${classId}/lessons${qs ? `?${qs}` : ''}`);
+};
+export const getStudentClassLessons = (classId: string) =>
+  request<{ entries: StudentLessonEntry[] }>(`/api/classes/${classId}/lessons/student`);
+export const getMyLessons = () =>
+  request<{ entries: TeacherLessonEntry[] }>(`/api/lessons/mine`);
+
+export const setClassLessonsVisibility = (classId: string, visible: boolean) =>
+  put<void>(`/api/classes/${classId}/lessons-visibility`, { visible });

@@ -11,3 +11,4 @@ export * from '../../modules/auth/infrastructure/persistence/refresh-token.schem
 export * from '../../modules/profiles/infrastructure/persistence/profile.schema';
 export * from '../../modules/recitations/infrastructure/persistence/recitation.schema';
 export * from '../../modules/attendance/infrastructure/persistence/attendance.schema';
+export * from '../../modules/lessons/infrastructure/persistence/lesson.schema';

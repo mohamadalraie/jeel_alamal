@@ -84,7 +84,13 @@ export interface ScheduleSlot {
 }
 
 export interface ClassProfile {
-  class: { id: string; name: string; description: string | null; createdAt: string };
+  class: {
+    id: string;
+    name: string;
+    description: string | null;
+    lessonsVisibleToStudents: boolean;
+    createdAt: string;
+  };
   schedule: (ScheduleSlot & { id: string })[];
   teachers: { id: string; name: string; isSupervisor: boolean }[];
   students: { id: string; name: string; schoolGrade: string | null }[];
@@ -268,4 +274,74 @@ export interface CreateInstituteInput {
   description?: string;
   logoUrl?: string;
   manager: MemberInput;
+}
+
+// ── Lessons program (الدروس) — spec 008 ──
+export type LessonKind = 'lesson' | 'recitation';
+export type LessonSourceKind = 'link' | 'image' | 'pdf';
+
+export interface LessonCategory {
+  id: string;
+  name: string;
+  color: string;
+}
+
+export interface LessonSourceInput {
+  kind: LessonSourceKind;
+  url: string;
+  description?: string;
+}
+
+export interface LessonSourceView {
+  kind: LessonSourceKind;
+  url: string;
+  description: string | null;
+}
+
+export interface LessonAssignmentInput {
+  classId: string;
+  teacherId: string;
+}
+
+export interface CreateLessonInput {
+  kind: LessonKind;
+  name?: string;
+  description?: string;
+  categoryId?: string;
+  date: string; // YYYY-MM-DD
+  sources?: LessonSourceInput[];
+  assignments: LessonAssignmentInput[];
+}
+
+export type UpdateLessonInput = Partial<CreateLessonInput>;
+
+export interface ProgramEntry {
+  lessonClassId: string;
+  lessonId: string;
+  kind: LessonKind;
+  name: string | null;
+  description: string | null;
+  category: LessonCategory | null;
+  date: string;
+  sort: number;
+  teacher: { id: string; name: string };
+  className: string;
+  sources: LessonSourceView[];
+}
+
+export interface ClassProgram {
+  lessonsVisibleToStudents: boolean;
+  entries: ProgramEntry[];
+}
+
+export interface TeacherLessonEntry extends ProgramEntry {
+  isNext: boolean;
+}
+
+export interface StudentLessonEntry {
+  lessonClassId: string;
+  kind: LessonKind;
+  name: string | null;
+  description: string | null;
+  date: string;
 }

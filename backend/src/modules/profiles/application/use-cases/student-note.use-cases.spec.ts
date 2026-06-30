@@ -63,6 +63,9 @@ class FakeNotes implements StudentNoteRepository {
 const assignments: ManagerAssignmentRepository = {
   isAssigned: () => Promise.resolve(true),
   assign: () => Promise.resolve(),
+  unassign: () => Promise.resolve(),
+  countManagers: () => Promise.resolve(1),
+  findManagerIdsByInstitute: () => Promise.resolve([]),
 };
 
 describe('Student notes (spec 002)', () => {

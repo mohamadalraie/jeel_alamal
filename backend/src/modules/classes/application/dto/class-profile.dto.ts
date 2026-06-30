@@ -1,6 +1,7 @@
 import { Type } from 'class-transformer';
 import {
   IsArray,
+  IsBoolean,
   IsIn,
   IsOptional,
   IsString,
@@ -55,8 +56,19 @@ interface SlotView {
   end: { kind: string; value: string } | null;
 }
 
+export class SetLessonsVisibilityDto {
+  @IsBoolean()
+  visible: boolean;
+}
+
 export interface ClassProfileResult {
-  class: { id: string; name: string; description: string | null; createdAt: string };
+  class: {
+    id: string;
+    name: string;
+    description: string | null;
+    lessonsVisibleToStudents: boolean;
+    createdAt: string;
+  };
   schedule: SlotView[];
   teachers: { id: string; name: string; isSupervisor: boolean }[];
   students: { id: string; name: string; schoolGrade: string | null }[];
