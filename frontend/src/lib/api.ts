@@ -27,6 +27,7 @@ import type {
   ClassProgram,
   TeacherLessonEntry,
   StudentLessonEntry,
+  InstituteLesson,
   CreateLessonInput,
   UpdateLessonInput,
 } from './types';
@@ -35,7 +36,18 @@ import type {
  * Typed API client. Auth travels via httpOnly cookies, so every request sends
  * `credentials: 'include'`. On a 401 the caller redirects to login.
  */
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001';
+/**
+ * Backend base URL. If `NEXT_PUBLIC_API_URL` is set it wins (e.g. prod). Otherwise
+ * we derive it from the page's own hostname at runtime, so the app works from any
+ * device on the network — `localhost` on the PC, the LAN IP from a phone — without
+ * hardcoding an address. Falls back to localhost during server-side rendering.
+ */
+const BACKEND_PORT = 3001;
+const API_URL =
+  process.env.NEXT_PUBLIC_API_URL ||
+  (typeof window !== 'undefined'
+    ? `${window.location.protocol}//${window.location.hostname}:${BACKEND_PORT}`
+    : 'http://localhost:3001');
 
 /** Resolve an asset URL: relative /uploads paths are served by the backend origin. */
 export function resolveAsset(url: string | null | undefined): string | null {
@@ -306,6 +318,15 @@ export const getStudentClassLessons = (classId: string) =>
   request<{ entries: StudentLessonEntry[] }>(`/api/classes/${classId}/lessons/student`);
 export const getMyLessons = () =>
   request<{ entries: TeacherLessonEntry[] }>(`/api/lessons/mine`);
+export const getInstituteLessons = (instituteId: string, from?: string, to?: string) => {
+  const qs = new URLSearchParams();
+  if (from) qs.set('from', from);
+  if (to) qs.set('to', to);
+  const q = qs.toString();
+  return request<{ entries: InstituteLesson[] }>(
+    `/api/institutes/${instituteId}/lessons${q ? `?${q}` : ''}`,
+  );
+};
 
 export const setClassLessonsVisibility = (classId: string, visible: boolean) =>
   put<void>(`/api/classes/${classId}/lessons-visibility`, { visible });

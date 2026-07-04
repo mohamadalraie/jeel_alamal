@@ -158,6 +158,7 @@
     "noAvailableTeachers": "لا يوجد أساتذة متاحون",
     "myProfile": "ملفي الشخصي",
     "myLessons": "دروسي",
+    "lessons": "الدروس",
     "myClass": "حلقتي",
     "notInClass": "غير مسجّل في حلقة"
   },
@@ -325,6 +326,11 @@
     "categoryName": "اسم التصنيف",
     "color": "اللون",
     "addCategory": "إضافة تصنيف",
+    "newCategory": "تصنيف جديد",
+    "hubTitle": "برنامج الدروس",
+    "hubSubtitle": "كل دروس المعهد عبر الحلقات",
+    "allClasses": "كل الحلقات",
+    "classesCount": "{n} حلقات",
     "deleteCategory": "حذف التصنيف",
     "deleteCategoryMsg": "سيُحذف التصنيف وتصبح دروسه بدون تصنيف. متابعة؟",
     "deleteLessonMsg": "هل تريد حذف هذا الدرس؟",
@@ -345,6 +351,9 @@
     "today": "اليوم",
     "week": "الأسبوع",
     "selectAtLeastOneClass": "اختر حلقة واحدة على الأقل",
-    "assignTeacherEach": "عيّن أستاذًا لكل حلقة مختارة"
+    "assignTeacherEach": "عيّن أستاذًا لكل حلقة مختارة",
+    "programView": "البرنامج",
+    "weekView": "أسبوعي",
+    "noClassTeachers": "لا يوجد أساتذة في هذه الحلقة"
   }
 }

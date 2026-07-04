@@ -69,9 +69,10 @@ services:
       dockerfile: Dockerfile.dev
     container_name: jeel_frontend
     restart: unless-stopped
-    environment:
-      # Browser-side URL → reaches the backend via the published host port.
-      NEXT_PUBLIC_API_URL: http://localhost:${BACKEND_PORT:-3001}
+    # NEXT_PUBLIC_API_URL is intentionally unset in dev: the browser derives the
+    # backend URL from the page's own hostname (see frontend/src/lib/api.ts), so
+    # the app works from the PC (localhost) and from a phone on the same Wi-Fi
+    # (the host's LAN IP) without hardcoding an address.
     ports:
       - '${FRONTEND_PORT:-3000}:3000'
     volumes:

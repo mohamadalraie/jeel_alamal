@@ -1,7 +1,7 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
-import { GraduationCap, Users, BookOpen, Building2, BarChart3, UserCircle, ShieldCheck, CalendarClock } from 'lucide-react';
+import { GraduationCap, Users, BookOpen, Building2, BarChart3, UserCircle, ShieldCheck, CalendarClock, CalendarRange } from 'lucide-react';
 import { Link, usePathname } from '@/i18n/navigation';
 import { cn } from '@/lib/utils';
 import { useInstitute } from './institute-context';
@@ -28,6 +28,7 @@ const ITEMS: NavItem[] = [
   { href: '/dashboard/teachers', labelKey: 'teachers', icon: GraduationCap, hideForStudent: true },
   { href: '/dashboard/students', labelKey: 'students', icon: Users, hideForStudent: true },
   { href: '/dashboard/classes', labelKey: 'classes', icon: BookOpen, hideForStudent: true },
+  { href: '/dashboard/lessons', labelKey: 'lessons', icon: CalendarRange, managersOnly: true },
 ];
 
 /**

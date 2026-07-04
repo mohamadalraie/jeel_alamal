@@ -158,6 +158,7 @@
     "noAvailableTeachers": "No available teachers",
     "myProfile": "My profile",
     "myLessons": "My lessons",
+    "lessons": "Lessons",
     "myClass": "My class",
     "notInClass": "Not enrolled in a class"
   },
@@ -325,6 +326,11 @@
     "categoryName": "Category name",
     "color": "Color",
     "addCategory": "Add category",
+    "newCategory": "New category",
+    "hubTitle": "Lessons program",
+    "hubSubtitle": "All the institute's lessons across classes",
+    "allClasses": "All classes",
+    "classesCount": "{n} classes",
     "deleteCategory": "Delete category",
     "deleteCategoryMsg": "The category is deleted and its lessons become uncategorized. Continue?",
     "deleteLessonMsg": "Delete this lesson?",
@@ -345,6 +351,9 @@
     "today": "Today",
     "week": "Week",
     "selectAtLeastOneClass": "Select at least one class",
-    "assignTeacherEach": "Assign a teacher to each selected class"
+    "assignTeacherEach": "Assign a teacher to each selected class",
+    "programView": "Program",
+    "weekView": "Weekly",
+    "noClassTeachers": "No teachers in this class"
   }
 }

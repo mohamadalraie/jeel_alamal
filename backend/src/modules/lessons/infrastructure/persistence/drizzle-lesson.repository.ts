@@ -257,6 +257,13 @@ export class DrizzleLessonRepository implements LessonRepository {
     );
   }
 
+  async getInstituteProgram(instituteId: string, from?: string, to?: string): Promise<ProgramEntryRead[]> {
+    const conds: SQL[] = [eq(lessons.instituteId, instituteId)];
+    if (from) conds.push(gte(lessons.date, from));
+    if (to) conds.push(lte(lessons.date, to));
+    return this.queryEntries(and(...conds)!);
+  }
+
   async getTeacherProgram(teacherId: string): Promise<ProgramEntryRead[]> {
     return this.queryEntries(eq(lessonClasses.teacherId, teacherId));
   }
@@ -275,6 +282,7 @@ export class DrizzleLessonRepository implements LessonRepository {
         teacherId: users.id,
         teacherFirst: users.firstName,
         teacherLast: users.lastName,
+        classId: lessonClasses.classId,
         className: classes.name,
         categoryId: lessonCategories.id,
         categoryName: lessonCategories.name,
@@ -315,6 +323,7 @@ export class DrizzleLessonRepository implements LessonRepository {
       date: r.date,
       sort: r.sort,
       teacher: { id: r.teacherId, name: `${r.teacherFirst} ${r.teacherLast}` },
+      classId: r.classId,
       className: r.className,
       sources: sourcesByLesson.get(r.lessonId) ?? [],
     }));

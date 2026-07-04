@@ -20,9 +20,17 @@ async function bootstrap() {
   // Serve uploaded files (logos, etc.) read-only at /uploads.
   app.use(UPLOADS_URL_PREFIX, express.static(UPLOADS_DIR));
 
-  // CORS — allow the frontend origin
+  // CORS — in development reflect the caller's origin so the app is reachable
+  // from any device on the LAN (PC via localhost, phone via the host's IP). In
+  // production, restrict to the configured FRONTEND_ORIGIN allowlist.
+  const isProd = config.get<string>('NODE_ENV') === 'production';
+  const allowlist = config
+    .get<string>('FRONTEND_ORIGIN', '*')
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean);
   app.enableCors({
-    origin: config.get<string>('FRONTEND_ORIGIN', '*'),
+    origin: isProd ? (allowlist.includes('*') ? true : allowlist) : true,
     credentials: true,
   });
 

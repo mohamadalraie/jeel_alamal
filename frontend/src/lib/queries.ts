@@ -1,6 +1,6 @@
 'use client';
 
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueries, useQueryClient } from '@tanstack/react-query';
 import * as api from './api';
 
 /** Centralised query keys (spec 006) so mutations can invalidate precisely. */
@@ -22,6 +22,7 @@ export const qk = {
   studentAttendance: (id: string) => ['student-attendance', id] as const,
   lessonCategories: (id: string) => ['lesson-categories', id] as const,
   classLessons: (id: string) => ['class-lessons', id] as const,
+  instituteLessons: (id: string) => ['institute-lessons', id] as const,
   studentClassLessons: (id: string) => ['student-class-lessons', id] as const,
   myLessons: ['my-lessons'] as const,
 };
@@ -119,6 +120,13 @@ export const useClassLessons = (classId?: string) =>
     enabled: !!classId,
   });
 
+export const useInstituteLessons = (instituteId?: string) =>
+  useQuery({
+    queryKey: qk.instituteLessons(instituteId ?? ''),
+    queryFn: () => api.getInstituteLessons(instituteId!),
+    enabled: !!instituteId,
+  });
+
 export const useStudentClassLessons = (classId?: string, enabled = true) =>
   useQuery({
     queryKey: qk.studentClassLessons(classId ?? ''),
@@ -143,4 +151,4 @@ export const useStudentAttendance = (studentId?: string) =>
     enabled: !!studentId,
   });
 
-export { useQueryClient };
+export { useQueryClient, useQueries };

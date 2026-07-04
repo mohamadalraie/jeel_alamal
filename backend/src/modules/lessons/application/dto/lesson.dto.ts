@@ -175,3 +175,15 @@ export interface StudentLessonView {
   description: string | null;
   date: string;
 }
+
+/** One lesson in the institute-wide hub, grouped across the classes it serves. */
+export interface InstituteLessonView {
+  lessonId: string;
+  kind: LessonKind;
+  name: string | null;
+  description: string | null;
+  category: CategoryView | null;
+  date: string;
+  sources: { kind: LessonSourceKind; url: string; description: string | null }[];
+  classes: { lessonClassId: string; classId: string; className: string; teacher: { id: string; name: string } }[];
+}

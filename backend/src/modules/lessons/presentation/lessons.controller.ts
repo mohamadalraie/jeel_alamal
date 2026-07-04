@@ -27,7 +27,10 @@ import {
   RemoveLessonClassUseCase,
   ReorderClassDayUseCase,
 } from '../application/lesson.use-cases';
-import { GetClassProgramUseCase } from '../application/class-program.use-case';
+import {
+  GetClassProgramUseCase,
+  GetInstituteProgramUseCase,
+} from '../application/class-program.use-case';
 import { GetMyLessonsUseCase } from '../application/teacher-lessons.use-case';
 import { GetStudentClassLessonsUseCase } from '../application/student-lessons.use-case';
 import {
@@ -51,6 +54,7 @@ export class LessonsController {
     private readonly removeLessonClass: RemoveLessonClassUseCase,
     private readonly reorderDay: ReorderClassDayUseCase,
     private readonly getClassProgram: GetClassProgramUseCase,
+    private readonly getInstituteProgram: GetInstituteProgramUseCase,
     private readonly getMyLessons: GetMyLessonsUseCase,
     private readonly getStudentLessons: GetStudentClassLessonsUseCase,
   ) {}
@@ -143,6 +147,16 @@ export class LessonsController {
   }
 
   // ── Reads ──
+  @Get('institutes/:instituteId/lessons')
+  instituteProgram(
+    @CurrentUser() actor: Actor,
+    @Param('instituteId', ParseUUIDPipe) instituteId: string,
+    @Query('from') from?: string,
+    @Query('to') to?: string,
+  ) {
+    return this.getInstituteProgram.execute(actor, instituteId, from, to);
+  }
+
   @Get('classes/:classId/lessons')
   classProgram(
     @CurrentUser() actor: Actor,

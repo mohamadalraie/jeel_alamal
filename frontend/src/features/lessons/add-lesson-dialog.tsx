@@ -2,15 +2,16 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { BookOpen, BookMarked, Check } from 'lucide-react';
+import { BookOpen, BookMarked, Check, Plus, X } from 'lucide-react';
 import type {
   LessonCategory,
   LessonKind,
   LessonSourceInput,
 } from '@/lib/types';
-import { createLesson, updateLesson, ApiError } from '@/lib/api';
-import { useClasses, useTeachers, useManagers } from '@/lib/queries';
+import { createLesson, updateLesson, createLessonCategory, getClassProfile, ApiError } from '@/lib/api';
+import { useClasses, useQueries, useQueryClient, qk } from '@/lib/queries';
 import { notify } from '@/lib/toast';
+import { CATEGORY_PALETTE } from './lesson-colors';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -71,16 +72,29 @@ export function AddLessonDialog({
   const isEdit = !!editing;
 
   const { data: classes = [] } = useClasses(instituteId);
-  const { data: teachers = [] } = useTeachers(instituteId);
-  const { data: managers = [] } = useManagers(instituteId);
-  const candidateTeachers = useMemo(
-    () =>
-      [
-        ...teachers.map((u) => ({ id: u.id, name: `${u.firstName} ${u.lastName}` })),
-        ...managers.map((u) => ({ id: u.id, name: `${u.firstName} ${u.lastName} (${t('teacher')})` })),
-      ],
-    [teachers, managers, t],
-  );
+
+  // Fetch every class profile in parallel — Radix Dialog unmounts on close so this
+  // component only exists while the dialog is open; no `enabled` guard needed.
+  const classProfileResults = useQueries({
+    queries: classes.map((c) => ({
+      queryKey: qk.classProfile(c.id),
+      queryFn: () => getClassProfile(c.id),
+      staleTime: 5 * 60 * 1000,
+    })),
+  });
+
+  // classId → { teachers[], isLoading }
+  const classTeachersMap = useMemo(() => {
+    const map = new Map<string, { teachers: { id: string; name: string }[]; isLoading: boolean }>();
+    classes.forEach((c, i) => {
+      const r = classProfileResults[i];
+      map.set(c.id, {
+        teachers: r?.data?.teachers.map((t) => ({ id: t.id, name: t.name })) ?? [],
+        isLoading: r?.isPending ?? true,
+      });
+    });
+    return map;
+  }, [classProfileResults, classes]);
 
   const [kind, setKind] = useState<LessonKind>('lesson');
   const [name, setName] = useState('');
@@ -91,6 +105,32 @@ export function AddLessonDialog({
   const [assign, setAssign] = useState<Record<string, string>>({}); // classId -> teacherId
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Inline "create category" (the chosen UX accelerator).
+  const qc = useQueryClient();
+  const [newCat, setNewCat] = useState(false);
+  const [catName, setCatName] = useState('');
+  const [catColor, setCatColor] = useState(CATEGORY_PALETTE[0]);
+  const [catBusy, setCatBusy] = useState(false);
+
+  async function addCategoryInline() {
+    if (!catName.trim()) return;
+    setCatBusy(true);
+    try {
+      const created = await createLessonCategory(instituteId, {
+        name: catName.trim(),
+        color: catColor,
+      });
+      await qc.invalidateQueries({ queryKey: qk.lessonCategories(instituteId) });
+      setCategoryId(created.id);
+      setCatName('');
+      setNewCat(false);
+    } catch (err) {
+      notify.error(err, tc('error'));
+    } finally {
+      setCatBusy(false);
+    }
+  }
 
   // Reset the form each time the dialog opens.
   useEffect(() => {
@@ -197,23 +237,70 @@ export function AddLessonDialog({
                 <Input id="lsn-desc" value={description} onChange={(e) => setDescription(e.target.value)} />
               </div>
               <div className="flex flex-col gap-1.5">
-                <Label>{t('category')}</Label>
-                <Select value={categoryId || 'none'} onValueChange={(v) => setCategoryId(v === 'none' ? '' : v)}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none">{t('noCategory')}</SelectItem>
-                    {categories.map((c) => (
-                      <SelectItem key={c.id} value={c.id}>
-                        <span className="flex items-center gap-2">
-                          <span className="size-3 rounded-full" style={{ backgroundColor: c.color }} />
-                          {c.name}
-                        </span>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <div className="flex items-center justify-between">
+                  <Label>{t('category')}</Label>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 gap-1 text-xs"
+                    onClick={() => setNewCat((v) => !v)}
+                  >
+                    {newCat ? <X className="size-3.5" /> : <Plus className="size-3.5" />}
+                    {t('newCategory')}
+                  </Button>
+                </div>
+                {newCat ? (
+                  <div className="border-border flex flex-col gap-2 rounded-md border p-2">
+                    <Input
+                      value={catName}
+                      onChange={(e) => setCatName(e.target.value)}
+                      placeholder={t('categoryName')}
+                      className="h-8 text-sm"
+                    />
+                    <div className="flex flex-wrap gap-1.5">
+                      {CATEGORY_PALETTE.map((c) => (
+                        <button
+                          key={c}
+                          type="button"
+                          aria-label={c}
+                          onClick={() => setCatColor(c)}
+                          className={cn(
+                            'size-6 rounded-full ring-offset-2 transition',
+                            catColor === c && 'ring-foreground ring-2',
+                          )}
+                          style={{ backgroundColor: c }}
+                        />
+                      ))}
+                    </div>
+                    <Button
+                      type="button"
+                      size="sm"
+                      className="h-8 self-start"
+                      disabled={catBusy || !catName.trim()}
+                      onClick={addCategoryInline}
+                    >
+                      {catBusy ? tc('loading') : t('addCategory')}
+                    </Button>
+                  </div>
+                ) : (
+                  <Select value={categoryId || 'none'} onValueChange={(v) => setCategoryId(v === 'none' ? '' : v)}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">{t('noCategory')}</SelectItem>
+                      {categories.map((c) => (
+                        <SelectItem key={c.id} value={c.id}>
+                          <span className="flex items-center gap-2">
+                            <span className="size-3 rounded-full" style={{ backgroundColor: c.color }} />
+                            {c.name}
+                          </span>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
               </div>
             </>
           )}
@@ -255,23 +342,35 @@ export function AddLessonDialog({
                         </span>
                         {c.name}
                       </button>
-                      {selected && (
-                        <Select
-                          value={assign[c.id] || ''}
-                          onValueChange={(v) => setAssign((p) => ({ ...p, [c.id]: v }))}
-                        >
-                          <SelectTrigger className="h-8 text-xs">
-                            <SelectValue placeholder={t('selectTeacher')} />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {candidateTeachers.map((te) => (
-                              <SelectItem key={te.id} value={te.id}>
-                                {te.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      )}
+                      {selected && (() => {
+                        const cm = classTeachersMap.get(c.id);
+                        return (
+                          <Select
+                            value={assign[c.id] || ''}
+                            onValueChange={(v) => setAssign((p) => ({ ...p, [c.id]: v }))}
+                            disabled={cm?.isLoading}
+                          >
+                            <SelectTrigger className="h-8 text-xs">
+                              <SelectValue
+                                placeholder={cm?.isLoading ? tc('loading') : t('selectTeacher')}
+                              />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {cm?.teachers.length === 0 ? (
+                                <SelectItem value="__none__" disabled>
+                                  {t('noClassTeachers')}
+                                </SelectItem>
+                              ) : (
+                                cm?.teachers.map((te) => (
+                                  <SelectItem key={te.id} value={te.id}>
+                                    {te.name}
+                                  </SelectItem>
+                                ))
+                              )}
+                            </SelectContent>
+                          </Select>
+                        );
+                      })()}
                     </div>
                   );
                 })}

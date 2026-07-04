@@ -27,6 +27,7 @@ export interface ProgramEntryRead {
   date: string; // YYYY-MM-DD
   sort: number;
   teacher: { id: string; name: string };
+  classId: string;
   className: string;
   sources: SourceRead[];
 }
@@ -57,6 +58,8 @@ export interface LessonRepository {
   // ── Reads ──
   /** All entries of a class (optionally within [from,to]). Newest-first not required. */
   getClassProgram(classId: string, from?: string, to?: string): Promise<ProgramEntryRead[]>;
+  /** Every entry of an institute (all classes) — basis for the manager hub. */
+  getInstituteProgram(instituteId: string, from?: string, to?: string): Promise<ProgramEntryRead[]>;
   /** Past entries (date <= today) of a class — basis for the student view. */
   getClassProgramUpTo(classId: string, today: string): Promise<ProgramEntryRead[]>;
   /** The lessons assigned to a teacher across their classes. */

@@ -22,11 +22,14 @@ export function LessonCard({
   entry,
   showTeacher = false,
   showClass = false,
+  index = 0,
   actions,
 }: {
   entry: ProgramEntry;
   showTeacher?: boolean;
   showClass?: boolean;
+  /** Lesson number within the day (0 = don't show). */
+  index?: number;
   actions?: React.ReactNode;
 }) {
   const t = useTranslations('lessons');
@@ -41,6 +44,9 @@ export function LessonCard({
       <div className="flex flex-1 flex-col gap-1.5 p-3">
         <div className="flex items-start justify-between gap-2">
           <span className="flex items-center gap-1.5 font-semibold">
+            {index > 0 && (
+              <span className="text-muted-foreground text-xs font-medium">{index}.</span>
+            )}
             <BookOpen className="text-primary size-4 shrink-0" />
             {isRecitation ? t('recitation') : entry.name}
           </span>

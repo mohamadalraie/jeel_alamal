@@ -19,7 +19,6 @@ import {
 import { useClassLessons, useLessonCategories, useQueryClient, qk } from '@/lib/queries';
 import { notify } from '@/lib/toast';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -30,6 +29,8 @@ import { ListSkeleton } from '@/features/shared/skeletons';
 import { ConfirmDialog } from '@/features/shared/confirm-dialog';
 import { toYMD } from '@/features/attendance/calendar-utils';
 import { LessonCard } from './lesson-card';
+
+const TODAY_YMD = toYMD(new Date());
 import { AddLessonDialog, type LessonEditing } from './add-lesson-dialog';
 import { CategoryManager } from './category-manager';
 
@@ -171,52 +172,76 @@ export function LessonProgram({
         </button>
       )}
 
-      {/* Days */}
-      <div className="flex flex-col gap-3">
-        {week.map((d) => (
-          <div key={d.ymd} className="flex flex-col gap-1.5">
-            <div className="flex items-center justify-between">
-              <span className="text-sm font-semibold">
-                {d.date.toLocaleDateString(locale, { weekday: 'long', day: 'numeric', month: 'short' })}
-              </span>
-              {canManage && (
-                <Button variant="ghost" size="sm" onClick={() => openCreate(d.ymd)}>
-                  <Plus className="size-4" />
-                </Button>
+      {/* Days — empty days are shown dimmed for managers, hidden for others */}
+      <div className="flex flex-col gap-2">
+        {week.map((d) => {
+          const isToday = d.ymd === TODAY_YMD;
+          const hasLessons = d.entries.length > 0;
+          if (!hasLessons && !canManage) return null;
+          return (
+            <div
+              key={d.ymd}
+              className={`flex flex-col gap-1.5 rounded-xl border px-3 py-2 transition ${
+                isToday
+                  ? 'border-primary/30 bg-primary/5 ring-1 ring-primary/20'
+                  : 'border-border bg-card'
+              } ${!hasLessons ? 'opacity-40' : ''}`}
+            >
+              {/* Day header */}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span
+                    className={`flex size-7 items-center justify-center rounded-full text-sm font-bold ${
+                      isToday ? 'bg-primary text-primary-foreground' : ''
+                    }`}
+                  >
+                    {d.date.getDate()}
+                  </span>
+                  <span className="text-sm font-semibold">
+                    {d.date.toLocaleDateString(locale, { weekday: 'long', month: 'short' })}
+                  </span>
+                  {isToday && (
+                    <span className="text-primary text-xs font-semibold">{t('today')}</span>
+                  )}
+                </div>
+                {canManage && (
+                  <Button variant="ghost" size="sm" onClick={() => openCreate(d.ymd)}>
+                    <Plus className="size-4" />
+                  </Button>
+                )}
+              </div>
+
+              {/* Lesson cards */}
+              {hasLessons && (
+                <div className="flex flex-col gap-1.5 pt-0.5">
+                  {d.entries.map((e, idx) => (
+                    <LessonCard
+                      key={e.lessonClassId}
+                      entry={e}
+                      index={d.entries.length > 1 ? idx + 1 : 0}
+                      showTeacher
+                      actions={
+                        canManage ? (
+                          <EntryMenu
+                            onEdit={() => openEdit(e)}
+                            onRemoveFromClass={async () => {
+                              await removeLessonClass(e.lessonClassId);
+                              refresh();
+                            }}
+                            onDelete={async () => {
+                              await deleteLesson(e.lessonId);
+                              refresh();
+                            }}
+                          />
+                        ) : undefined
+                      }
+                    />
+                  ))}
+                </div>
               )}
             </div>
-            {d.entries.length === 0 ? (
-              <Card>
-                <CardContent className="text-muted-foreground py-3 text-center text-xs">
-                  {t('noLessonsDay')}
-                </CardContent>
-              </Card>
-            ) : (
-              d.entries.map((e) => (
-                <LessonCard
-                  key={e.lessonClassId}
-                  entry={e}
-                  showTeacher
-                  actions={
-                    canManage ? (
-                      <EntryMenu
-                        onEdit={() => openEdit(e)}
-                        onRemoveFromClass={async () => {
-                          await removeLessonClass(e.lessonClassId);
-                          refresh();
-                        }}
-                        onDelete={async () => {
-                          await deleteLesson(e.lessonId);
-                          refresh();
-                        }}
-                      />
-                    ) : undefined
-                  }
-                />
-              ))
-            )}
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       {canManage && (

@@ -16,7 +16,10 @@ import {
   RemoveLessonClassUseCase,
   ReorderClassDayUseCase,
 } from './application/lesson.use-cases';
-import { GetClassProgramUseCase } from './application/class-program.use-case';
+import {
+  GetClassProgramUseCase,
+  GetInstituteProgramUseCase,
+} from './application/class-program.use-case';
 import { GetMyLessonsUseCase } from './application/teacher-lessons.use-case';
 import { GetStudentClassLessonsUseCase } from './application/student-lessons.use-case';
 import { LESSON_REPOSITORY } from './domain/lesson.repository';
@@ -41,6 +44,7 @@ import { DrizzleLessonRepository } from './infrastructure/persistence/drizzle-le
     RemoveLessonClassUseCase,
     ReorderClassDayUseCase,
     GetClassProgramUseCase,
+    GetInstituteProgramUseCase,
     GetMyLessonsUseCase,
     GetStudentClassLessonsUseCase,
     { provide: LESSON_REPOSITORY, useClass: DrizzleLessonRepository },

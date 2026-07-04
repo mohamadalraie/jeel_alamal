@@ -61,6 +61,12 @@ abstract class LessonBase {
         throw new BusinessRuleError('A selected class is not in this institute');
       }
       await this.assertCanTeach(a.teacherId, instituteId);
+      const isClassMember = await this.classes.isTeacherOfClass(a.classId, a.teacherId);
+      if (!isClassMember) {
+        throw new BusinessRuleError(
+          'The assigned teacher is not a member of the selected class',
+        );
+      }
       bindings.push(
         LessonClassBinding.create({ lessonId, classId: a.classId, teacherId: a.teacherId }),
       );

@@ -345,3 +345,20 @@ export interface StudentLessonEntry {
   description: string | null;
   date: string;
 }
+
+/** One lesson in the institute-wide manager hub, grouped across its classes. */
+export interface InstituteLesson {
+  lessonId: string;
+  kind: LessonKind;
+  name: string | null;
+  description: string | null;
+  category: LessonCategory | null;
+  date: string;
+  sources: LessonSourceView[];
+  classes: {
+    lessonClassId: string;
+    classId: string;
+    className: string;
+    teacher: { id: string; name: string };
+  }[];
+}
