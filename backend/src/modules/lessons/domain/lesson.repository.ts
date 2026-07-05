@@ -3,6 +3,7 @@ import { Lesson } from './lesson.entity';
 import { LessonClassBinding } from './lesson-class-binding.entity';
 import { LessonKind } from './lesson-kind';
 import { LessonSourceKind } from './lesson-source-kind';
+import type { StoredLessonStatus } from './lesson-binding-status';
 
 export const LESSON_REPOSITORY = Symbol('LESSON_REPOSITORY');
 
@@ -26,10 +27,33 @@ export interface ProgramEntryRead {
   category: { id: string; name: string; color: string } | null;
   date: string; // YYYY-MM-DD
   sort: number;
+  expectedDurationMinutes: number | null;
+  status: StoredLessonStatus;
+  actualStartTime: Date | null;
+  actualEndTime: Date | null;
   teacher: { id: string; name: string };
   classId: string;
   className: string;
   sources: SourceRead[];
+}
+
+/** One binding's data for the teacher timer page (spec 009). */
+export interface LessonTimerRead {
+  lessonClassId: string;
+  lessonId: string;
+  instituteId: string;
+  teacherId: string;
+  kind: LessonKind;
+  name: string | null;
+  date: string;
+  className: string;
+  expectedDurationMinutes: number | null;
+  status: StoredLessonStatus;
+  actualStartTime: Date | null;
+  /** 1-based position within the class's lessons that day. */
+  ordinal: number;
+  /** Total lessons for that class on that date. */
+  ofTotal: number;
 }
 
 export interface LessonRepository {
@@ -52,6 +76,19 @@ export interface LessonRepository {
   /** Remove the lesson from ONE class (one binding). */
   removeBinding(lessonClassId: string): Promise<void>;
   findBindingById(lessonClassId: string): Promise<LessonClassBinding | null>;
+  /** True if any binding of this lesson has advanced past `pending`. */
+  hasAnyStartedBinding(lessonId: string): Promise<boolean>;
+  /**
+   * Persist a binding's lifecycle fields (status + timestamps) only if its
+   * stored status still matches `expectedPriorStatus`. Returns true if a row
+   * was updated — false means a concurrent transition already happened (409).
+   */
+  updateBindingLifecycle(
+    binding: LessonClassBinding,
+    expectedPriorStatus: StoredLessonStatus,
+  ): Promise<boolean>;
+  /** One binding's data for the teacher timer page. */
+  getBindingTimerView(lessonClassId: string): Promise<LessonTimerRead | null>;
   /** Set the order of a class's entries on a given date. */
   reorderClassDay(classId: string, date: string, orderedLessonClassIds: string[]): Promise<void>;
 

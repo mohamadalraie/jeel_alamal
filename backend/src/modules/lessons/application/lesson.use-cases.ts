@@ -129,6 +129,7 @@ export class CreateLessonUseCase extends LessonBase {
       description: isLesson ? dto.description ?? null : null,
       categoryId: isLesson ? dto.categoryId ?? null : null,
       date: dto.date,
+      expectedDurationMinutes: dto.expectedDurationMinutes ?? null,
       sources: isLesson ? toSources(dto.sources) : [],
       createdBy: actor.userId,
     });
@@ -160,11 +161,23 @@ export class UpdateLessonUseCase extends LessonBase {
       await this.assertCategoryInInstitute(dto.categoryId, lesson.instituteId);
     }
 
+    // Expected duration is locked once any binding has advanced past pending —
+    // the evaluation basis must stay deterministic mid-delivery (FR-002).
+    if (dto.expectedDurationMinutes !== undefined) {
+      const locked = await this.lessons.hasAnyStartedBinding(lesson.id);
+      if (locked) {
+        throw new BusinessRuleError(
+          'Cannot change expected duration after the lesson has started',
+        );
+      }
+    }
+
     lesson.edit({
       name: dto.name,
       description: dto.description,
       categoryId: dto.categoryId,
       date: dto.date,
+      expectedDurationMinutes: dto.expectedDurationMinutes,
       sources: lesson.kind === LessonKind.Lesson && dto.sources ? toSources(dto.sources) : undefined,
     });
     await this.lessons.updateLesson(lesson);

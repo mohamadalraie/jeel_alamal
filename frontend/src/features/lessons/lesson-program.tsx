@@ -28,7 +28,9 @@ import {
 import { ListSkeleton } from '@/features/shared/skeletons';
 import { ConfirmDialog } from '@/features/shared/confirm-dialog';
 import { toYMD } from '@/features/attendance/calendar-utils';
+import { useInstitute } from '@/features/layout/institute-context';
 import { LessonCard } from './lesson-card';
+import { LessonTimerActions } from './lesson-timer-actions';
 
 const TODAY_YMD = toYMD(new Date());
 import { AddLessonDialog, type LessonEditing } from './add-lesson-dialog';
@@ -58,6 +60,7 @@ export function LessonProgram({
   const tc = useTranslations('common');
   const locale = useLocale();
   const qc = useQueryClient();
+  const { user } = useInstitute();
   const { data, isLoading } = useClassLessons(classId);
   const { data: categories = [] } = useLessonCategories(instituteId);
 
@@ -105,6 +108,7 @@ export function LessonProgram({
       description: e.description,
       categoryId: e.category?.id ?? null,
       date: e.date,
+      expectedDurationMinutes: e.expectedDurationMinutes,
       sources: e.sources.map((s) => ({
         kind: s.kind,
         url: s.url,
@@ -221,19 +225,22 @@ export function LessonProgram({
                       index={d.entries.length > 1 ? idx + 1 : 0}
                       showTeacher
                       actions={
-                        canManage ? (
-                          <EntryMenu
-                            onEdit={() => openEdit(e)}
-                            onRemoveFromClass={async () => {
-                              await removeLessonClass(e.lessonClassId);
-                              refresh();
-                            }}
-                            onDelete={async () => {
-                              await deleteLesson(e.lessonId);
-                              refresh();
-                            }}
-                          />
-                        ) : undefined
+                        <div className="flex items-center gap-1.5">
+                          {user.id === e.teacher.id && <LessonTimerActions entry={e} />}
+                          {canManage && (
+                            <EntryMenu
+                              onEdit={() => openEdit(e)}
+                              onRemoveFromClass={async () => {
+                                await removeLessonClass(e.lessonClassId);
+                                refresh();
+                              }}
+                              onDelete={async () => {
+                                await deleteLesson(e.lessonId);
+                                refresh();
+                              }}
+                            />
+                          )}
+                        </div>
                       }
                     />
                   ))}

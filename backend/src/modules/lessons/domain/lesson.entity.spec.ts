@@ -60,4 +60,38 @@ describe('Lesson entity (spec 008)', () => {
     expect(lesson.name).toBe('B');
     expect(lesson.description).toBe('desc');
   });
+
+  // ── Expected duration (spec 009) ──
+  it('accepts no expected duration (null) and a positive integer', () => {
+    const a = Lesson.create({ ...base, kind: LessonKind.Lesson, name: 'A' });
+    expect(a.expectedDurationMinutes).toBeNull();
+    const b = Lesson.create({
+      ...base,
+      kind: LessonKind.Lesson,
+      name: 'B',
+      expectedDurationMinutes: 45,
+    });
+    expect(b.expectedDurationMinutes).toBe(45);
+  });
+
+  it('rejects a zero, negative, or fractional expected duration', () => {
+    for (const bad of [0, -5, 2.5]) {
+      expect(() =>
+        Lesson.create({
+          ...base,
+          kind: LessonKind.Lesson,
+          name: 'X',
+          expectedDurationMinutes: bad,
+        }),
+      ).toThrow(BusinessRuleError);
+    }
+  });
+
+  it('edit() can set and clear the expected duration', () => {
+    const lesson = Lesson.create({ ...base, kind: LessonKind.Lesson, name: 'A' });
+    lesson.edit({ expectedDurationMinutes: 30 });
+    expect(lesson.expectedDurationMinutes).toBe(30);
+    lesson.edit({ expectedDurationMinutes: null });
+    expect(lesson.expectedDurationMinutes).toBeNull();
+  });
 });

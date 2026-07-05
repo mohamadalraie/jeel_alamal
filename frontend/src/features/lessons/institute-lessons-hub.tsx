@@ -8,12 +8,15 @@ import {
   CalendarDays,
   ChevronLeft,
   ChevronRight,
+  Clock,
   LayoutList,
   MoreVertical,
   Pencil,
   Plus,
+  Settings,
   Trash2,
 } from 'lucide-react';
+import { Link } from '@/i18n/navigation';
 import type { InstituteLesson } from '@/lib/types';
 import { deleteLesson } from '@/lib/api';
 import { useInstituteLessons, useLessonCategories, useQueryClient, qk } from '@/lib/queries';
@@ -30,6 +33,7 @@ import { ConfirmDialog } from '@/features/shared/confirm-dialog';
 import { toYMD } from '@/features/attendance/calendar-utils';
 import { AddLessonDialog, type LessonEditing } from './add-lesson-dialog';
 import { CategoryManager } from './category-manager';
+import { LessonStatusBadge } from './lesson-status-badge';
 import { tint } from './lesson-colors';
 
 const TODAY_YMD = toYMD(new Date());
@@ -109,6 +113,7 @@ export function InstituteLessonsHub({ instituteId }: { instituteId: string }) {
       description: e.description,
       categoryId: e.category?.id ?? null,
       date: e.date,
+      expectedDurationMinutes: e.expectedDurationMinutes,
       sources: e.sources.map((s) => ({
         kind: s.kind,
         url: s.url,
@@ -133,6 +138,12 @@ export function InstituteLessonsHub({ instituteId }: { instituteId: string }) {
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <CategoryManager instituteId={instituteId} />
+          <Button variant="outline" size="sm" asChild>
+            <Link href="/dashboard/lessons/settings">
+              <Settings data-icon="inline-start" className="size-4" />
+              {t('lessonSettings')}
+            </Link>
+          </Button>
           <Button size="sm" onClick={() => openCreate()}>
             <Plus data-icon="inline-start" />
             {t('addLesson')}
@@ -485,14 +496,24 @@ function HubLessonRow({
               {entry.category.name}
             </span>
           )}
+          {entry.expectedDurationMinutes != null && (
+            <span className="text-muted-foreground inline-flex items-center gap-0.5 text-[10px]">
+              <Clock className="size-2.5" />
+              {t('durationMinutes', { n: entry.expectedDurationMinutes })}
+            </span>
+          )}
         </div>
 
-        {/* Classes + teachers */}
-        <div className="flex flex-wrap gap-x-3 gap-y-0.5">
+        {/* Classes + teachers + per-class status */}
+        <div className="flex flex-wrap gap-x-3 gap-y-1">
           {entry.classes.map((c) => (
-            <span key={c.lessonClassId} className="text-muted-foreground text-[11px]">
+            <span
+              key={c.lessonClassId}
+              className="text-muted-foreground inline-flex items-center gap-1 text-[11px]"
+            >
               {c.className}
               <span className="opacity-60"> · {c.teacher.name}</span>
+              <LessonStatusBadge status={c.status} className="h-4 px-1.5 text-[10px]" />
             </span>
           ))}
         </div>

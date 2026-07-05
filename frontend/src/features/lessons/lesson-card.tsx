@@ -1,11 +1,12 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
-import { BookOpen, ExternalLink, FileText, ImageIcon, Link2 } from 'lucide-react';
+import { BookOpen, Clock, ExternalLink, FileText, ImageIcon, Link2 } from 'lucide-react';
 import type { ProgramEntry, LessonSourceView } from '@/lib/types';
 import { resolveAsset } from '@/lib/api';
 import { Badge } from '@/components/ui/badge';
 import { tint } from './lesson-colors';
+import { LessonStatusBadge } from './lesson-status-badge';
 
 const SOURCE_ICON = {
   link: Link2,
@@ -22,12 +23,15 @@ export function LessonCard({
   entry,
   showTeacher = false,
   showClass = false,
+  showStatus = true,
   index = 0,
   actions,
 }: {
   entry: ProgramEntry;
   showTeacher?: boolean;
   showClass?: boolean;
+  /** Show the lifecycle status badge (spec 009). */
+  showStatus?: boolean;
   /** Lesson number within the day (0 = don't show). */
   index?: number;
   actions?: React.ReactNode;
@@ -35,6 +39,18 @@ export function LessonCard({
   const t = useTranslations('lessons');
   const isRecitation = entry.kind === 'recitation';
   const color = entry.category?.color;
+  // Actual delivered minutes (shown once a lesson has been ended).
+  const actualMinutes =
+    entry.actualStartTime && entry.actualEndTime
+      ? Math.max(
+          1,
+          Math.ceil(
+            (new Date(entry.actualEndTime).getTime() -
+              new Date(entry.actualStartTime).getTime()) /
+              60_000,
+          ),
+        )
+      : null;
 
   return (
     <div
@@ -54,6 +70,7 @@ export function LessonCard({
         </div>
 
         <div className="flex flex-wrap items-center gap-1.5">
+          {showStatus && <LessonStatusBadge status={entry.status} />}
           {entry.category && (
             <span
               className="inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[11px] font-medium"
@@ -61,6 +78,17 @@ export function LessonCard({
             >
               <span className="size-2 rounded-full" style={{ backgroundColor: entry.category.color }} />
               {entry.category.name}
+            </span>
+          )}
+          {entry.expectedDurationMinutes != null && (
+            <span className="text-muted-foreground inline-flex items-center gap-1 text-[11px]">
+              <Clock className="size-3" />
+              {actualMinutes != null
+                ? t('durationActualExpected', {
+                    actual: actualMinutes,
+                    expected: entry.expectedDurationMinutes,
+                  })
+                : t('durationMinutes', { n: entry.expectedDurationMinutes })}
             </span>
           )}
           {showClass && <Badge variant="outline">{entry.className}</Badge>}

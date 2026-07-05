@@ -30,6 +30,9 @@ import type {
   InstituteLesson,
   CreateLessonInput,
   UpdateLessonInput,
+  LessonSettings,
+  LessonTimer,
+  EndLessonResult,
 } from './types';
 
 /**
@@ -330,3 +333,15 @@ export const getInstituteLessons = (instituteId: string, from?: string, to?: str
 
 export const setClassLessonsVisibility = (classId: string, visible: boolean) =>
   put<void>(`/api/classes/${classId}/lessons-visibility`, { visible });
+
+// ── Lesson lifecycle (spec 009) ──
+export const startLesson = (lessonClassId: string) =>
+  post<void>(`/api/lesson-classes/${lessonClassId}/start`);
+export const endLesson = (lessonClassId: string) =>
+  post<EndLessonResult>(`/api/lesson-classes/${lessonClassId}/end`);
+export const getLessonTimer = (lessonClassId: string) =>
+  request<LessonTimer>(`/api/lesson-classes/${lessonClassId}/timer`);
+export const getLessonSettings = (instituteId: string) =>
+  request<LessonSettings>(`/api/institutes/${instituteId}/lesson-settings`);
+export const updateLessonSettings = (instituteId: string, input: LessonSettings) =>
+  put<LessonSettings>(`/api/institutes/${instituteId}/lesson-settings`, input);

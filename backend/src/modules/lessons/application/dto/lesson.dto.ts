@@ -2,18 +2,23 @@ import { Type } from 'class-transformer';
 import {
   ArrayMinSize,
   IsArray,
+  IsBoolean,
   IsEnum,
   IsHexColor,
+  IsInt,
   IsOptional,
   IsString,
   IsUUID,
   Matches,
+  Max,
   MaxLength,
+  Min,
   MinLength,
   ValidateNested,
 } from 'class-validator';
 import { LessonKind } from '../../domain/lesson-kind';
 import { LessonSourceKind } from '../../domain/lesson-source-kind';
+import type { LessonBindingStatus } from '../../domain/lesson-binding-status';
 
 // ── Categories ──
 export class CreateCategoryDto {
@@ -81,6 +86,11 @@ export class CreateLessonDto {
   date: string;
 
   @IsOptional()
+  @IsInt()
+  @Min(1)
+  expectedDurationMinutes?: number;
+
+  @IsOptional()
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => LessonSourceDto)
@@ -111,6 +121,12 @@ export class UpdateLessonDto {
   @Matches(/^\d{4}-\d{2}-\d{2}$/, { message: 'date must be YYYY-MM-DD' })
   date?: string;
 
+  // null clears the duration; a number sets it. Locked once any binding started.
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  expectedDurationMinutes?: number | null;
+
   @IsOptional()
   @IsArray()
   @ValidateNested({ each: true })
@@ -138,6 +154,17 @@ export class SetLessonsVisibilityDto {
   visible: boolean;
 }
 
+// ── Lesson settings (spec 009) ──
+export class UpdateLessonSettingsDto {
+  @IsInt()
+  @Min(0)
+  @Max(120)
+  durationThresholdMinutes: number;
+
+  @IsBoolean()
+  durationStatusEnabled: boolean;
+}
+
 // ── Read models returned to the presentation layer ──
 export interface CategoryView {
   id: string;
@@ -154,6 +181,10 @@ export interface ProgramEntryView {
   category: CategoryView | null;
   date: string;
   sort: number;
+  expectedDurationMinutes: number | null;
+  status: LessonBindingStatus;
+  actualStartTime: string | null;
+  actualEndTime: string | null;
   teacher: { id: string; name: string };
   className: string;
   sources: { kind: LessonSourceKind; url: string; description: string | null }[];
@@ -184,6 +215,41 @@ export interface InstituteLessonView {
   description: string | null;
   category: CategoryView | null;
   date: string;
+  expectedDurationMinutes: number | null;
   sources: { kind: LessonSourceKind; url: string; description: string | null }[];
-  classes: { lessonClassId: string; classId: string; className: string; teacher: { id: string; name: string } }[];
+  classes: {
+    lessonClassId: string;
+    classId: string;
+    className: string;
+    teacher: { id: string; name: string };
+    status: LessonBindingStatus;
+    actualStartTime: string | null;
+    actualEndTime: string | null;
+  }[];
+}
+
+/** Per-institute lesson settings returned to the manager (spec 009). */
+export interface LessonSettingsView {
+  durationThresholdMinutes: number;
+  durationStatusEnabled: boolean;
+}
+
+/** The teacher timer page payload for one binding (spec 009). */
+export interface LessonTimerView {
+  lessonClassId: string;
+  kind: LessonKind;
+  name: string | null;
+  date: string;
+  className: string;
+  expectedDurationMinutes: number | null;
+  status: LessonBindingStatus;
+  actualStartTime: string | null;
+  ordinal: number;
+  ofTotal: number;
+}
+
+/** Result of ending a lesson (spec 009). */
+export interface EndLessonResult {
+  status: LessonBindingStatus;
+  actualDurationMinutes: number;
 }

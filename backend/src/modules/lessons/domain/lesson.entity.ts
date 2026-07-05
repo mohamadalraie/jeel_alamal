@@ -21,9 +21,19 @@ interface LessonProps {
   description: string | null;
   categoryId: string | null;
   date: string; // YYYY-MM-DD
+  expectedDurationMinutes: number | null;
   sources: LessonSourceData[];
   createdBy: string;
   createdAt: Date;
+}
+
+/** Validate an expected duration: null (no duration) or a positive integer. */
+function assertDuration(minutes: number | null | undefined): number | null {
+  if (minutes === null || minutes === undefined) return null;
+  if (!Number.isInteger(minutes) || minutes < 1) {
+    throw new BusinessRuleError('Expected duration must be a positive whole number of minutes');
+  }
+  return minutes;
 }
 
 /**
@@ -47,6 +57,7 @@ export class Lesson extends Entity<string> {
     description?: string | null;
     categoryId?: string | null;
     date: string;
+    expectedDurationMinutes?: number | null;
     sources?: LessonSourceData[];
     createdBy: string;
   }): Lesson {
@@ -60,6 +71,7 @@ export class Lesson extends Entity<string> {
       description: input.description ?? null,
       categoryId: input.categoryId ?? null,
       date: input.date,
+      expectedDurationMinutes: assertDuration(input.expectedDurationMinutes),
       sources: input.sources ?? [],
       createdBy: input.createdBy,
       createdAt: new Date(),
@@ -77,6 +89,7 @@ export class Lesson extends Entity<string> {
     description?: string | null;
     categoryId?: string | null;
     date?: string;
+    expectedDurationMinutes?: number | null;
     sources?: LessonSourceData[];
   }): void {
     if (input.date !== undefined) {
@@ -84,6 +97,9 @@ export class Lesson extends Entity<string> {
         throw new BusinessRuleError('Lesson date must be a valid YYYY-MM-DD');
       }
       this.props.date = input.date;
+    }
+    if (input.expectedDurationMinutes !== undefined) {
+      this.props.expectedDurationMinutes = assertDuration(input.expectedDurationMinutes);
     }
     if (input.name !== undefined) this.props.name = input.name;
     if (input.description !== undefined) this.props.description = input.description;
@@ -113,6 +129,9 @@ export class Lesson extends Entity<string> {
   }
   get date() {
     return this.props.date;
+  }
+  get expectedDurationMinutes() {
+    return this.props.expectedDurationMinutes;
   }
   get sources(): readonly LessonSourceData[] {
     return this.props.sources;

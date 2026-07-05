@@ -6,13 +6,16 @@ import type { ClassRepository } from '../../classes/domain/class.repository';
 import { InstituteAccessPolicy } from '../../institutes/application/institute-access.policy';
 import { LESSON_REPOSITORY } from '../domain/lesson.repository';
 import type { LessonRepository, ProgramEntryRead } from '../domain/lesson.repository';
+import { deriveReadStatus } from '../domain/lesson-binding-status';
 import {
   ClassProgramResult,
   InstituteLessonView,
   ProgramEntryView,
 } from './dto/lesson.dto';
 
-export const toEntryView = (e: ProgramEntryRead): ProgramEntryView => ({
+const todayYMD = () => new Date().toISOString().slice(0, 10);
+
+export const toEntryView = (e: ProgramEntryRead, today = todayYMD()): ProgramEntryView => ({
   lessonClassId: e.lessonClassId,
   lessonId: e.lessonId,
   kind: e.kind,
@@ -21,13 +24,17 @@ export const toEntryView = (e: ProgramEntryRead): ProgramEntryView => ({
   category: e.category,
   date: e.date,
   sort: e.sort,
+  expectedDurationMinutes: e.expectedDurationMinutes,
+  status: deriveReadStatus(e.status, e.date, today),
+  actualStartTime: e.actualStartTime?.toISOString() ?? null,
+  actualEndTime: e.actualEndTime?.toISOString() ?? null,
   teacher: e.teacher,
   className: e.className,
   sources: e.sources,
 });
 
 /** Group flat per-binding rows into one entry per lesson (institute hub). */
-export function groupByLesson(rows: ProgramEntryRead[]): InstituteLessonView[] {
+export function groupByLesson(rows: ProgramEntryRead[], today = todayYMD()): InstituteLessonView[] {
   const byLesson = new Map<string, InstituteLessonView>();
   for (const r of rows) {
     let entry = byLesson.get(r.lessonId);
@@ -39,6 +46,7 @@ export function groupByLesson(rows: ProgramEntryRead[]): InstituteLessonView[] {
         description: r.description,
         category: r.category,
         date: r.date,
+        expectedDurationMinutes: r.expectedDurationMinutes,
         sources: r.sources,
         classes: [],
       };
@@ -49,6 +57,9 @@ export function groupByLesson(rows: ProgramEntryRead[]): InstituteLessonView[] {
       classId: r.classId,
       className: r.className,
       teacher: r.teacher,
+      status: deriveReadStatus(r.status, r.date, today),
+      actualStartTime: r.actualStartTime?.toISOString() ?? null,
+      actualEndTime: r.actualEndTime?.toISOString() ?? null,
     });
   }
   // Preserve the repo's date,sort ordering (Map keeps insertion order).
@@ -75,9 +86,10 @@ export class GetClassProgramUseCase {
     await this.policy.assertStaffOf(actor, klass.instituteId);
 
     const entries = await this.lessons.getClassProgram(classId, from, to);
+    const today = todayYMD();
     return {
       lessonsVisibleToStudents: klass.lessonsVisibleToStudents,
-      entries: entries.map(toEntryView),
+      entries: entries.map((e) => toEntryView(e, today)),
     };
   }
 }

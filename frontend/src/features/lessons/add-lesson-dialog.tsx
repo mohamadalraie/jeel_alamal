@@ -38,6 +38,7 @@ export interface LessonEditing {
   description: string | null;
   categoryId: string | null;
   date: string;
+  expectedDurationMinutes: number | null;
   sources: LessonSourceInput[];
 }
 
@@ -101,6 +102,7 @@ export function AddLessonDialog({
   const [description, setDescription] = useState('');
   const [categoryId, setCategoryId] = useState<string>('');
   const [date, setDate] = useState(todayISO());
+  const [duration, setDuration] = useState(''); // expected minutes, '' = none
   const [sources, setSources] = useState<LessonSourceInput[]>([]);
   const [assign, setAssign] = useState<Record<string, string>>({}); // classId -> teacherId
   const [busy, setBusy] = useState(false);
@@ -141,6 +143,7 @@ export function AddLessonDialog({
       setDescription(editing.description ?? '');
       setCategoryId(editing.categoryId ?? '');
       setDate(editing.date);
+      setDuration(editing.expectedDurationMinutes?.toString() ?? '');
       setSources(editing.sources);
       setAssign({});
     } else {
@@ -149,6 +152,7 @@ export function AddLessonDialog({
       setDescription('');
       setCategoryId('');
       setDate(preselectDate ?? todayISO());
+      setDuration('');
       setSources([]);
       setAssign(preselectClassId ? { [preselectClassId]: '' } : {});
     }
@@ -179,6 +183,11 @@ export function AddLessonDialog({
       if (entries.some(([, teacherId]) => !teacherId)) return setError(t('assignTeacherEach'));
     }
 
+    // '' → null (clear); a positive number otherwise. Invalid input is ignored.
+    const parsed = duration.trim() === '' ? null : Number(duration);
+    const expectedDurationMinutes =
+      parsed !== null && Number.isFinite(parsed) && parsed >= 1 ? Math.floor(parsed) : null;
+
     setBusy(true);
     try {
       if (isEdit) {
@@ -187,6 +196,7 @@ export function AddLessonDialog({
           description: isLesson ? description || undefined : undefined,
           categoryId: isLesson ? categoryId || undefined : undefined,
           date,
+          expectedDurationMinutes,
           sources: isLesson ? sources : undefined,
         });
       } else {
@@ -196,6 +206,7 @@ export function AddLessonDialog({
           description: isLesson ? description || undefined : undefined,
           categoryId: isLesson && categoryId ? categoryId : undefined,
           date,
+          expectedDurationMinutes: expectedDurationMinutes ?? undefined,
           sources: isLesson ? sources : undefined,
           assignments: Object.entries(assign).map(([classId, teacherId]) => ({ classId, teacherId })),
         });
@@ -305,9 +316,24 @@ export function AddLessonDialog({
             </>
           )}
 
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor="lsn-date">{t('date')}</Label>
-            <Input id="lsn-date" type="date" dir="ltr" value={date} onChange={(e) => setDate(e.target.value)} required />
+          <div className="grid grid-cols-2 gap-2">
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="lsn-date">{t('date')}</Label>
+              <Input id="lsn-date" type="date" dir="ltr" value={date} onChange={(e) => setDate(e.target.value)} required />
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="lsn-duration">{t('expectedDuration')}</Label>
+              <Input
+                id="lsn-duration"
+                type="number"
+                min={1}
+                inputMode="numeric"
+                dir="ltr"
+                placeholder={t('expectedDurationPlaceholder')}
+                value={duration}
+                onChange={(e) => setDuration(e.target.value)}
+              />
+            </div>
           </div>
 
           {isLesson && <LessonSourcesEditor value={sources} onChange={setSources} />}

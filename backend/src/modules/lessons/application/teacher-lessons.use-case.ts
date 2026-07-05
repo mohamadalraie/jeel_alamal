@@ -19,7 +19,7 @@ export class GetMyLessonsUseCase {
     const today = todayISO();
     // The next lesson = the first entry dated today or later.
     const nextIdx = raw.findIndex((e) => e.date >= today);
-    const entries = raw.map((e, i) => ({ ...toEntryView(e), isNext: i === nextIdx }));
+    const entries = raw.map((e, i) => ({ ...toEntryView(e, today), isNext: i === nextIdx }));
     return { entries };
   }
 }

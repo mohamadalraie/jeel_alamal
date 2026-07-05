@@ -280,6 +280,40 @@ export interface CreateInstituteInput {
 export type LessonKind = 'lesson' | 'recitation';
 export type LessonSourceKind = 'link' | 'image' | 'pdf';
 
+// ── Lesson lifecycle — spec 009 ──
+export type LessonBindingStatus =
+  | 'pending'
+  | 'started'
+  | 'finished'
+  | 'not_given'
+  | 'over_time'
+  | 'under_time';
+
+export interface LessonSettings {
+  durationThresholdMinutes: number;
+  durationStatusEnabled: boolean;
+}
+
+/** The teacher timer page payload for one lesson-class binding. */
+export interface LessonTimer {
+  lessonClassId: string;
+  kind: LessonKind;
+  name: string | null;
+  date: string;
+  className: string;
+  expectedDurationMinutes: number | null;
+  status: LessonBindingStatus;
+  actualStartTime: string | null;
+  ordinal: number;
+  ofTotal: number;
+}
+
+/** Result of ending a lesson. */
+export interface EndLessonResult {
+  status: LessonBindingStatus;
+  actualDurationMinutes: number;
+}
+
 export interface LessonCategory {
   id: string;
   name: string;
@@ -309,6 +343,7 @@ export interface CreateLessonInput {
   description?: string;
   categoryId?: string;
   date: string; // YYYY-MM-DD
+  expectedDurationMinutes?: number | null;
   sources?: LessonSourceInput[];
   assignments: LessonAssignmentInput[];
 }
@@ -324,6 +359,10 @@ export interface ProgramEntry {
   category: LessonCategory | null;
   date: string;
   sort: number;
+  expectedDurationMinutes: number | null;
+  status: LessonBindingStatus;
+  actualStartTime: string | null;
+  actualEndTime: string | null;
   teacher: { id: string; name: string };
   className: string;
   sources: LessonSourceView[];
@@ -354,11 +393,15 @@ export interface InstituteLesson {
   description: string | null;
   category: LessonCategory | null;
   date: string;
+  expectedDurationMinutes: number | null;
   sources: LessonSourceView[];
   classes: {
     lessonClassId: string;
     classId: string;
     className: string;
     teacher: { id: string; name: string };
+    status: LessonBindingStatus;
+    actualStartTime: string | null;
+    actualEndTime: string | null;
   }[];
 }

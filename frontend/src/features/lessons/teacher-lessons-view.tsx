@@ -8,6 +8,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { ListSkeleton } from '@/features/shared/skeletons';
 import { EmptyState } from '@/features/shared/empty-state';
 import { LessonCard } from './lesson-card';
+import { LessonTimerActions } from './lesson-timer-actions';
 
 const todayISO = () => new Date().toISOString().slice(0, 10);
 
@@ -42,7 +43,11 @@ export function TeacherLessonsView() {
               <CalendarClock className="size-4" />
               {t('nextLesson')} · {dateLabel(groups.next.date)}
             </span>
-            <LessonCard entry={groups.next} showClass />
+            <LessonCard
+              entry={groups.next}
+              showClass
+              actions={<LessonTimerActions entry={groups.next} />}
+            />
           </CardContent>
         </Card>
       )}
@@ -53,7 +58,7 @@ export function TeacherLessonsView() {
           {groups.upcoming.map((e) => (
             <div key={e.lessonClassId} className="flex flex-col gap-1">
               <span className="text-muted-foreground text-xs">{dateLabel(e.date)}</span>
-              <LessonCard entry={e} showClass />
+              <LessonCard entry={e} showClass actions={<LessonTimerActions entry={e} />} />
             </div>
           ))}
         </Section>
@@ -65,7 +70,7 @@ export function TeacherLessonsView() {
           {groups.past.map((e) => (
             <div key={e.lessonClassId} className="flex flex-col gap-1 opacity-75">
               <span className="text-muted-foreground text-xs">{dateLabel(e.date)}</span>
-              <LessonCard entry={e} showClass />
+              <LessonCard entry={e} showClass actions={<LessonTimerActions entry={e} />} />
             </div>
           ))}
         </Section>

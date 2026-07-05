@@ -1,5 +1,7 @@
 import {
+  boolean,
   date,
+  integer,
   pgEnum,
   pgTable,
   smallint,
@@ -22,6 +24,20 @@ export const lessonSourceKindEnum = pgEnum('lesson_source_kind', [
   'link',
   'image',
   'pdf',
+]);
+
+/**
+ * Delivery status of a lesson-class binding (spec 009). `not_given` is derived
+ * lazily on read and is never persisted, but it is part of the enum so reports
+ * MAY persist it later without another migration.
+ */
+export const lessonBindingStatusEnum = pgEnum('lesson_binding_status', [
+  'pending',
+  'started',
+  'finished',
+  'not_given',
+  'over_time',
+  'under_time',
 ]);
 
 /** Dynamic, per-institute lesson categories (name + color). */
@@ -53,6 +69,8 @@ export const lessons = pgTable('lessons', {
     onDelete: 'set null',
   }),
   date: date('date').notNull(), // 'YYYY-MM-DD'
+  // Shared content metadata: how long the lesson is expected to run (spec 009).
+  expectedDurationMinutes: integer('expected_duration_minutes'),
   createdBy: uuid('created_by')
     .notNull()
     .references(() => users.id),
@@ -91,11 +109,38 @@ export const lessonClasses = pgTable(
       .notNull()
       .references(() => users.id),
     sort: smallint('sort').notNull().default(0), // order within the class's day
+    // Delivery lifecycle (spec 009): status lives on the binding, not the
+    // shared lesson, so each teacher delivers independently.
+    status: lessonBindingStatusEnum('status').notNull().default('pending'),
+    actualStartTime: timestamp('actual_start_time', { withTimezone: true }),
+    actualEndTime: timestamp('actual_end_time', { withTimezone: true }),
   },
   (t) => [uniqueIndex('one_lesson_per_class').on(t.lessonId, t.classId)],
 );
+
+/**
+ * Per-institute lesson settings (spec 009). One row per institute, created on
+ * first save (upsert). Absence means defaults apply (threshold 10, enabled).
+ */
+export const lessonSettings = pgTable('lesson_settings', {
+  id: uuid('id').primaryKey(),
+  instituteId: uuid('institute_id')
+    .notNull()
+    .unique()
+    .references(() => institutes.id, { onDelete: 'cascade' }),
+  durationThresholdMinutes: smallint('duration_threshold_minutes')
+    .notNull()
+    .default(10),
+  durationStatusEnabled: boolean('duration_status_enabled')
+    .notNull()
+    .default(true),
+  updatedAt: timestamp('updated_at', { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
 
 export type LessonCategoryRow = InferSelectModel<typeof lessonCategories>;
 export type LessonRow = InferSelectModel<typeof lessons>;
 export type LessonSourceRow = InferSelectModel<typeof lessonSources>;
 export type LessonClassRow = InferSelectModel<typeof lessonClasses>;
+export type LessonSettingsRow = InferSelectModel<typeof lessonSettings>;

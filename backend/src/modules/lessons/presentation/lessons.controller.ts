@@ -34,11 +34,21 @@ import {
 import { GetMyLessonsUseCase } from '../application/teacher-lessons.use-case';
 import { GetStudentClassLessonsUseCase } from '../application/student-lessons.use-case';
 import {
+  StartLessonUseCase,
+  EndLessonUseCase,
+  GetLessonTimerUseCase,
+} from '../application/lesson-lifecycle.use-cases';
+import {
+  GetLessonSettingsUseCase,
+  UpdateLessonSettingsUseCase,
+} from '../application/lesson-settings.use-cases';
+import {
   CreateCategoryDto,
   CreateLessonDto,
   ReorderDayDto,
   UpdateCategoryDto,
   UpdateLessonDto,
+  UpdateLessonSettingsDto,
 } from '../application/dto/lesson.dto';
 
 @Controller()
@@ -57,6 +67,11 @@ export class LessonsController {
     private readonly getInstituteProgram: GetInstituteProgramUseCase,
     private readonly getMyLessons: GetMyLessonsUseCase,
     private readonly getStudentLessons: GetStudentClassLessonsUseCase,
+    private readonly startLesson: StartLessonUseCase,
+    private readonly endLesson: EndLessonUseCase,
+    private readonly getLessonTimer: GetLessonTimerUseCase,
+    private readonly getLessonSettings: GetLessonSettingsUseCase,
+    private readonly updateLessonSettings: UpdateLessonSettingsUseCase,
   ) {}
 
   // ── Categories ──
@@ -178,5 +193,49 @@ export class LessonsController {
   @Get('lessons/mine')
   mine(@CurrentUser() actor: Actor) {
     return this.getMyLessons.execute(actor);
+  }
+
+  // ── Lesson lifecycle (spec 009) ──
+  @Post('lesson-classes/:lessonClassId/start')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async start(
+    @CurrentUser() actor: Actor,
+    @Param('lessonClassId', ParseUUIDPipe) lessonClassId: string,
+  ) {
+    await this.startLesson.execute(actor, lessonClassId);
+  }
+
+  @Post('lesson-classes/:lessonClassId/end')
+  end(
+    @CurrentUser() actor: Actor,
+    @Param('lessonClassId', ParseUUIDPipe) lessonClassId: string,
+  ) {
+    return this.endLesson.execute(actor, lessonClassId);
+  }
+
+  @Get('lesson-classes/:lessonClassId/timer')
+  timer(
+    @CurrentUser() actor: Actor,
+    @Param('lessonClassId', ParseUUIDPipe) lessonClassId: string,
+  ) {
+    return this.getLessonTimer.execute(actor, lessonClassId);
+  }
+
+  // ── Lesson settings (spec 009) ──
+  @Get('institutes/:instituteId/lesson-settings')
+  lessonSettings(
+    @CurrentUser() actor: Actor,
+    @Param('instituteId', ParseUUIDPipe) instituteId: string,
+  ) {
+    return this.getLessonSettings.execute(actor, instituteId);
+  }
+
+  @Put('institutes/:instituteId/lesson-settings')
+  saveLessonSettings(
+    @CurrentUser() actor: Actor,
+    @Param('instituteId', ParseUUIDPipe) instituteId: string,
+    @Body() dto: UpdateLessonSettingsDto,
+  ) {
+    return this.updateLessonSettings.execute(actor, instituteId, dto);
   }
 }
