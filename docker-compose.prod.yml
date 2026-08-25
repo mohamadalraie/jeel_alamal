@@ -1,36 +1,60 @@
-# ─────────────────────────────────────────────────────────────
-# جيل العمل / Jeel Alamal — PRODUCTION overrides
-# Uses multi-stage Dockerfiles (no bind mounts, slim runtime images).
-#   docker compose -f docker-compose.yml -f docker-compose.prod.yml up --build -d
-# ─────────────────────────────────────────────────────────────
-
 services:
+  db:
+    image: postgres:17-alpine
+    container_name: jeel_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
   backend:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    command: sh -c "node dist/database/run-migrations.js && node dist/database/seed.js && node dist/main"
+    container_name: jeel_backend
+    restart: unless-stopped
+    command: sh -c "npm run migration:run && npm run start:prod"
     environment:
       NODE_ENV: production
+      DATABASE_HOST: db
+      DATABASE_PORT: 5432
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET}
+      JWT_REFRESH_EXPIRES_IN: ${JWT_REFRESH_EXPIRES_IN}
+      SUPER_ADMIN_USERNAME: ${SUPER_ADMIN_USERNAME}
+      SUPER_ADMIN_PASSWORD: ${SUPER_ADMIN_PASSWORD}
+      FRONTEND_ORIGIN: ${FRONTEND_ORIGIN}
       UPLOADS_DIR: /app/uploads
-    # Keep only the uploads volume in prod (no source bind mount).
     volumes:
       - uploads:/app/uploads
-    restart: always
+    depends_on:
+      db:
+        condition: service_healthy
 
   frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
-      args:
-        # Set this to the PUBLIC backend URL of your deployment before building.
-        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
+    container_name: jeel_frontend
+    restart: unless-stopped
     environment:
       NODE_ENV: production
-    volumes: []
-    restart: always
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
+    depends_on:
+      - backend
 
-  # Adminer should not be exposed in production.
-  adminer:
-    profiles:
-      - donotstart
+volumes:
+  pgdata:
+  uploads:
