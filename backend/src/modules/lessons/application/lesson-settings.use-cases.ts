@@ -20,7 +20,10 @@ export class GetLessonSettingsUseCase {
     private readonly settings: LessonSettingsRepository,
   ) {}
 
-  async execute(actor: Actor, instituteId: string): Promise<LessonSettingsView> {
+  async execute(
+    actor: Actor,
+    instituteId: string,
+  ): Promise<LessonSettingsView> {
     await this.policy.assertStaffOf(actor, instituteId);
     const found = await this.settings.findByInstitute(instituteId);
     return toView(found ?? LessonSettings.defaults(instituteId));

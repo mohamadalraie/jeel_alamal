@@ -1,15 +1,8 @@
 'use client';
 
-import { useMemo, useState } from 'react';
-import { useTranslations, useLocale } from 'next-intl';
-import {
-  ChevronLeft,
-  ChevronRight,
-  MoreVertical,
-  Pencil,
-  Plus,
-  Trash2,
-} from 'lucide-react';
+import { useState } from 'react';
+import { useTranslations } from 'next-intl';
+import { MoreVertical, Pencil, Plus, Trash2 } from 'lucide-react';
 import type { ProgramEntry } from '@/lib/types';
 import {
   deleteLesson,
@@ -27,25 +20,17 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { ListSkeleton } from '@/features/shared/skeletons';
 import { ConfirmDialog } from '@/features/shared/confirm-dialog';
-import { toYMD } from '@/features/attendance/calendar-utils';
 import { useInstitute } from '@/features/layout/institute-context';
-import { LessonCard } from './lesson-card';
+import { LessonProgramList } from './lesson-program-list';
 import { LessonTimerActions } from './lesson-timer-actions';
-
-const TODAY_YMD = toYMD(new Date());
 import { AddLessonDialog, type LessonEditing } from './add-lesson-dialog';
 import { CategoryManager } from './category-manager';
 
-/** Saturday-of-the-week for a date (Arabic week starts Saturday). */
-function weekStart(d: Date): Date {
-  const back = (d.getDay() - 6 + 7) % 7;
-  return new Date(d.getFullYear(), d.getMonth(), d.getDate() - back);
-}
-
 /**
- * Class Lessons tab (spec 008): a week navigator with entries grouped by day.
- * Managers can add/edit/delete lessons, reorder within a day, manage categories,
- * and toggle student visibility. Teachers see it read-only.
+ * Class Lessons tab (spec 008/009): the class program grouped by month/day —
+ * matching the manager الدروس view. Managers can add/edit/delete lessons, manage
+ * categories, and toggle student visibility; the assigned teacher gets a
+ * start/resume control on their own lessons.
  */
 export function LessonProgram({
   classId,
@@ -58,13 +43,11 @@ export function LessonProgram({
 }) {
   const t = useTranslations('lessons');
   const tc = useTranslations('common');
-  const locale = useLocale();
   const qc = useQueryClient();
   const { user } = useInstitute();
   const { data, isLoading } = useClassLessons(classId);
   const { data: categories = [] } = useLessonCategories(instituteId);
 
-  const [cursor, setCursor] = useState(() => weekStart(new Date()));
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<LessonEditing | null>(null);
   const [presetDate, setPresetDate] = useState<string>();
@@ -74,26 +57,6 @@ export function LessonProgram({
     refresh();
     qc.invalidateQueries({ queryKey: qk.classProfile(classId) });
   };
-
-  // Group the week's entries by day.
-  const week = useMemo(() => {
-    const days = Array.from({ length: 7 }, (_, i) => {
-      const d = new Date(cursor);
-      d.setDate(cursor.getDate() + i);
-      return { date: d, ymd: toYMD(d), entries: [] as ProgramEntry[] };
-    });
-    const byYmd = new Map(days.map((d) => [d.ymd, d]));
-    for (const e of data?.entries ?? []) byYmd.get(e.date)?.entries.push(e);
-    for (const d of days) d.entries.sort((a, b) => a.sort - b.sort);
-    return days;
-  }, [cursor, data?.entries]);
-
-  if (isLoading || !data) return <ListSkeleton />;
-
-  const Prev = locale === 'ar' ? ChevronRight : ChevronLeft;
-  const Next = locale === 'ar' ? ChevronLeft : ChevronRight;
-  const shiftWeek = (n: number) =>
-    setCursor((c) => new Date(c.getFullYear(), c.getMonth(), c.getDate() + n * 7));
 
   const openCreate = (ymd?: string) => {
     setEditing(null);
@@ -128,32 +91,20 @@ export function LessonProgram({
     }
   }
 
+  if (isLoading || !data) return <ListSkeleton />;
+
   return (
     <div className="flex flex-col gap-3">
-      {/* Toolbar */}
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <div className="flex items-center gap-1">
-          <Button variant="ghost" size="icon" onClick={() => shiftWeek(-1)} aria-label={t('week')}>
-            <Prev className="size-4" />
-          </Button>
-          <span className="text-sm font-semibold">
-            {cursor.toLocaleDateString(locale, { day: 'numeric', month: 'short' })} –{' '}
-            {week[6].date.toLocaleDateString(locale, { day: 'numeric', month: 'short' })}
-          </span>
-          <Button variant="ghost" size="icon" onClick={() => shiftWeek(1)} aria-label={t('week')}>
-            <Next className="size-4" />
+      {/* Toolbar (manager) */}
+      {canManage && (
+        <div className="flex flex-wrap items-center justify-end gap-2">
+          <CategoryManager instituteId={instituteId} />
+          <Button size="sm" onClick={() => openCreate()}>
+            <Plus data-icon="inline-start" />
+            {t('addLesson')}
           </Button>
         </div>
-        {canManage && (
-          <div className="flex flex-wrap items-center gap-2">
-            <CategoryManager instituteId={instituteId} />
-            <Button size="sm" onClick={() => openCreate()}>
-              <Plus data-icon="inline-start" />
-              {t('addLesson')}
-            </Button>
-          </div>
-        )}
-      </div>
+      )}
 
       {/* Student visibility toggle (manager) */}
       {canManage && (
@@ -176,80 +127,35 @@ export function LessonProgram({
         </button>
       )}
 
-      {/* Days — empty days are shown dimmed for managers, hidden for others */}
-      <div className="flex flex-col gap-2">
-        {week.map((d) => {
-          const isToday = d.ymd === TODAY_YMD;
-          const hasLessons = d.entries.length > 0;
-          if (!hasLessons && !canManage) return null;
+      {/* Program list */}
+      <LessonProgramList
+        entries={data.entries}
+        emptyText={t('noLessons')}
+        showTeacher
+        onAddDay={canManage ? (ymd) => openCreate(ymd) : undefined}
+        renderActions={(e) => {
+          const canStart = user.id === e.teacher.id;
+          if (!canStart && !canManage) return null;
           return (
-            <div
-              key={d.ymd}
-              className={`flex flex-col gap-1.5 rounded-xl border px-3 py-2 transition ${
-                isToday
-                  ? 'border-primary/30 bg-primary/5 ring-1 ring-primary/20'
-                  : 'border-border bg-card'
-              } ${!hasLessons ? 'opacity-40' : ''}`}
-            >
-              {/* Day header */}
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <span
-                    className={`flex size-7 items-center justify-center rounded-full text-sm font-bold ${
-                      isToday ? 'bg-primary text-primary-foreground' : ''
-                    }`}
-                  >
-                    {d.date.getDate()}
-                  </span>
-                  <span className="text-sm font-semibold">
-                    {d.date.toLocaleDateString(locale, { weekday: 'long', month: 'short' })}
-                  </span>
-                  {isToday && (
-                    <span className="text-primary text-xs font-semibold">{t('today')}</span>
-                  )}
-                </div>
-                {canManage && (
-                  <Button variant="ghost" size="sm" onClick={() => openCreate(d.ymd)}>
-                    <Plus className="size-4" />
-                  </Button>
-                )}
-              </div>
-
-              {/* Lesson cards */}
-              {hasLessons && (
-                <div className="flex flex-col gap-1.5 pt-0.5">
-                  {d.entries.map((e, idx) => (
-                    <LessonCard
-                      key={e.lessonClassId}
-                      entry={e}
-                      index={d.entries.length > 1 ? idx + 1 : 0}
-                      showTeacher
-                      actions={
-                        <div className="flex items-center gap-1.5">
-                          {user.id === e.teacher.id && <LessonTimerActions entry={e} />}
-                          {canManage && (
-                            <EntryMenu
-                              onEdit={() => openEdit(e)}
-                              onRemoveFromClass={async () => {
-                                await removeLessonClass(e.lessonClassId);
-                                refresh();
-                              }}
-                              onDelete={async () => {
-                                await deleteLesson(e.lessonId);
-                                refresh();
-                              }}
-                            />
-                          )}
-                        </div>
-                      }
-                    />
-                  ))}
-                </div>
+            <div className="flex items-center gap-1.5">
+              {canStart && <LessonTimerActions entry={e} />}
+              {canManage && (
+                <EntryMenu
+                  onEdit={() => openEdit(e)}
+                  onRemoveFromClass={async () => {
+                    await removeLessonClass(e.lessonClassId);
+                    refresh();
+                  }}
+                  onDelete={async () => {
+                    await deleteLesson(e.lessonId);
+                    refresh();
+                  }}
+                />
               )}
             </div>
           );
-        })}
-      </div>
+        }}
+      />
 
       {canManage && (
         <AddLessonDialog

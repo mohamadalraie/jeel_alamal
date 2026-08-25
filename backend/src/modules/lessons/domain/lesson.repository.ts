@@ -90,15 +90,30 @@ export interface LessonRepository {
   /** One binding's data for the teacher timer page. */
   getBindingTimerView(lessonClassId: string): Promise<LessonTimerRead | null>;
   /** Set the order of a class's entries on a given date. */
-  reorderClassDay(classId: string, date: string, orderedLessonClassIds: string[]): Promise<void>;
+  reorderClassDay(
+    classId: string,
+    date: string,
+    orderedLessonClassIds: string[],
+  ): Promise<void>;
 
   // ── Reads ──
   /** All entries of a class (optionally within [from,to]). Newest-first not required. */
-  getClassProgram(classId: string, from?: string, to?: string): Promise<ProgramEntryRead[]>;
+  getClassProgram(
+    classId: string,
+    from?: string,
+    to?: string,
+  ): Promise<ProgramEntryRead[]>;
   /** Every entry of an institute (all classes) — basis for the manager hub. */
-  getInstituteProgram(instituteId: string, from?: string, to?: string): Promise<ProgramEntryRead[]>;
+  getInstituteProgram(
+    instituteId: string,
+    from?: string,
+    to?: string,
+  ): Promise<ProgramEntryRead[]>;
   /** Past entries (date <= today) of a class — basis for the student view. */
-  getClassProgramUpTo(classId: string, today: string): Promise<ProgramEntryRead[]>;
+  getClassProgramUpTo(
+    classId: string,
+    today: string,
+  ): Promise<ProgramEntryRead[]>;
   /** The lessons assigned to a teacher across their classes. */
   getTeacherProgram(teacherId: string): Promise<ProgramEntryRead[]>;
 }

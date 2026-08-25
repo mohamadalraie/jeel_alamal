@@ -6,11 +6,7 @@ import type { TokenSigner } from '../ports/token-signer.port';
 import { REFRESH_TOKEN_REPOSITORY } from '../ports/refresh-token.repository';
 import type { RefreshTokenRepository } from '../ports/refresh-token.repository';
 import { UnauthorizedError } from '../../../../shared/domain/domain.error';
-import {
-  LoginResult,
-  REFRESH_TOKEN_TTL_MS,
-  hashToken,
-} from './login.use-case';
+import { LoginResult, REFRESH_TOKEN_TTL_MS, hashToken } from './login.use-case';
 import { UserResponseDto } from '../../../users/application/dto/user-response.dto';
 
 /**

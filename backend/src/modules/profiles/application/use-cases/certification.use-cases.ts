@@ -69,7 +69,9 @@ export class RemoveCertificationUseCase {
     // Tenant guard: the certification's teacher must belong to this institute.
     const teacher = await this.users.findById(cert.teacherId);
     if (!teacher || teacher.instituteId !== instituteId) {
-      throw new ForbiddenError('Certification does not belong to this institute');
+      throw new ForbiddenError(
+        'Certification does not belong to this institute',
+      );
     }
     await this.certs.delete(certificationId);
   }

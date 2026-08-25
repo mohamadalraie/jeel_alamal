@@ -16,8 +16,16 @@ import {
   ForbiddenError,
 } from '../../../shared/domain/domain.error';
 
-const teacher: Actor = { userId: 't1', role: UserRole.Teacher, instituteId: 'inst-1' };
-const other: Actor = { userId: 't2', role: UserRole.Teacher, instituteId: 'inst-1' };
+const teacher: Actor = {
+  userId: 't1',
+  role: UserRole.Teacher,
+  instituteId: 'inst-1',
+};
+const other: Actor = {
+  userId: 't2',
+  role: UserRole.Teacher,
+  instituteId: 'inst-1',
+};
 
 const today = () => new Date().toISOString().slice(0, 10);
 const yesterday = () => {
@@ -61,7 +69,9 @@ function makeRepo(date: string, expected: number | null) {
   return { repo: repo as LessonRepository, binding, lesson };
 }
 
-const settingsRepo = (settings: LessonSettings | null): LessonSettingsRepository => ({
+const settingsRepo = (
+  settings: LessonSettings | null,
+): LessonSettingsRepository => ({
   findByInstitute: async () => settings,
   save: async () => {},
 });
@@ -76,16 +86,16 @@ describe('StartLessonUseCase (spec 009)', () => {
 
   it('rejects a non-owner teacher', async () => {
     const { repo, binding } = makeRepo(today(), 45);
-    await expect(new StartLessonUseCase(repo).execute(other, binding.id)).rejects.toBeInstanceOf(
-      ForbiddenError,
-    );
+    await expect(
+      new StartLessonUseCase(repo).execute(other, binding.id),
+    ).rejects.toBeInstanceOf(ForbiddenError);
   });
 
   it('rejects a future-dated lesson', async () => {
     const { repo, binding } = makeRepo(tomorrow(), 45);
-    await expect(new StartLessonUseCase(repo).execute(teacher, binding.id)).rejects.toBeInstanceOf(
-      BusinessRuleError,
-    );
+    await expect(
+      new StartLessonUseCase(repo).execute(teacher, binding.id),
+    ).rejects.toBeInstanceOf(BusinessRuleError);
   });
 
   it('allows starting a past (not_given) lesson', async () => {
@@ -97,9 +107,9 @@ describe('StartLessonUseCase (spec 009)', () => {
   it('reports a conflict when the conditional write matches no row', async () => {
     const { repo, binding } = makeRepo(today(), 45);
     repo.updateBindingLifecycle = async () => false;
-    await expect(new StartLessonUseCase(repo).execute(teacher, binding.id)).rejects.toBeInstanceOf(
-      ConflictError,
-    );
+    await expect(
+      new StartLessonUseCase(repo).execute(teacher, binding.id),
+    ).rejects.toBeInstanceOf(ConflictError);
   });
 });
 
@@ -142,7 +152,10 @@ describe('EndLessonUseCase (spec 009)', () => {
   it('rejects ending a lesson that never started', async () => {
     const { repo, binding } = makeRepo(today(), 45);
     await expect(
-      new EndLessonUseCase(repo, settingsRepo(null)).execute(teacher, binding.id),
+      new EndLessonUseCase(repo, settingsRepo(null)).execute(
+        teacher,
+        binding.id,
+      ),
     ).rejects.toBeInstanceOf(BusinessRuleError);
   });
 

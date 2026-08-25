@@ -405,3 +405,82 @@ export interface InstituteLesson {
     actualEndTime: string | null;
   }[];
 }
+
+// ── Dinars (نظام الدنانير) — spec 010 ──
+export type DinarContext = 'lesson' | 'recitation' | 'attendance' | 'general';
+
+export interface DinarRule {
+  id: string;
+  name: string;
+  amount: number;
+  context: DinarContext;
+  trigger: 'manual' | 'automatic';
+  systemKey: string | null;
+  isActive: boolean;
+  isProtected: boolean;
+  createdAt: string;
+}
+
+export interface DinarRules {
+  manual: DinarRule[];
+  system: DinarRule[];
+}
+
+export interface DinarLedgerItem {
+  id: string;
+  amount: number;
+  context: DinarContext;
+  sourceType: 'manual_rule' | 'exceptional' | 'attendance' | 'recitation';
+  label: string;
+  awardedByName: string | null;
+  reversesId: string | null;
+  reversedAt: string | null;
+  createdAt: string;
+}
+
+export interface DinarSummary {
+  net: number;
+  positive: number;
+  negative: number;
+  count: number;
+}
+
+export interface StudentDinars {
+  summary: DinarSummary;
+  ledger: DinarLedgerItem[];
+}
+
+export interface DinarLeaderboardRow {
+  rank: number;
+  studentId: string;
+  name: string;
+  balance: number;
+}
+
+export interface DinarLeaderboard {
+  scope: 'institute' | 'class';
+  rows: DinarLeaderboardRow[];
+}
+
+export interface CreateDinarRuleInput {
+  name: string;
+  amount: number;
+  context: 'lesson' | 'recitation';
+}
+
+export interface UpdateDinarRuleInput {
+  name?: string;
+  amount?: number;
+  isActive?: boolean;
+}
+
+export interface AwardDinarInput {
+  ruleId?: string;
+  amount?: number;
+  reason?: string;
+  context?: DinarContext;
+}
+
+export interface BulkAwardDinarInput extends AwardDinarInput {
+  studentIds: string[];
+}

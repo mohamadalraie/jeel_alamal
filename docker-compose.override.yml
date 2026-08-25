@@ -1,15 +1,18 @@
 # ─────────────────────────────────────────────────────────────
 # LAN access override — lets phones/tablets on the same Wi-Fi
 # reach the app via the host machine's IP instead of localhost.
-# Auto-merged by `docker compose up`. Change LAN_IP if your IP changes.
+# Auto-merged by `docker compose up`.
+#
+# When your IP changes: update LAN_IP in .env, then run:
+#   docker compose up -d --force-recreate
 # ─────────────────────────────────────────────────────────────
 services:
   backend:
     environment:
       # CORS must allow the LAN origin (credentialed cookies need an exact match).
-      FRONTEND_ORIGIN: http://192.168.1.4:${FRONTEND_PORT:-3000}
+      FRONTEND_ORIGIN: http://${LAN_IP}:${FRONTEND_PORT:-3000}
 
   frontend:
     environment:
       # Browser (incl. phones) calls the backend at the host's LAN IP.
-      NEXT_PUBLIC_API_URL: http://192.168.1.4:${BACKEND_PORT:-3001}
+      NEXT_PUBLIC_API_URL: http://${LAN_IP}:${BACKEND_PORT:-3001}

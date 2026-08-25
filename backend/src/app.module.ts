@@ -18,6 +18,7 @@ import { StatisticsModule } from './modules/statistics/statistics.module';
 import { RecitationsModule } from './modules/recitations/recitations.module';
 import { AttendanceModule } from './modules/attendance/attendance.module';
 import { LessonsModule } from './modules/lessons/lessons.module';
+import { DinarsModule } from './modules/dinars/dinars.module';
 
 @Module({
   imports: [
@@ -50,6 +51,7 @@ import { LessonsModule } from './modules/lessons/lessons.module';
     RecitationsModule,
     AttendanceModule,
     LessonsModule,
+    DinarsModule,
   ],
   providers: [
     { provide: APP_GUARD, useClass: ThrottlerGuard },

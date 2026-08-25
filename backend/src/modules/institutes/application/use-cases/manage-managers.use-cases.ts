@@ -80,7 +80,9 @@ export class RemoveManagerUseCase {
     await this.policy.assertManagerOf(actor, instituteId);
     const count = await this.assignments.countManagers(instituteId);
     if (count <= 1) {
-      throw new BusinessRuleError('The institute must keep at least one manager');
+      throw new BusinessRuleError(
+        'The institute must keep at least one manager',
+      );
     }
     await this.assignments.unassign(managerId, instituteId);
   }

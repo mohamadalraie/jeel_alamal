@@ -35,11 +35,17 @@ export class LessonSettings extends Entity<string> {
     });
   }
 
-  static reconstitute(instituteId: string, props: LessonSettingsProps): LessonSettings {
+  static reconstitute(
+    instituteId: string,
+    props: LessonSettingsProps,
+  ): LessonSettings {
     return new LessonSettings(instituteId, props);
   }
 
-  update(input: { durationThresholdMinutes: number; durationStatusEnabled: boolean }): void {
+  update(input: {
+    durationThresholdMinutes: number;
+    durationStatusEnabled: boolean;
+  }): void {
     if (
       !Number.isInteger(input.durationThresholdMinutes) ||
       input.durationThresholdMinutes < 0 ||
@@ -60,7 +66,10 @@ export class LessonSettings extends Entity<string> {
    * was set, every lesson simply resolves to `finished`. The boundary is
    * inclusive: exactly `expected ± threshold` is still `finished`.
    */
-  evaluate(actualMinutes: number, expectedMinutes: number | null): FinalLessonStatus {
+  evaluate(
+    actualMinutes: number,
+    expectedMinutes: number | null,
+  ): FinalLessonStatus {
     if (
       !this.props.durationStatusEnabled ||
       this.props.durationThresholdMinutes <= 0 ||

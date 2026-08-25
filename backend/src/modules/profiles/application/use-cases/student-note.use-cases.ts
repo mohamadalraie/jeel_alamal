@@ -86,7 +86,11 @@ export class AddStudentNoteUseCase extends NoteBase {
   ): Promise<NoteDto> {
     await this.policy.assertStaffOfInstitute(actor, instituteId);
     await this.ensureStudent(instituteId, studentId);
-    const note = StudentNote.create({ studentId, authorId: actor.userId, body });
+    const note = StudentNote.create({
+      studentId,
+      authorId: actor.userId,
+      body,
+    });
     await this.notes.save(note);
     return this.toDto(note);
   }

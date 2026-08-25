@@ -14,6 +14,7 @@ import { AttendanceSession } from '../domain/attendance-session.entity';
 import { AttendanceRecord } from '../domain/attendance-record.entity';
 import { ATTENDANCE_REPOSITORY } from '../domain/attendance.repository';
 import type { AttendanceRepository } from '../domain/attendance.repository';
+import { SyncAttendanceDinarsUseCase } from '../../dinars/application/sync-attendance-dinars.use-case';
 import {
   buildSessions,
   buildStudentStats,
@@ -35,6 +36,7 @@ export class TakeAttendanceUseCase {
     @Inject(CLASS_REPOSITORY) private readonly classes: ClassRepository,
     @Inject(ATTENDANCE_REPOSITORY)
     private readonly attendance: AttendanceRepository,
+    private readonly syncDinars: SyncAttendanceDinarsUseCase,
   ) {}
 
   async execute(
@@ -75,6 +77,19 @@ export class TakeAttendanceUseCase {
       }),
     );
     await this.attendance.upsertSession(session, records);
+
+    // Reconcile automatic attendance dinars (spec 010). Projections are keyed by
+    // classId:date, so this stays correct across attendance re-takes.
+    await this.syncDinars.execute({
+      instituteId: klass.instituteId,
+      classId,
+      date: dto.date,
+      entries: dto.entries.map((e) => ({
+        studentId: e.studentId,
+        status: e.status,
+      })),
+      takenBy: actor.userId,
+    });
   }
 }
 
@@ -101,7 +116,10 @@ export class GetClassAttendanceUseCase {
     const people = await this.users.findManyByIds(membership.studentIds);
     const nameMap = new Map(people.map((u) => [u.id, u.fullName]));
     const nameOf = (id: string) => nameMap.get(id) ?? '—';
-    const roster = membership.studentIds.map((id) => ({ id, name: nameOf(id) }));
+    const roster = membership.studentIds.map((id) => ({
+      id,
+      name: nameOf(id),
+    }));
 
     const totals = buildTotals(records);
     const sessions = buildSessions(records);
@@ -166,7 +184,8 @@ export class GetStudentAttendanceUseCase {
       throw new NotFoundError('Student not found');
     }
     // A student may read only their own attendance; everyone else must be staff.
-    const isSelf = actor.role === UserRole.Student && actor.userId === studentId;
+    const isSelf =
+      actor.role === UserRole.Student && actor.userId === studentId;
     if (!isSelf) {
       await this.policy.assertStaffOf(actor, student.instituteId);
     }

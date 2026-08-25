@@ -4,7 +4,10 @@ import { BusinessRuleError } from '../../../shared/domain/domain.error';
 describe('LessonSettings.evaluate (spec 009)', () => {
   const settings = (threshold: number, enabled = true) => {
     const s = LessonSettings.defaults('inst-1');
-    s.update({ durationThresholdMinutes: threshold, durationStatusEnabled: enabled });
+    s.update({
+      durationThresholdMinutes: threshold,
+      durationStatusEnabled: enabled,
+    });
     return s;
   };
 
@@ -37,12 +40,12 @@ describe('LessonSettings.evaluate (spec 009)', () => {
 
   it('rejects an out-of-range threshold', () => {
     const s = LessonSettings.defaults('inst-1');
-    expect(() => s.update({ durationThresholdMinutes: -1, durationStatusEnabled: true })).toThrow(
-      BusinessRuleError,
-    );
-    expect(() => s.update({ durationThresholdMinutes: 121, durationStatusEnabled: true })).toThrow(
-      BusinessRuleError,
-    );
+    expect(() =>
+      s.update({ durationThresholdMinutes: -1, durationStatusEnabled: true }),
+    ).toThrow(BusinessRuleError);
+    expect(() =>
+      s.update({ durationThresholdMinutes: 121, durationStatusEnabled: true }),
+    ).toThrow(BusinessRuleError);
   });
 
   it('defaults to threshold 10 and enabled', () => {

@@ -46,7 +46,9 @@ class EnvironmentVariables {
   JWT_SECRET: string;
 
   @IsString()
-  @MinLength(16, { message: 'JWT_REFRESH_SECRET must be at least 16 characters' })
+  @MinLength(16, {
+    message: 'JWT_REFRESH_SECRET must be at least 16 characters',
+  })
   JWT_REFRESH_SECRET: string;
 
   @IsString()

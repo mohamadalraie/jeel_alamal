@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
-import { Menu, LogOut, Building2, ChevronDown } from 'lucide-react';
+import { Menu, LogOut, Building2, ChevronDown, KeyRound } from 'lucide-react';
 import { useRouter } from '@/i18n/navigation';
 import { logout, resolveAsset } from '@/lib/api';
 import { Button } from '@/components/ui/button';
@@ -32,6 +32,7 @@ import { LocaleSwitcher } from '@/features/locale-switcher';
 import { ThemeToggle } from './theme-toggle';
 import { SidebarNav } from './sidebar-nav';
 import { useInstitute } from './institute-context';
+import { ChangePasswordDialog } from './change-password-dialog';
 
 /**
  * Top bar: mobile menu trigger, the selected-institute picker (the tenant
@@ -41,10 +42,12 @@ export function Topbar() {
   const t = useTranslations('dashboard');
   const tc = useTranslations('common');
   const tr = useTranslations('roles');
+  const ta = useTranslations('auth');
   const router = useRouter();
   const locale = useLocale();
   const { user, institutes, selected, selectInstitute } = useInstitute();
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [changePwOpen, setChangePwOpen] = useState(false);
   // Drawer opens from the start side: right in Arabic (RTL), left in English.
   const drawerSide = locale === 'ar' ? 'right' : 'left';
 
@@ -126,6 +129,10 @@ export function Topbar() {
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={() => setChangePwOpen(true)}>
+              <KeyRound className="size-4" />
+              {ta('changePassword')}
+            </DropdownMenuItem>
             <DropdownMenuItem
               onClick={async () => {
                 await logout().catch(() => undefined);
@@ -138,6 +145,8 @@ export function Topbar() {
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
+
+      <ChangePasswordDialog open={changePwOpen} onOpenChange={setChangePwOpen} />
     </header>
   );
 }

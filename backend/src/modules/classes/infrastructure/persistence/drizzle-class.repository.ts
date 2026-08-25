@@ -220,11 +220,9 @@ export class DrizzleClassRepository implements ClassRepository {
       .where(eq(classSchedule.classId, classId));
     return rows.map((r) => ({
       id: r.id,
-      dayOfWeek: r.dayOfWeek as Weekday,
-      start: { kind: r.startKind as AnchorKind, value: r.startValue },
-      end: r.endKind
-        ? { kind: r.endKind as AnchorKind, value: r.endValue ?? '' }
-        : null,
+      dayOfWeek: r.dayOfWeek,
+      start: { kind: r.startKind, value: r.startValue },
+      end: r.endKind ? { kind: r.endKind, value: r.endValue ?? '' } : null,
     }));
   }
 

@@ -1,7 +1,10 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { Actor } from '../../../../shared/application/actor';
 import { UserRole } from '../../../../shared/domain/user-role';
-import { ForbiddenError, NotFoundError } from '../../../../shared/domain/domain.error';
+import {
+  ForbiddenError,
+  NotFoundError,
+} from '../../../../shared/domain/domain.error';
 import { CLASS_REPOSITORY } from '../../domain/class.repository';
 import type { ClassRepository } from '../../domain/class.repository';
 import { InstituteAccessPolicy } from '../../../institutes/application/institute-access.policy';
@@ -14,7 +17,11 @@ export class RemoveClassTeacherUseCase {
     @Inject(CLASS_REPOSITORY) private readonly classes: ClassRepository,
   ) {}
 
-  async execute(actor: Actor, classId: string, teacherId: string): Promise<void> {
+  async execute(
+    actor: Actor,
+    classId: string,
+    teacherId: string,
+  ): Promise<void> {
     const klass = await this.classes.findById(classId);
     if (!klass) throw new NotFoundError('Class not found');
     await this.policy.assertManagerOf(actor, klass.instituteId);
@@ -32,7 +39,11 @@ export class RemoveClassStudentUseCase {
     @Inject(CLASS_REPOSITORY) private readonly classes: ClassRepository,
   ) {}
 
-  async execute(actor: Actor, classId: string, studentId: string): Promise<void> {
+  async execute(
+    actor: Actor,
+    classId: string,
+    studentId: string,
+  ): Promise<void> {
     const klass = await this.classes.findById(classId);
     if (!klass) throw new NotFoundError('Class not found');
 
@@ -41,8 +52,13 @@ export class RemoveClassStudentUseCase {
       actor.instituteId === klass.instituteId &&
       (await this.classes.isTeacherOfClass(classId, actor.userId));
     if (!isClassTeacher) {
-      if (actor.role !== UserRole.InstituteManager && actor.role !== UserRole.SuperAdmin) {
-        throw new ForbiddenError('Only the manager or a class teacher can remove students');
+      if (
+        actor.role !== UserRole.InstituteManager &&
+        actor.role !== UserRole.SuperAdmin
+      ) {
+        throw new ForbiddenError(
+          'Only the manager or a class teacher can remove students',
+        );
       }
       await this.policy.assertManagerOf(actor, klass.instituteId);
     }

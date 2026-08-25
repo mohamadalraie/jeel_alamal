@@ -1,7 +1,7 @@
 <!-- SPECKIT START -->
 For additional context about technologies to be used, project structure,
 shell commands, and other important information, read the current plan:
-`specs/009-lesson-lifecycle/plan.md` (Lesson Lifecycle — دورة حياة الدرس).
+`specs/010-dinars/plan.md` (Dinars — نظام الدنانير).
 <!-- SPECKIT END -->
 
 # جيل العمل / Jeel Alamal

@@ -32,7 +32,8 @@ export class GetStudentProfileUseCase {
     instituteId: string,
     studentId: string,
   ): Promise<StudentProfileResult> {
-    const isSelf = actor.role === UserRole.Student && actor.userId === studentId;
+    const isSelf =
+      actor.role === UserRole.Student && actor.userId === studentId;
     if (!isSelf) {
       await this.policy.assertStaffOfInstitute(actor, instituteId);
     }

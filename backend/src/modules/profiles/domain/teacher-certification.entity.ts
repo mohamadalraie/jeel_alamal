@@ -18,7 +18,10 @@ export class TeacherCertification extends Entity<string> {
     super(id);
   }
 
-  static create(input: { teacherId: string; title: string }): TeacherCertification {
+  static create(input: {
+    teacherId: string;
+    title: string;
+  }): TeacherCertification {
     const title = input.title.trim();
     if (title.length < 2) {
       throw new BusinessRuleError('Certification title is too short');

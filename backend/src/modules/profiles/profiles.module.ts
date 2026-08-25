@@ -58,7 +58,10 @@ import { DrizzleStudentNoteRepository } from './infrastructure/persistence/drizz
       provide: CERTIFICATION_REPOSITORY,
       useClass: DrizzleCertificationRepository,
     },
-    { provide: STUDENT_NOTE_REPOSITORY, useClass: DrizzleStudentNoteRepository },
+    {
+      provide: STUDENT_NOTE_REPOSITORY,
+      useClass: DrizzleStudentNoteRepository,
+    },
   ],
 })
 export class ProfilesModule {}

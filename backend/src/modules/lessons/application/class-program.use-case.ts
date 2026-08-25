@@ -5,7 +5,10 @@ import { CLASS_REPOSITORY } from '../../classes/domain/class.repository';
 import type { ClassRepository } from '../../classes/domain/class.repository';
 import { InstituteAccessPolicy } from '../../institutes/application/institute-access.policy';
 import { LESSON_REPOSITORY } from '../domain/lesson.repository';
-import type { LessonRepository, ProgramEntryRead } from '../domain/lesson.repository';
+import type {
+  LessonRepository,
+  ProgramEntryRead,
+} from '../domain/lesson.repository';
 import { deriveReadStatus } from '../domain/lesson-binding-status';
 import {
   ClassProgramResult,
@@ -15,7 +18,10 @@ import {
 
 const todayYMD = () => new Date().toISOString().slice(0, 10);
 
-export const toEntryView = (e: ProgramEntryRead, today = todayYMD()): ProgramEntryView => ({
+export const toEntryView = (
+  e: ProgramEntryRead,
+  today = todayYMD(),
+): ProgramEntryView => ({
   lessonClassId: e.lessonClassId,
   lessonId: e.lessonId,
   kind: e.kind,
@@ -34,7 +40,10 @@ export const toEntryView = (e: ProgramEntryRead, today = todayYMD()): ProgramEnt
 });
 
 /** Group flat per-binding rows into one entry per lesson (institute hub). */
-export function groupByLesson(rows: ProgramEntryRead[], today = todayYMD()): InstituteLessonView[] {
+export function groupByLesson(
+  rows: ProgramEntryRead[],
+  today = todayYMD(),
+): InstituteLessonView[] {
   const byLesson = new Map<string, InstituteLessonView>();
   for (const r of rows) {
     let entry = byLesson.get(r.lessonId);

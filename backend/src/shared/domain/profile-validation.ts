@@ -26,9 +26,13 @@ export function assertBirthDateNotFuture(date: Date | null | undefined): void {
   }
 }
 
-export function assertQuranPartsInRange(parts: number | null | undefined): void {
+export function assertQuranPartsInRange(
+  parts: number | null | undefined,
+): void {
   if (parts == null) return;
   if (!Number.isInteger(parts) || parts < 0 || parts > 30) {
-    throw new BusinessRuleError('Quran parts memorized must be between 0 and 30');
+    throw new BusinessRuleError(
+      'Quran parts memorized must be between 0 and 30',
+    );
   }
 }

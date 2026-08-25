@@ -26,7 +26,10 @@ export interface AttendanceRepository {
   findByClassAndDate(
     classId: string,
     date: string,
-  ): Promise<{ session: AttendanceSession; records: AttendanceRecord[] } | null>;
+  ): Promise<{
+    session: AttendanceSession;
+    records: AttendanceRecord[];
+  } | null>;
 
   /** All sessions for a class, newest date first. */
   findSessionsByClass(classId: string): Promise<AttendanceSession[]>;

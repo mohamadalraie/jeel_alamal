@@ -138,7 +138,8 @@ export function assertValidRange(
   toAyah: number,
 ): Surah {
   const surah = BY_NUMBER.get(surahNumber);
-  if (!surah) throw new BusinessRuleError(`Invalid surah number: ${surahNumber}`);
+  if (!surah)
+    throw new BusinessRuleError(`Invalid surah number: ${surahNumber}`);
   if (
     !Number.isInteger(fromAyah) ||
     !Number.isInteger(toAyah) ||

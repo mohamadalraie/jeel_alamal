@@ -25,14 +25,20 @@ export class ProfileAccessPolicy {
   }
 
   /** Teacher EXTENDED details & deletion: super_admin or assigned manager. */
-  async assertManagesInstitute(actor: Actor, instituteId: string): Promise<void> {
+  async assertManagesInstitute(
+    actor: Actor,
+    instituteId: string,
+  ): Promise<void> {
     if (actor.role === UserRole.SuperAdmin) return;
     if (await this.isAssignedManager(actor, instituteId)) return;
     throw new ForbiddenError('Requires manager or super admin');
   }
 
   /** Student data & notes: super_admin, assigned manager, or teacher of institute. */
-  async assertStaffOfInstitute(actor: Actor, instituteId: string): Promise<void> {
+  async assertStaffOfInstitute(
+    actor: Actor,
+    instituteId: string,
+  ): Promise<void> {
     if (actor.role === UserRole.SuperAdmin) return;
     if (actor.role === UserRole.Teacher && actor.instituteId === instituteId) {
       return;

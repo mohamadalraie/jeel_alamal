@@ -1,4 +1,10 @@
-import { IsNotEmpty, IsOptional, IsString, IsUUID, MinLength } from 'class-validator';
+import {
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  IsUUID,
+  MinLength,
+} from 'class-validator';
 import { Class } from '../../domain/class.entity';
 import { ClassMembership } from '../../domain/class.repository';
 
@@ -28,7 +34,10 @@ export class ClassResponseDto {
   supervisorId: string | null;
   studentIds: string[];
 
-  static fromDomain(klass: Class, membership: ClassMembership): ClassResponseDto {
+  static fromDomain(
+    klass: Class,
+    membership: ClassMembership,
+  ): ClassResponseDto {
     const dto = new ClassResponseDto();
     dto.id = klass.id;
     dto.instituteId = klass.instituteId;

@@ -41,6 +41,8 @@ import { ClassRecitationTab } from '@/features/recitation/class-recitation-tab';
 import { ClassAttendanceTab } from '@/features/attendance/class-attendance-tab';
 import { ClassLessonsCalendar } from '@/features/attendance/class-lessons-calendar';
 import { LessonProgram } from '@/features/lessons/lesson-program';
+import { AwardDinarDialog } from '@/features/dinars/award-dinar-dialog';
+import { DinarLeaderboard } from '@/features/dinars/dinar-leaderboard';
 
 export default function ClassProfilePage({
   params,
@@ -52,6 +54,7 @@ export default function ClassProfilePage({
   const tc = useTranslations('common');
   const tRec = useTranslations('recitation');
   const tAtt = useTranslations('attendance');
+  const tDin = useTranslations('dinars');
   const locale = useLocale();
   const router = useRouter();
   const { selected, user } = useInstitute();
@@ -130,6 +133,7 @@ export default function ClassProfilePage({
           <TabsTrigger value="teachers">{t('tabTeachers')}</TabsTrigger>
           <TabsTrigger value="recitation">{tRec('classTab')}</TabsTrigger>
           <TabsTrigger value="attendance">{tAtt('tab')}</TabsTrigger>
+          <TabsTrigger value="dinars">{tDin('tab')}</TabsTrigger>
           <TabsTrigger value="details">{t('tabDetails')}</TabsTrigger>
           <TabsTrigger value="lessons">{t('tabLessons')}</TabsTrigger>
           <TabsTrigger value="activities">{t('tabActivities')}</TabsTrigger>
@@ -284,6 +288,20 @@ export default function ClassProfilePage({
         <TabsContent value="attendance" className="flex flex-col gap-4 pt-4">
           <ClassAttendanceTab classId={classId} />
           <ClassLessonsCalendar classId={classId} schedule={schedule} />
+        </TabsContent>
+
+        {/* الدنانير — class leaderboard + bulk award */}
+        <TabsContent value="dinars" className="flex flex-col gap-4 pt-4">
+          {students.length > 0 && (
+            <div className="flex justify-end">
+              <AwardDinarDialog
+                instituteId={instituteId}
+                students={students.map((s) => ({ id: s.id, name: s.name }))}
+                onDone={load}
+              />
+            </div>
+          )}
+          <DinarLeaderboard instituteId={instituteId} classId={classId} />
         </TabsContent>
 
         {/* 3 — Details + weekly schedule */}

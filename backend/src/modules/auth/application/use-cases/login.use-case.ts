@@ -69,6 +69,10 @@ export class LoginUseCase {
       new Date(Date.now() + REFRESH_TOKEN_TTL_MS),
     );
 
-    return { user: UserResponseDto.fromDomain(user), accessToken, refreshToken };
+    return {
+      user: UserResponseDto.fromDomain(user),
+      accessToken,
+      refreshToken,
+    };
   }
 }

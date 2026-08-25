@@ -12,3 +12,4 @@ export * from '../../modules/profiles/infrastructure/persistence/profile.schema'
 export * from '../../modules/recitations/infrastructure/persistence/recitation.schema';
 export * from '../../modules/attendance/infrastructure/persistence/attendance.schema';
 export * from '../../modules/lessons/infrastructure/persistence/lesson.schema';
+export * from '../../modules/dinars/infrastructure/persistence/dinar.schema';

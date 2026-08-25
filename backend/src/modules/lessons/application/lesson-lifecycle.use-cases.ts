@@ -29,16 +29,23 @@ export class StartLessonUseCase {
     const binding = await this.lessons.findBindingById(lessonClassId);
     if (!binding) throw new NotFoundError('Lesson assignment not found');
     if (binding.teacherId !== actor.userId) {
-      throw new ForbiddenError('Only the assigned teacher can start this lesson');
+      throw new ForbiddenError(
+        'Only the assigned teacher can start this lesson',
+      );
     }
     const lesson = await this.lessons.findLessonById(binding.lessonId);
     if (!lesson) throw new NotFoundError('Lesson not found');
     if (lesson.date > todayYMD()) {
-      throw new BusinessRuleError('This lesson cannot be started before its date');
+      throw new BusinessRuleError(
+        'This lesson cannot be started before its date',
+      );
     }
 
     binding.start(new Date());
-    const updated = await this.lessons.updateBindingLifecycle(binding, 'pending');
+    const updated = await this.lessons.updateBindingLifecycle(
+      binding,
+      'pending',
+    );
     if (!updated) {
       throw new ConflictError('Lesson has already been started');
     }
@@ -71,10 +78,16 @@ export class EndLessonUseCase {
       LessonSettings.defaults(lesson.instituteId);
 
     const actualDurationMinutes = binding.end(new Date());
-    const status = settings.evaluate(actualDurationMinutes, lesson.expectedDurationMinutes);
+    const status = settings.evaluate(
+      actualDurationMinutes,
+      lesson.expectedDurationMinutes,
+    );
     binding.applyStatus(status);
 
-    const updated = await this.lessons.updateBindingLifecycle(binding, 'started');
+    const updated = await this.lessons.updateBindingLifecycle(
+      binding,
+      'started',
+    );
     if (!updated) {
       throw new ConflictError('Lesson is not currently in progress');
     }
@@ -96,7 +109,9 @@ export class GetLessonTimerUseCase {
     const view = await this.lessons.getBindingTimerView(lessonClassId);
     if (!view) throw new NotFoundError('Lesson assignment not found');
     if (view.teacherId !== actor.userId) {
-      throw new ForbiddenError('Only the assigned teacher can view this lesson timer');
+      throw new ForbiddenError(
+        'Only the assigned teacher can view this lesson timer',
+      );
     }
     return {
       lessonClassId: view.lessonClassId,

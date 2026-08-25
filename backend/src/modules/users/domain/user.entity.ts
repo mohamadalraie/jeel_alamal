@@ -78,10 +78,14 @@ export class User extends Entity<string> {
     const tenantBound =
       input.role === UserRole.Teacher || input.role === UserRole.Student;
     if (tenantBound && !input.instituteId) {
-      throw new BusinessRuleError(`A ${input.role} must belong to an institute`);
+      throw new BusinessRuleError(
+        `A ${input.role} must belong to an institute`,
+      );
     }
     if (!tenantBound && input.instituteId) {
-      throw new BusinessRuleError(`A ${input.role} is not bound to one institute`);
+      throw new BusinessRuleError(
+        `A ${input.role} is not bound to one institute`,
+      );
     }
     if (input.schoolGrade && input.role !== UserRole.Student) {
       throw new BusinessRuleError('Only students have a school grade');
@@ -131,9 +135,18 @@ export class User extends Entity<string> {
     this.props.lastName = lastName;
     this.props.birthDate = input.birthDate;
     this.props.phone = input.phone;
-    if (input.schoolGrade !== undefined && this.props.role === UserRole.Student) {
+    if (
+      input.schoolGrade !== undefined &&
+      this.props.role === UserRole.Student
+    ) {
       this.props.schoolGrade = input.schoolGrade || null;
     }
+  }
+
+  /** Replace the stored password hash (called by ChangePasswordUseCase). */
+  changePassword(newHash: string): void {
+    if (!newHash) throw new BusinessRuleError('Password hash is required');
+    this.props.passwordHash = newHash;
   }
 
   /** Edit teacher extended details (manager/super_admin only). */

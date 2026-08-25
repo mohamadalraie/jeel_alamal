@@ -29,7 +29,7 @@ export class AnchorDto {
 }
 
 export class ScheduleSlotDto {
-  @IsIn(WEEKDAYS as unknown as string[])
+  @IsIn(WEEKDAYS)
   dayOfWeek: string;
 
   @ValidateNested()

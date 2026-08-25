@@ -85,7 +85,11 @@ async function insertSources(tx: DrizzleTx, lesson: Lesson): Promise<void> {
 }
 
 /** Next order index for a class's entries on a given date. */
-async function nextSortFor(tx: DrizzleTx, classId: string, date: string): Promise<number> {
+async function nextSortFor(
+  tx: DrizzleTx,
+  classId: string,
+  date: string,
+): Promise<number> {
   const rows = await tx
     .select({ s: lessonClasses.sort })
     .from(lessonClasses)
@@ -139,7 +143,10 @@ export class DrizzleLessonRepository implements LessonRepository {
   }
 
   // ── Lessons (writes) ──
-  async createLesson(lesson: Lesson, bindings: LessonClassBinding[]): Promise<void> {
+  async createLesson(
+    lesson: Lesson,
+    bindings: LessonClassBinding[],
+  ): Promise<void> {
     await this.db.transaction(async (tx) => {
       await tx.insert(lessons).values({
         id: lesson.id,
@@ -168,7 +175,11 @@ export class DrizzleLessonRepository implements LessonRepository {
   }
 
   async findLessonById(id: string): Promise<Lesson | null> {
-    const [row] = await this.db.select().from(lessons).where(eq(lessons.id, id)).limit(1);
+    const [row] = await this.db
+      .select()
+      .from(lessons)
+      .where(eq(lessons.id, id))
+      .limit(1);
     if (!row) return null;
     const srcs = await this.db
       .select()
@@ -189,12 +200,17 @@ export class DrizzleLessonRepository implements LessonRepository {
           expectedDurationMinutes: lesson.expectedDurationMinutes,
         })
         .where(eq(lessons.id, lesson.id));
-      await tx.delete(lessonSources).where(eq(lessonSources.lessonId, lesson.id));
+      await tx
+        .delete(lessonSources)
+        .where(eq(lessonSources.lessonId, lesson.id));
       await insertSources(tx, lesson);
     });
   }
 
-  async setBindings(lessonId: string, bindings: LessonClassBinding[]): Promise<void> {
+  async setBindings(
+    lessonId: string,
+    bindings: LessonClassBinding[],
+  ): Promise<void> {
     await this.db.transaction(async (tx) => {
       const [row] = await tx
         .select({ date: lessons.date })
@@ -202,7 +218,9 @@ export class DrizzleLessonRepository implements LessonRepository {
         .where(eq(lessons.id, lessonId))
         .limit(1);
       const date = row?.date ?? '1970-01-01';
-      await tx.delete(lessonClasses).where(eq(lessonClasses.lessonId, lessonId));
+      await tx
+        .delete(lessonClasses)
+        .where(eq(lessonClasses.lessonId, lessonId));
       for (const b of bindings) {
         const sort = await nextSortFor(tx, b.classId, date);
         await tx.insert(lessonClasses).values({
@@ -221,10 +239,14 @@ export class DrizzleLessonRepository implements LessonRepository {
   }
 
   async removeBinding(lessonClassId: string): Promise<void> {
-    await this.db.delete(lessonClasses).where(eq(lessonClasses.id, lessonClassId));
+    await this.db
+      .delete(lessonClasses)
+      .where(eq(lessonClasses.id, lessonClassId));
   }
 
-  async findBindingById(lessonClassId: string): Promise<LessonClassBinding | null> {
+  async findBindingById(
+    lessonClassId: string,
+  ): Promise<LessonClassBinding | null> {
     const [row] = await this.db
       .select()
       .from(lessonClasses)
@@ -237,7 +259,12 @@ export class DrizzleLessonRepository implements LessonRepository {
     const [row] = await this.db
       .select({ id: lessonClasses.id })
       .from(lessonClasses)
-      .where(and(eq(lessonClasses.lessonId, lessonId), ne(lessonClasses.status, 'pending')))
+      .where(
+        and(
+          eq(lessonClasses.lessonId, lessonId),
+          ne(lessonClasses.status, 'pending'),
+        ),
+      )
       .limit(1);
     return !!row;
   }
@@ -263,7 +290,9 @@ export class DrizzleLessonRepository implements LessonRepository {
     return result.length > 0;
   }
 
-  async getBindingTimerView(lessonClassId: string): Promise<LessonTimerRead | null> {
+  async getBindingTimerView(
+    lessonClassId: string,
+  ): Promise<LessonTimerRead | null> {
     const [row] = await this.db
       .select({
         lessonClassId: lessonClasses.id,
@@ -292,7 +321,9 @@ export class DrizzleLessonRepository implements LessonRepository {
       .select({ id: lessonClasses.id, sort: lessonClasses.sort })
       .from(lessonClasses)
       .innerJoin(lessons, eq(lessonClasses.lessonId, lessons.id))
-      .where(and(eq(lessonClasses.classId, row.classId), eq(lessons.date, row.date)))
+      .where(
+        and(eq(lessonClasses.classId, row.classId), eq(lessons.date, row.date)),
+      )
       .orderBy(asc(lessonClasses.sort));
     const ordinal = dayRows.findIndex((r) => r.id === lessonClassId) + 1;
 
@@ -334,20 +365,31 @@ export class DrizzleLessonRepository implements LessonRepository {
   }
 
   // ── Reads ──
-  async getClassProgram(classId: string, from?: string, to?: string): Promise<ProgramEntryRead[]> {
+  async getClassProgram(
+    classId: string,
+    from?: string,
+    to?: string,
+  ): Promise<ProgramEntryRead[]> {
     const conds: SQL[] = [eq(lessonClasses.classId, classId)];
     if (from) conds.push(gte(lessons.date, from));
     if (to) conds.push(lte(lessons.date, to));
     return this.queryEntries(and(...conds)!);
   }
 
-  async getClassProgramUpTo(classId: string, today: string): Promise<ProgramEntryRead[]> {
+  async getClassProgramUpTo(
+    classId: string,
+    today: string,
+  ): Promise<ProgramEntryRead[]> {
     return this.queryEntries(
       and(eq(lessonClasses.classId, classId), lte(lessons.date, today))!,
     );
   }
 
-  async getInstituteProgram(instituteId: string, from?: string, to?: string): Promise<ProgramEntryRead[]> {
+  async getInstituteProgram(
+    instituteId: string,
+    from?: string,
+    to?: string,
+  ): Promise<ProgramEntryRead[]> {
     const conds: SQL[] = [eq(lessons.instituteId, instituteId)];
     if (from) conds.push(gte(lessons.date, from));
     if (to) conds.push(lte(lessons.date, to));
@@ -401,7 +443,11 @@ export class DrizzleLessonRepository implements LessonRepository {
     const sourcesByLesson = new Map<string, SourceRead[]>();
     for (const s of srcRows) {
       const list = sourcesByLesson.get(s.lessonId) ?? [];
-      list.push({ kind: s.kind as LessonSourceKind, url: s.url, description: s.description });
+      list.push({
+        kind: s.kind as LessonSourceKind,
+        url: s.url,
+        description: s.description,
+      });
       sourcesByLesson.set(s.lessonId, list);
     }
 

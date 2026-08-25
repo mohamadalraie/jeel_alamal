@@ -8,14 +8,15 @@ import {
 import { CLASS_REPOSITORY } from '../../domain/class.repository';
 import type { ClassRepository } from '../../domain/class.repository';
 import { assertValidSlot } from '../../domain/class-schedule';
-import type { AnchorKind, ScheduleSlot, Weekday } from '../../domain/class-schedule';
+import type {
+  AnchorKind,
+  ScheduleSlot,
+  Weekday,
+} from '../../domain/class-schedule';
 import { USER_REPOSITORY } from '../../../users/domain/user.repository';
 import type { UserRepository } from '../../../users/domain/user.repository';
 import { InstituteAccessPolicy } from '../../../institutes/application/institute-access.policy';
-import {
-  ClassProfileResult,
-  UpdateClassDto,
-} from '../dto/class-profile.dto';
+import { ClassProfileResult, UpdateClassDto } from '../dto/class-profile.dto';
 
 /** Full class aggregate for the profile page: details, schedule, members (named). */
 @Injectable()
@@ -32,7 +33,9 @@ export class GetClassProfileUseCase {
 
     if (actor.role === UserRole.Student) {
       // Students may only view the class they are enrolled in.
-      const current = await this.classes.findCurrentClassOfStudent(actor.userId);
+      const current = await this.classes.findCurrentClassOfStudent(
+        actor.userId,
+      );
       if (!current || current.id !== classId) {
         throw new ForbiddenError('You are not enrolled in this class');
       }
@@ -84,7 +87,11 @@ export class UpdateClassUseCase {
     @Inject(CLASS_REPOSITORY) private readonly classes: ClassRepository,
   ) {}
 
-  async execute(actor: Actor, classId: string, dto: UpdateClassDto): Promise<void> {
+  async execute(
+    actor: Actor,
+    classId: string,
+    dto: UpdateClassDto,
+  ): Promise<void> {
     const klass = await this.classes.findById(classId);
     if (!klass) throw new NotFoundError('Class not found');
     await this.policy.assertManagerOf(actor, klass.instituteId);
@@ -101,7 +108,11 @@ export class SetClassLessonsVisibilityUseCase {
     @Inject(CLASS_REPOSITORY) private readonly classes: ClassRepository,
   ) {}
 
-  async execute(actor: Actor, classId: string, visible: boolean): Promise<void> {
+  async execute(
+    actor: Actor,
+    classId: string,
+    visible: boolean,
+  ): Promise<void> {
     const klass = await this.classes.findById(classId);
     if (!klass) throw new NotFoundError('Class not found');
     await this.policy.assertManagerOf(actor, klass.instituteId);
@@ -150,7 +161,9 @@ export class SetClassScheduleUseCase {
     const typed: ScheduleSlot[] = slots.map((s) => ({
       dayOfWeek: s.dayOfWeek as Weekday,
       start: { kind: s.start.kind as AnchorKind, value: s.start.value },
-      end: s.end ? { kind: s.end.kind as AnchorKind, value: s.end.value } : null,
+      end: s.end
+        ? { kind: s.end.kind as AnchorKind, value: s.end.value }
+        : null,
     }));
     typed.forEach(assertValidSlot);
     await this.classes.setSchedule(classId, typed);

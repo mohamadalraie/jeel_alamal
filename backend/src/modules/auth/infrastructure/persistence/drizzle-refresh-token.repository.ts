@@ -10,7 +10,11 @@ import { refreshTokens } from './refresh-token.schema';
 export class DrizzleRefreshTokenRepository implements RefreshTokenRepository {
   constructor(@Inject(DRIZZLE) private readonly db: DrizzleDb) {}
 
-  async save(userId: string, tokenHash: string, expiresAt: Date): Promise<void> {
+  async save(
+    userId: string,
+    tokenHash: string,
+    expiresAt: Date,
+  ): Promise<void> {
     await this.db.insert(refreshTokens).values({
       id: randomUUID(),
       userId,
@@ -35,8 +39,6 @@ export class DrizzleRefreshTokenRepository implements RefreshTokenRepository {
   }
 
   async deleteAllForUser(userId: string): Promise<void> {
-    await this.db
-      .delete(refreshTokens)
-      .where(eq(refreshTokens.userId, userId));
+    await this.db.delete(refreshTokens).where(eq(refreshTokens.userId, userId));
   }
 }

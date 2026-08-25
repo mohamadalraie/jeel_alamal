@@ -158,7 +158,12 @@ export class LessonsController {
     @Param('classId', ParseUUIDPipe) classId: string,
     @Body() dto: ReorderDayDto,
   ) {
-    await this.reorderDay.execute(actor, classId, dto.date, dto.orderedLessonClassIds);
+    await this.reorderDay.execute(
+      actor,
+      classId,
+      dto.date,
+      dto.orderedLessonClassIds,
+    );
   }
 
   // ── Reads ──

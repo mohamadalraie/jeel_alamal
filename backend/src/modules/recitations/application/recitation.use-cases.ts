@@ -8,11 +8,10 @@ import { CLASS_REPOSITORY } from '../../classes/domain/class.repository';
 import type { ClassRepository } from '../../classes/domain/class.repository';
 import { InstituteAccessPolicy } from '../../institutes/application/institute-access.policy';
 import { Recitation } from '../domain/recitation.entity';
-import {
-  RECITATION_REPOSITORY,
-} from '../domain/recitation.repository';
+import { RECITATION_REPOSITORY } from '../domain/recitation.repository';
 import type { RecitationRepository } from '../domain/recitation.repository';
 import { getSurah, SURAHS } from '../domain/quran';
+import { ApplyRecitationDinarUseCase } from '../../dinars/application/apply-recitation-dinar.use-case';
 import { buildHeart } from './heart';
 import {
   AddRecitationDto,
@@ -55,6 +54,7 @@ export class AddRecitationUseCase {
     @Inject(USER_REPOSITORY) private readonly users: UserRepository,
     @Inject(RECITATION_REPOSITORY)
     private readonly recitations: RecitationRepository,
+    private readonly applyDinar: ApplyRecitationDinarUseCase,
   ) {}
 
   async execute(
@@ -63,11 +63,7 @@ export class AddRecitationUseCase {
     dto: AddRecitationDto,
   ): Promise<void> {
     const student = await this.users.findById(studentId);
-    if (
-      !student ||
-      student.role !== UserRole.Student ||
-      !student.instituteId
-    ) {
+    if (!student || student.role !== UserRole.Student || !student.instituteId) {
       throw new NotFoundError('Student not found');
     }
     await this.policy.assertStaffOf(actor, student.instituteId);
@@ -82,6 +78,15 @@ export class AddRecitationUseCase {
       recitedBy: actor.userId,
     });
     await this.recitations.save(recitation);
+
+    // Automatic dinar projection from the recitation rating (spec 010).
+    await this.applyDinar.execute({
+      instituteId: student.instituteId,
+      studentId,
+      recitationId: recitation.id,
+      rating: dto.rating,
+      recitedBy: actor.userId,
+    });
   }
 }
 
@@ -103,7 +108,8 @@ export class GetStudentRecitationUseCase {
     if (!student || student.role !== UserRole.Student || !student.instituteId) {
       throw new NotFoundError('Student not found');
     }
-    const isSelf = actor.role === UserRole.Student && actor.userId === studentId;
+    const isSelf =
+      actor.role === UserRole.Student && actor.userId === studentId;
     if (!isSelf) {
       await this.policy.assertStaffOf(actor, student.instituteId);
     }
@@ -143,7 +149,10 @@ export class GetClassRecitationUseCase {
   async execute(
     actor: Actor,
     classId: string,
-  ): Promise<{ log: RecitationLogItem[]; students: { id: string; name: string }[] }> {
+  ): Promise<{
+    log: RecitationLogItem[];
+    students: { id: string; name: string }[];
+  }> {
     const klass = await this.classes.findById(classId);
     if (!klass) throw new NotFoundError('Class not found');
     await this.policy.assertStaffOf(actor, klass.instituteId);
@@ -152,9 +161,7 @@ export class GetClassRecitationUseCase {
     const studentIds = membership.studentIds;
     const recs = await this.recitations.findByStudents(studentIds);
 
-    const ids = [
-      ...new Set([...studentIds, ...recs.map((r) => r.recitedBy)]),
-    ];
+    const ids = [...new Set([...studentIds, ...recs.map((r) => r.recitedBy)])];
     const people = await this.users.findManyByIds(ids);
     const nameMap = new Map(people.map((u) => [u.id, u.fullName]));
     const nameOf = (id: string) => nameMap.get(id) ?? '—';

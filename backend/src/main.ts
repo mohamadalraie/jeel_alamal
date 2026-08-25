@@ -6,7 +6,10 @@ import cookieParser from 'cookie-parser';
 import * as express from 'express';
 import { AppModule } from './app.module';
 import { HttpExceptionFilter } from './core/filters/http-exception.filter';
-import { UPLOADS_DIR, UPLOADS_URL_PREFIX } from './modules/uploads/uploads.config';
+import {
+  UPLOADS_DIR,
+  UPLOADS_URL_PREFIX,
+} from './modules/uploads/uploads.config';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);

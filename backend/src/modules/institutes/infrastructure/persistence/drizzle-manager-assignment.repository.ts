@@ -6,9 +6,7 @@ import type { DrizzleDb } from '../../../../core/database/drizzle.provider';
 import { managerInstitutes } from './manager-assignment.schema';
 
 @Injectable()
-export class DrizzleManagerAssignmentRepository
-  implements ManagerAssignmentRepository
-{
+export class DrizzleManagerAssignmentRepository implements ManagerAssignmentRepository {
   constructor(@Inject(DRIZZLE) private readonly db: DrizzleDb) {}
 
   async isAssigned(managerId: string, instituteId: string): Promise<boolean> {

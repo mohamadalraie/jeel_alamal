@@ -31,7 +31,9 @@ interface LessonProps {
 function assertDuration(minutes: number | null | undefined): number | null {
   if (minutes === null || minutes === undefined) return null;
   if (!Number.isInteger(minutes) || minutes < 1) {
-    throw new BusinessRuleError('Expected duration must be a positive whole number of minutes');
+    throw new BusinessRuleError(
+      'Expected duration must be a positive whole number of minutes',
+    );
   }
   return minutes;
 }
@@ -99,11 +101,15 @@ export class Lesson extends Entity<string> {
       this.props.date = input.date;
     }
     if (input.expectedDurationMinutes !== undefined) {
-      this.props.expectedDurationMinutes = assertDuration(input.expectedDurationMinutes);
+      this.props.expectedDurationMinutes = assertDuration(
+        input.expectedDurationMinutes,
+      );
     }
     if (input.name !== undefined) this.props.name = input.name;
-    if (input.description !== undefined) this.props.description = input.description;
-    if (input.categoryId !== undefined) this.props.categoryId = input.categoryId;
+    if (input.description !== undefined)
+      this.props.description = input.description;
+    if (input.categoryId !== undefined)
+      this.props.categoryId = input.categoryId;
     if (input.sources !== undefined) this.props.sources = input.sources;
     const n = normalize(this.props);
     this.props.name = n.name;
@@ -147,7 +153,13 @@ export class Lesson extends Entity<string> {
 /** Apply kind invariants: recitation entries are field-less. */
 function normalize(props: LessonProps): LessonProps {
   if (props.kind === LessonKind.Recitation) {
-    return { ...props, name: null, description: null, categoryId: null, sources: [] };
+    return {
+      ...props,
+      name: null,
+      description: null,
+      categoryId: null,
+      sources: [],
+    };
   }
   const name = props.name?.trim() || null;
   if (!name) {

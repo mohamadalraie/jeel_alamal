@@ -24,7 +24,12 @@ describe('Lesson entity (spec 008)', () => {
       description: 'Intro',
       categoryId: 'cat-1',
       sources: [
-        { kind: LessonSourceKind.Link, url: 'https://x', description: 'v', sort: 0 },
+        {
+          kind: LessonSourceKind.Link,
+          url: 'https://x',
+          description: 'v',
+          sort: 0,
+        },
       ],
     });
     expect(lesson.name).toBe('Fiqh');
@@ -39,7 +44,14 @@ describe('Lesson entity (spec 008)', () => {
       name: 'ignored',
       description: 'ignored',
       categoryId: 'cat-1',
-      sources: [{ kind: LessonSourceKind.Link, url: 'https://x', description: null, sort: 0 }],
+      sources: [
+        {
+          kind: LessonSourceKind.Link,
+          url: 'https://x',
+          description: null,
+          sort: 0,
+        },
+      ],
     });
     expect(rec.kind).toBe(LessonKind.Recitation);
     expect(rec.name).toBeNull();
@@ -50,12 +62,21 @@ describe('Lesson entity (spec 008)', () => {
 
   it('rejects an invalid date', () => {
     expect(() =>
-      Lesson.create({ ...base, date: '07-01-2026', kind: LessonKind.Lesson, name: 'X' }),
+      Lesson.create({
+        ...base,
+        date: '07-01-2026',
+        kind: LessonKind.Lesson,
+        name: 'X',
+      }),
     ).toThrow(BusinessRuleError);
   });
 
   it('edit() re-applies recitation invariants are not needed but lesson edits persist', () => {
-    const lesson = Lesson.create({ ...base, kind: LessonKind.Lesson, name: 'A' });
+    const lesson = Lesson.create({
+      ...base,
+      kind: LessonKind.Lesson,
+      name: 'A',
+    });
     lesson.edit({ name: 'B', description: 'desc' });
     expect(lesson.name).toBe('B');
     expect(lesson.description).toBe('desc');
@@ -88,7 +109,11 @@ describe('Lesson entity (spec 008)', () => {
   });
 
   it('edit() can set and clear the expected duration', () => {
-    const lesson = Lesson.create({ ...base, kind: LessonKind.Lesson, name: 'A' });
+    const lesson = Lesson.create({
+      ...base,
+      kind: LessonKind.Lesson,
+      name: 'A',
+    });
     lesson.edit({ expectedDurationMinutes: 30 });
     expect(lesson.expectedDurationMinutes).toBe(30);
     lesson.edit({ expectedDurationMinutes: null });

@@ -1,7 +1,15 @@
 import { BusinessRuleError } from '../../../shared/domain/domain.error';
 
 /** Days of the week, Arabic-week order (Saturday first). */
-export const WEEKDAYS = ['sat', 'sun', 'mon', 'tue', 'wed', 'thu', 'fri'] as const;
+export const WEEKDAYS = [
+  'sat',
+  'sun',
+  'mon',
+  'tue',
+  'wed',
+  'thu',
+  'fri',
+] as const;
 export type Weekday = (typeof WEEKDAYS)[number];
 
 /** The five daily prayers used as schedule anchors (spec 004). */

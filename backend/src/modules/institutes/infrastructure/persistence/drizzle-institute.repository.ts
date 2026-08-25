@@ -72,7 +72,10 @@ export class DrizzleInstituteRepository implements InstituteRepository {
    * any step rolls back everything — an institute can never exist without its
    * manager (spec 001 FR-2).
    */
-  async provisionWithManager(institute: Institute, manager: User): Promise<void> {
+  async provisionWithManager(
+    institute: Institute,
+    manager: User,
+  ): Promise<void> {
     await this.db.transaction(async (tx) => {
       await tx.insert(institutes).values(toRow(institute));
       await tx.insert(users).values(UserMapper.toRow(manager));

@@ -4,24 +4,40 @@ import { BusinessRuleError } from '../../../shared/domain/domain.error';
 
 describe('deriveReadStatus (spec 009)', () => {
   it('surfaces a past pending binding as not_given', () => {
-    expect(deriveReadStatus('pending', '2026-07-01', '2026-07-05')).toBe('not_given');
+    expect(deriveReadStatus('pending', '2026-07-01', '2026-07-05')).toBe(
+      'not_given',
+    );
   });
 
   it('keeps a today/future pending binding as pending', () => {
-    expect(deriveReadStatus('pending', '2026-07-05', '2026-07-05')).toBe('pending');
-    expect(deriveReadStatus('pending', '2026-07-09', '2026-07-05')).toBe('pending');
+    expect(deriveReadStatus('pending', '2026-07-05', '2026-07-05')).toBe(
+      'pending',
+    );
+    expect(deriveReadStatus('pending', '2026-07-09', '2026-07-05')).toBe(
+      'pending',
+    );
   });
 
   it('never rewrites a non-pending status', () => {
-    expect(deriveReadStatus('started', '2026-07-01', '2026-07-05')).toBe('started');
-    expect(deriveReadStatus('finished', '2026-07-01', '2026-07-05')).toBe('finished');
-    expect(deriveReadStatus('over_time', '2026-07-01', '2026-07-05')).toBe('over_time');
+    expect(deriveReadStatus('started', '2026-07-01', '2026-07-05')).toBe(
+      'started',
+    );
+    expect(deriveReadStatus('finished', '2026-07-01', '2026-07-05')).toBe(
+      'finished',
+    );
+    expect(deriveReadStatus('over_time', '2026-07-01', '2026-07-05')).toBe(
+      'over_time',
+    );
   });
 });
 
 describe('LessonClassBinding lifecycle (spec 009)', () => {
   const make = () =>
-    LessonClassBinding.create({ lessonId: 'l1', classId: 'c1', teacherId: 't1' });
+    LessonClassBinding.create({
+      lessonId: 'l1',
+      classId: 'c1',
+      teacherId: 't1',
+    });
 
   it('starts from pending and records the start time', () => {
     const b = make();

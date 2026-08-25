@@ -58,34 +58,49 @@ abstract class LessonBase {
 
       const klass = await this.classes.findById(a.classId);
       if (!klass || klass.instituteId !== instituteId) {
-        throw new BusinessRuleError('A selected class is not in this institute');
+        throw new BusinessRuleError(
+          'A selected class is not in this institute',
+        );
       }
       await this.assertCanTeach(a.teacherId, instituteId);
-      const isClassMember = await this.classes.isTeacherOfClass(a.classId, a.teacherId);
+      const isClassMember = await this.classes.isTeacherOfClass(
+        a.classId,
+        a.teacherId,
+      );
       if (!isClassMember) {
         throw new BusinessRuleError(
           'The assigned teacher is not a member of the selected class',
         );
       }
       bindings.push(
-        LessonClassBinding.create({ lessonId, classId: a.classId, teacherId: a.teacherId }),
+        LessonClassBinding.create({
+          lessonId,
+          classId: a.classId,
+          teacherId: a.teacherId,
+        }),
       );
     }
     return bindings;
   }
 
   /** The assigned teacher must be a teacher of the institute or a manager of it. */
-  protected async assertCanTeach(userId: string, instituteId: string): Promise<void> {
+  protected async assertCanTeach(
+    userId: string,
+    instituteId: string,
+  ): Promise<void> {
     const user = await this.users.findById(userId);
     if (!user) throw new BusinessRuleError('Assigned teacher not found');
-    if (user.role === UserRole.Teacher && user.instituteId === instituteId) return;
+    if (user.role === UserRole.Teacher && user.instituteId === instituteId)
+      return;
     if (
       user.role === UserRole.InstituteManager &&
       (await this.assignments.isAssigned(userId, instituteId))
     ) {
       return;
     }
-    throw new BusinessRuleError('The assigned teacher is not a teacher of this institute');
+    throw new BusinessRuleError(
+      'The assigned teacher is not a teacher of this institute',
+    );
   }
 
   protected async assertCategoryInInstitute(
@@ -120,20 +135,27 @@ export class CreateLessonUseCase extends LessonBase {
   ): Promise<{ lessonId: string }> {
     await this.policy.assertManagerOf(actor, instituteId);
     const isLesson = dto.kind === LessonKind.Lesson;
-    await this.assertCategoryInInstitute(isLesson ? dto.categoryId : null, instituteId);
+    await this.assertCategoryInInstitute(
+      isLesson ? dto.categoryId : null,
+      instituteId,
+    );
 
     const lesson = Lesson.create({
       instituteId,
       kind: dto.kind,
-      name: isLesson ? dto.name ?? null : null,
-      description: isLesson ? dto.description ?? null : null,
-      categoryId: isLesson ? dto.categoryId ?? null : null,
+      name: isLesson ? (dto.name ?? null) : null,
+      description: isLesson ? (dto.description ?? null) : null,
+      categoryId: isLesson ? (dto.categoryId ?? null) : null,
       date: dto.date,
       expectedDurationMinutes: dto.expectedDurationMinutes ?? null,
       sources: isLesson ? toSources(dto.sources) : [],
       createdBy: actor.userId,
     });
-    const bindings = await this.buildBindings(lesson.id, instituteId, dto.assignments);
+    const bindings = await this.buildBindings(
+      lesson.id,
+      instituteId,
+      dto.assignments,
+    );
     await this.lessons.createLesson(lesson, bindings);
     return { lessonId: lesson.id };
   }
@@ -152,7 +174,11 @@ export class UpdateLessonUseCase extends LessonBase {
     super(policy, lessons, classes, users, assignments);
   }
 
-  async execute(actor: Actor, lessonId: string, dto: UpdateLessonDto): Promise<void> {
+  async execute(
+    actor: Actor,
+    lessonId: string,
+    dto: UpdateLessonDto,
+  ): Promise<void> {
     const lesson = await this.lessons.findLessonById(lessonId);
     if (!lesson) throw new NotFoundError('Lesson not found');
     await this.policy.assertManagerOf(actor, lesson.instituteId);
@@ -178,12 +204,19 @@ export class UpdateLessonUseCase extends LessonBase {
       categoryId: dto.categoryId,
       date: dto.date,
       expectedDurationMinutes: dto.expectedDurationMinutes,
-      sources: lesson.kind === LessonKind.Lesson && dto.sources ? toSources(dto.sources) : undefined,
+      sources:
+        lesson.kind === LessonKind.Lesson && dto.sources
+          ? toSources(dto.sources)
+          : undefined,
     });
     await this.lessons.updateLesson(lesson);
 
     if (dto.assignments) {
-      const bindings = await this.buildBindings(lesson.id, lesson.instituteId, dto.assignments);
+      const bindings = await this.buildBindings(
+        lesson.id,
+        lesson.instituteId,
+        dto.assignments,
+      );
       await this.lessons.setBindings(lesson.id, bindings);
     }
   }

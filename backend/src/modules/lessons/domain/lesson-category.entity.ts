@@ -25,8 +25,10 @@ export class LessonCategory extends Entity<string> {
   }): LessonCategory {
     const name = input.name.trim();
     const color = input.color.trim();
-    if (name.length < 1) throw new BusinessRuleError('Category name is required');
-    if (color.length < 1) throw new BusinessRuleError('Category color is required');
+    if (name.length < 1)
+      throw new BusinessRuleError('Category name is required');
+    if (color.length < 1)
+      throw new BusinessRuleError('Category color is required');
     return new LessonCategory(randomUUID(), {
       instituteId: input.instituteId,
       name,

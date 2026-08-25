@@ -187,7 +187,11 @@ export interface ProgramEntryView {
   actualEndTime: string | null;
   teacher: { id: string; name: string };
   className: string;
-  sources: { kind: LessonSourceKind; url: string; description: string | null }[];
+  sources: {
+    kind: LessonSourceKind;
+    url: string;
+    description: string | null;
+  }[];
 }
 
 export interface ClassProgramResult {
@@ -216,7 +220,11 @@ export interface InstituteLessonView {
   category: CategoryView | null;
   date: string;
   expectedDurationMinutes: number | null;
-  sources: { kind: LessonSourceKind; url: string; description: string | null }[];
+  sources: {
+    kind: LessonSourceKind;
+    url: string;
+    description: string | null;
+  }[];
   classes: {
     lessonClassId: string;
     classId: string;

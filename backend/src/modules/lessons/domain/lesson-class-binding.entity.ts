@@ -1,7 +1,10 @@
 import { randomUUID } from 'node:crypto';
 import { Entity } from '../../../shared/domain/entity.base';
 import { BusinessRuleError } from '../../../shared/domain/domain.error';
-import type { FinalLessonStatus, StoredLessonStatus } from './lesson-binding-status';
+import type {
+  FinalLessonStatus,
+  StoredLessonStatus,
+} from './lesson-binding-status';
 
 interface LessonClassBindingProps {
   lessonId: string;
@@ -44,7 +47,10 @@ export class LessonClassBinding extends Entity<string> {
     });
   }
 
-  static reconstitute(id: string, props: LessonClassBindingProps): LessonClassBinding {
+  static reconstitute(
+    id: string,
+    props: LessonClassBindingProps,
+  ): LessonClassBinding {
     return new LessonClassBinding(id, props);
   }
 

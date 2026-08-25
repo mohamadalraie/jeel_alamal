@@ -1,7 +1,10 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { Actor } from '../../../shared/application/actor';
 import { UserRole } from '../../../shared/domain/user-role';
-import { ForbiddenError, NotFoundError } from '../../../shared/domain/domain.error';
+import {
+  ForbiddenError,
+  NotFoundError,
+} from '../../../shared/domain/domain.error';
 import { CLASS_REPOSITORY } from '../../classes/domain/class.repository';
 import type { ClassRepository } from '../../classes/domain/class.repository';
 import { LESSON_REPOSITORY } from '../domain/lesson.repository';

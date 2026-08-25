@@ -13,6 +13,7 @@ import { StudentNotesCard } from '@/features/profiles/student-notes-card';
 import { ProfileHeader } from '@/features/profiles/profile-header';
 import { StudentRecitationTab } from '@/features/recitation/student-recitation-tab';
 import { StudentAttendanceView } from '@/features/attendance/student-attendance-view';
+import { StudentDinarsView } from '@/features/dinars/student-dinars-view';
 
 export default function StudentProfilePage({
   params,
@@ -24,8 +25,9 @@ export default function StudentProfilePage({
   const tc = useTranslations('common');
   const tRec = useTranslations('recitation');
   const tAtt = useTranslations('attendance');
+  const tDin = useTranslations('dinars');
   const router = useRouter();
-  const { selected } = useInstitute();
+  const { selected, user } = useInstitute();
   const [profile, setProfile] = useState<StudentProfile | null>(null);
   const [notFound, setNotFound] = useState(false);
 
@@ -62,6 +64,7 @@ export default function StudentProfilePage({
           <TabsTrigger value="info">{t('basicInfo')}</TabsTrigger>
           <TabsTrigger value="recitation">{tRec('tab')}</TabsTrigger>
           <TabsTrigger value="attendance">{tAtt('tab')}</TabsTrigger>
+          <TabsTrigger value="dinars">{tDin('tab')}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="info" className="flex flex-col gap-4 pt-4">
@@ -89,6 +92,15 @@ export default function StudentProfilePage({
 
         <TabsContent value="attendance" className="pt-4">
           <StudentAttendanceView studentId={studentId} classId={currentClass?.id} />
+        </TabsContent>
+
+        <TabsContent value="dinars" className="pt-4">
+          <StudentDinarsView
+            studentId={studentId}
+            instituteId={selected.id}
+            studentName={`${student.firstName} ${student.lastName}`}
+            canManage={user.role !== 'student'}
+          />
         </TabsContent>
       </Tabs>
     </div>

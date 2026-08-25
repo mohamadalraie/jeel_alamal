@@ -9,7 +9,7 @@ const nextConfig: NextConfig = {
   // Allow phones/tablets on the LAN to load dev resources (HMR, client bundles).
   // Without this, Next.js 16 blocks cross-origin dev requests and the page loads
   // but never hydrates, so nothing is interactive.
-  allowedDevOrigins: ['192.168.1.4'],
+  allowedDevOrigins: ['192.168.1.106'],
 };
 
 export default withNextIntl(nextConfig);

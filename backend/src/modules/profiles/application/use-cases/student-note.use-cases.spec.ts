@@ -92,7 +92,12 @@ describe('Student notes (spec 002)', () => {
       role: UserRole.Teacher,
       instituteId: INST,
     };
-    const dto = await useCase.execute(teacher, INST, student.id, 'Great progress');
+    const dto = await useCase.execute(
+      teacher,
+      INST,
+      student.id,
+      'Great progress',
+    );
     expect(notes.saved).toHaveLength(1);
     expect(notes.saved[0].authorId).toBe('teacher-1');
     expect(dto.body).toBe('Great progress');

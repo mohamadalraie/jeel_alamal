@@ -24,6 +24,7 @@ import { WeeklySchedule } from '@/features/classes/weekly-schedule';
 import { HeartMap } from '@/features/recitation/heart-map';
 import { StudentAttendanceView } from '@/features/attendance/student-attendance-view';
 import { StudentLessonsView } from '@/features/lessons/student-lessons-view';
+import { StudentDinarsView } from '@/features/dinars/student-dinars-view';
 import { CardsSkeleton } from '@/features/shared/skeletons';
 
 /** Student portal — the student sees only their own profile, class, and recitation. */
@@ -32,6 +33,7 @@ export default function MyProfilePage() {
   const tRec = useTranslations('recitation');
   const tAtt = useTranslations('attendance');
   const tLes = useTranslations('lessons');
+  const tDin = useTranslations('dinars');
   const locale = useLocale();
   const { user } = useInstitute();
 
@@ -71,6 +73,7 @@ export default function MyProfilePage() {
           <TabsTrigger value="class">{t('myClass')}</TabsTrigger>
           <TabsTrigger value="recitation">{tRec('tab')}</TabsTrigger>
           <TabsTrigger value="attendance">{tAtt('myAttendance')}</TabsTrigger>
+          <TabsTrigger value="dinars">{tDin('tab')}</TabsTrigger>
           {classProfile?.class.lessonsVisibleToStudents && (
             <TabsTrigger value="lessons">{tLes('studentLessonsTab')}</TabsTrigger>
           )}
@@ -165,6 +168,10 @@ export default function MyProfilePage() {
         {/* Tab 4: Attendance — read-only stats + calendar + log */}
         <TabsContent value="attendance" className="pt-4">
           <StudentAttendanceView studentId={user.id} classId={classId || undefined} />
+        </TabsContent>
+
+        <TabsContent value="dinars" className="pt-4">
+          <StudentDinarsView studentId={user.id} />
         </TabsContent>
 
         {classProfile?.class.lessonsVisibleToStudents && classId && (

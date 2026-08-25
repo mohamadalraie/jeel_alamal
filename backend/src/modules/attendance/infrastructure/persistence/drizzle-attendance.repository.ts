@@ -66,7 +66,10 @@ export class DrizzleAttendanceRepository implements AttendanceRepository {
   async findByClassAndDate(
     classId: string,
     date: string,
-  ): Promise<{ session: AttendanceSession; records: AttendanceRecord[] } | null> {
+  ): Promise<{
+    session: AttendanceSession;
+    records: AttendanceRecord[];
+  } | null> {
     const [sessionRow] = await this.db
       .select()
       .from(attendanceSessions)
@@ -124,7 +127,9 @@ export class DrizzleAttendanceRepository implements AttendanceRepository {
     }));
   }
 
-  async findRecordsByStudent(studentId: string): Promise<AttendanceRecordView[]> {
+  async findRecordsByStudent(
+    studentId: string,
+  ): Promise<AttendanceRecordView[]> {
     const rows = await this.db
       .select({
         sessionId: attendanceRecords.sessionId,

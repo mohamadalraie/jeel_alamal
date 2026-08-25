@@ -32,15 +32,23 @@ export class AttendanceSession extends Entity<string> {
     takenBy: string;
   }): AttendanceSession {
     if (!DATE.test(input.date)) {
-      throw new BusinessRuleError('Attendance date must be in YYYY-MM-DD format');
+      throw new BusinessRuleError(
+        'Attendance date must be in YYYY-MM-DD format',
+      );
     }
     if (Number.isNaN(Date.parse(input.date))) {
       throw new BusinessRuleError('Attendance date is not a valid date');
     }
-    return new AttendanceSession(randomUUID(), { ...input, createdAt: new Date() });
+    return new AttendanceSession(randomUUID(), {
+      ...input,
+      createdAt: new Date(),
+    });
   }
 
-  static reconstitute(id: string, props: AttendanceSessionProps): AttendanceSession {
+  static reconstitute(
+    id: string,
+    props: AttendanceSessionProps,
+  ): AttendanceSession {
     return new AttendanceSession(id, props);
   }
 

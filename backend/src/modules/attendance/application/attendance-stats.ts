@@ -32,14 +32,18 @@ export function rateOf(counts: AttendanceStatusCounts): number {
 }
 
 /** Overall counts across every record. */
-export function buildTotals(records: AttendanceRecordView[]): AttendanceStatusCounts {
+export function buildTotals(
+  records: AttendanceRecordView[],
+): AttendanceStatusCounts {
   const counts = emptyCounts();
   for (const r of records) add(counts, r.status);
   return counts;
 }
 
 /** Per-session summaries, newest date first. */
-export function buildSessions(records: AttendanceRecordView[]): SessionSummary[] {
+export function buildSessions(
+  records: AttendanceRecordView[],
+): SessionSummary[] {
   const byDate = new Map<string, AttendanceStatusCounts>();
   for (const r of records) {
     if (!byDate.has(r.date)) byDate.set(r.date, emptyCounts());

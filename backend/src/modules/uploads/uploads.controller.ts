@@ -31,12 +31,18 @@ export class UploadsController {
       storage: diskStorage({
         destination: UPLOADS_DIR,
         filename: (_req, file, cb) =>
-          cb(null, `${randomUUID()}${extname(file.originalname).toLowerCase()}`),
+          cb(
+            null,
+            `${randomUUID()}${extname(file.originalname).toLowerCase()}`,
+          ),
       }),
       limits: { fileSize: MAX_BYTES },
       fileFilter: (_req, file, cb) => {
         const ok = ALLOWED.includes(extname(file.originalname).toLowerCase());
-        cb(ok ? null : new BadRequestException('Only image files are allowed'), ok);
+        cb(
+          ok ? null : new BadRequestException('Only image files are allowed'),
+          ok,
+        );
       },
     }),
   )
@@ -52,12 +58,18 @@ export class UploadsController {
       storage: diskStorage({
         destination: UPLOADS_DIR,
         filename: (_req, file, cb) =>
-          cb(null, `${randomUUID()}${extname(file.originalname).toLowerCase()}`),
+          cb(
+            null,
+            `${randomUUID()}${extname(file.originalname).toLowerCase()}`,
+          ),
       }),
       limits: { fileSize: PDF_MAX_BYTES },
       fileFilter: (_req, file, cb) => {
         const ok = extname(file.originalname).toLowerCase() === '.pdf';
-        cb(ok ? null : new BadRequestException('Only PDF files are allowed'), ok);
+        cb(
+          ok ? null : new BadRequestException('Only PDF files are allowed'),
+          ok,
+        );
       },
     }),
   )

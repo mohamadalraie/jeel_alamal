@@ -5,13 +5,14 @@ import {
   HttpCode,
   HttpStatus,
   Inject,
+  Patch,
   Post,
   Req,
   Res,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import type { Request, Response } from 'express';
-import { IsNotEmpty, IsString } from 'class-validator';
+import { IsNotEmpty, IsString, MinLength } from 'class-validator';
 import { Public } from '../../../core/auth/public.decorator';
 import {
   ACCESS_TOKEN_COOKIE,
@@ -19,10 +20,17 @@ import {
 } from '../../../core/auth/auth.guard';
 import { CurrentUser } from '../../../core/auth/current-user.decorator';
 import type { Actor } from '../../../shared/application/actor';
-import { LoginUseCase, LoginResult } from '../application/use-cases/login.use-case';
+import {
+  LoginUseCase,
+  LoginResult,
+} from '../application/use-cases/login.use-case';
 import { RefreshTokenUseCase } from '../application/use-cases/refresh-token.use-case';
 import { LogoutUseCase } from '../application/use-cases/logout.use-case';
-import { UnauthorizedError, NotFoundError } from '../../../shared/domain/domain.error';
+import { ChangePasswordUseCase } from '../application/use-cases/change-password.use-case';
+import {
+  UnauthorizedError,
+  NotFoundError,
+} from '../../../shared/domain/domain.error';
 import { USER_REPOSITORY } from '../../users/domain/user.repository';
 import type { UserRepository } from '../../users/domain/user.repository';
 import { UserResponseDto } from '../../users/application/dto/user-response.dto';
@@ -35,6 +43,16 @@ class LoginDto {
   @IsString()
   @IsNotEmpty()
   password: string;
+}
+
+class ChangePasswordDto {
+  @IsString()
+  @IsNotEmpty()
+  currentPassword: string;
+
+  @IsString()
+  @MinLength(8)
+  newPassword: string;
 }
 
 const ACCESS_COOKIE_MAX_AGE = 15 * 60 * 1000; // mirror JWT_EXPIRES_IN
@@ -50,6 +68,7 @@ export class AuthController {
     private readonly loginUseCase: LoginUseCase,
     private readonly refreshUseCase: RefreshTokenUseCase,
     private readonly logoutUseCase: LogoutUseCase,
+    private readonly changePasswordUseCase: ChangePasswordUseCase,
     private readonly config: ConfigService,
     @Inject(USER_REPOSITORY) private readonly users: UserRepository,
   ) {}
@@ -93,6 +112,19 @@ export class AuthController {
     res.clearCookie(ACCESS_TOKEN_COOKIE, this.cookieOptions());
     res.clearCookie(REFRESH_TOKEN_COOKIE, this.cookieOptions());
     return { success: true };
+  }
+
+  @Patch('change-password')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async changePassword(
+    @CurrentUser() actor: Actor,
+    @Body() dto: ChangePasswordDto,
+  ) {
+    await this.changePasswordUseCase.execute(
+      actor,
+      dto.currentPassword,
+      dto.newPassword,
+    );
   }
 
   @Get('me')

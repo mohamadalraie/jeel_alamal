@@ -27,6 +27,10 @@ export const qk = {
   myLessons: ['my-lessons'] as const,
   lessonTimer: (id: string) => ['lesson-timer', id] as const,
   lessonSettings: (id: string) => ['lesson-settings', id] as const,
+  dinarRules: (id: string) => ['dinar-rules', id] as const,
+  studentDinars: (id: string) => ['student-dinars', id] as const,
+  dinarLeaderboard: (instituteId: string, classId: string) =>
+    ['dinar-leaderboard', instituteId, classId] as const,
 };
 
 export const useInstitutes = () =>
@@ -166,6 +170,35 @@ export const useStudentAttendance = (studentId?: string) =>
     queryKey: qk.studentAttendance(studentId ?? ''),
     queryFn: () => api.getStudentAttendance(studentId!),
     enabled: !!studentId,
+  });
+
+// ── Dinars (نظام الدنانير) — spec 010 ──
+export const useDinarRules = (instituteId?: string) =>
+  useQuery({
+    queryKey: qk.dinarRules(instituteId ?? ''),
+    queryFn: () => api.getDinarRules(instituteId!),
+    enabled: !!instituteId,
+  });
+
+export const useAwardableDinarRules = (instituteId?: string, enabled = true) =>
+  useQuery({
+    queryKey: [...qk.dinarRules(instituteId ?? ''), 'awardable'] as const,
+    queryFn: () => api.getAwardableDinarRules(instituteId!),
+    enabled: !!instituteId && enabled,
+  });
+
+export const useStudentDinars = (studentId?: string) =>
+  useQuery({
+    queryKey: qk.studentDinars(studentId ?? ''),
+    queryFn: () => api.getStudentDinars(studentId!),
+    enabled: !!studentId,
+  });
+
+export const useDinarLeaderboard = (instituteId?: string, classId?: string) =>
+  useQuery({
+    queryKey: qk.dinarLeaderboard(instituteId ?? '', classId ?? ''),
+    queryFn: () => api.getDinarLeaderboard(instituteId!, classId || undefined),
+    enabled: !!instituteId,
   });
 
 export { useQueryClient, useQueries };

@@ -73,7 +73,7 @@ export function buildHeart(recitations: Recitation[]): HeartCell[] {
       name: surah.name,
       ayahCount: surah.ayahCount,
       status: full ? ('full' as const) : ('partial' as const),
-      rating: recs[0].rating as RecitationRating, // latest
+      rating: recs[0].rating, // latest
       coveredAyahs,
       percent: Math.round((coveredAyahs / surah.ayahCount) * 100),
       nextAyah,

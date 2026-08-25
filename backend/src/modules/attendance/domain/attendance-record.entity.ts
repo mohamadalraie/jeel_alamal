@@ -25,7 +25,10 @@ export class AttendanceRecord extends Entity<string> {
     return new AttendanceRecord(randomUUID(), { ...input });
   }
 
-  static reconstitute(id: string, props: AttendanceRecordProps): AttendanceRecord {
+  static reconstitute(
+    id: string,
+    props: AttendanceRecordProps,
+  ): AttendanceRecord {
     return new AttendanceRecord(id, props);
   }
 

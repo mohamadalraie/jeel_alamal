@@ -19,6 +19,11 @@ const STATUS_COLOR: Record<LessonBindingStatus, string | null> = {
   under_time: '#0891B2', // cyan — ran short
 };
 
+/** Raw status color (or null for the neutral `pending` state) — for dots/accents. */
+export function statusColor(status: LessonBindingStatus): string | null {
+  return STATUS_COLOR[status];
+}
+
 /** A colored pill showing a binding's lifecycle status. */
 export function LessonStatusBadge({
   status,

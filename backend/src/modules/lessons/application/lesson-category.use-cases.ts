@@ -5,7 +5,11 @@ import { InstituteAccessPolicy } from '../../institutes/application/institute-ac
 import { LessonCategory } from '../domain/lesson-category.entity';
 import { LESSON_REPOSITORY } from '../domain/lesson.repository';
 import type { LessonRepository } from '../domain/lesson.repository';
-import { CategoryView, CreateCategoryDto, UpdateCategoryDto } from './dto/lesson.dto';
+import {
+  CategoryView,
+  CreateCategoryDto,
+  UpdateCategoryDto,
+} from './dto/lesson.dto';
 
 const toView = (c: LessonCategory): CategoryView => ({
   id: c.id,
@@ -27,7 +31,11 @@ export class AddCategoryUseCase {
     dto: CreateCategoryDto,
   ): Promise<CategoryView> {
     await this.policy.assertManagerOf(actor, instituteId);
-    const category = LessonCategory.create({ instituteId, name: dto.name, color: dto.color });
+    const category = LessonCategory.create({
+      instituteId,
+      name: dto.name,
+      color: dto.color,
+    });
     await this.lessons.addCategory(category);
     return toView(category);
   }
@@ -56,7 +64,11 @@ export class UpdateCategoryUseCase {
     @Inject(LESSON_REPOSITORY) private readonly lessons: LessonRepository,
   ) {}
 
-  async execute(actor: Actor, categoryId: string, dto: UpdateCategoryDto): Promise<void> {
+  async execute(
+    actor: Actor,
+    categoryId: string,
+    dto: UpdateCategoryDto,
+  ): Promise<void> {
     const category = await this.lessons.findCategoryById(categoryId);
     if (!category) throw new NotFoundError('Category not found');
     await this.policy.assertManagerOf(actor, category.instituteId);

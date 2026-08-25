@@ -31,10 +31,14 @@ export class Institute extends Entity<string> {
     const name = input.name.trim();
     const place = input.place.trim();
     if (name.length < 2) {
-      throw new BusinessRuleError('Institute name must be at least 2 characters');
+      throw new BusinessRuleError(
+        'Institute name must be at least 2 characters',
+      );
     }
     if (place.length < 2) {
-      throw new BusinessRuleError('Institute place must be at least 2 characters');
+      throw new BusinessRuleError(
+        'Institute place must be at least 2 characters',
+      );
     }
     return new Institute(randomUUID(), {
       name,
@@ -58,10 +62,14 @@ export class Institute extends Entity<string> {
     const name = input.name.trim();
     const place = input.place.trim();
     if (name.length < 2) {
-      throw new BusinessRuleError('Institute name must be at least 2 characters');
+      throw new BusinessRuleError(
+        'Institute name must be at least 2 characters',
+      );
     }
     if (place.length < 2) {
-      throw new BusinessRuleError('Institute place must be at least 2 characters');
+      throw new BusinessRuleError(
+        'Institute place must be at least 2 characters',
+      );
     }
     this.props.name = name;
     this.props.place = place;

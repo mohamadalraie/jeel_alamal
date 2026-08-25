@@ -7,9 +7,7 @@ import type { DrizzleDb } from '../../../../core/database/drizzle.provider';
 import { teacherCertifications } from './profile.schema';
 
 @Injectable()
-export class DrizzleCertificationRepository
-  implements TeacherCertificationRepository
-{
+export class DrizzleCertificationRepository implements TeacherCertificationRepository {
   constructor(@Inject(DRIZZLE) private readonly db: DrizzleDb) {}
 
   async save(cert: TeacherCertification): Promise<void> {

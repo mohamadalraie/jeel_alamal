@@ -28,7 +28,10 @@ import {
 } from '../application/use-cases/manage-managers.use-cases';
 import { ListMembersUseCase } from '../application/use-cases/list-members.use-case';
 import { CreateInstituteDto } from '../application/dto/create-institute.dto';
-import { CreateTeacherDto, CreateStudentDto } from '../application/dto/create-member.dto';
+import {
+  CreateTeacherDto,
+  CreateStudentDto,
+} from '../application/dto/create-member.dto';
 
 /**
  * Thin HTTP delivery: extract the verified actor, delegate to use-cases

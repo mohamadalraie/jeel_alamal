@@ -22,7 +22,7 @@ export class JwtTokenSigner implements TokenSigner {
   signAccessToken(payload: AccessTokenPayload): Promise<string> {
     return this.jwt.signAsync(payload, {
       secret: this.config.getOrThrow<string>('JWT_SECRET'),
-      expiresIn: this.config.get('JWT_EXPIRES_IN', '15m') as ExpiresIn,
+      expiresIn: this.config.get('JWT_EXPIRES_IN', '15m'),
     });
   }
 
@@ -31,7 +31,7 @@ export class JwtTokenSigner implements TokenSigner {
       { sub: userId, typ: 'refresh' },
       {
         secret: this.config.getOrThrow<string>('JWT_REFRESH_SECRET'),
-        expiresIn: this.config.get('JWT_REFRESH_EXPIRES_IN', '7d') as ExpiresIn,
+        expiresIn: this.config.get('JWT_REFRESH_EXPIRES_IN', '7d'),
       },
     );
   }

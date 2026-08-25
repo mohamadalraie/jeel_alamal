@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { UsersModule } from '../users/users.module';
 import { ClassesModule } from '../classes/classes.module';
 import { InstitutesModule } from '../institutes/institutes.module';
+import { DinarsModule } from '../dinars/dinars.module';
 import { RecitationsController } from './presentation/recitations.controller';
 import {
   ListSurahsUseCase,
@@ -17,7 +18,7 @@ import { DrizzleRecitationRepository } from './infrastructure/persistence/drizzl
  * and the InstituteAccessPolicy exported by their modules.
  */
 @Module({
-  imports: [UsersModule, ClassesModule, InstitutesModule],
+  imports: [UsersModule, ClassesModule, InstitutesModule, DinarsModule],
   controllers: [RecitationsController],
   providers: [
     ListSurahsUseCase,

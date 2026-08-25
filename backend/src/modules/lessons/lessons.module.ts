@@ -64,7 +64,10 @@ import { DrizzleLessonSettingsRepository } from './infrastructure/persistence/dr
     GetLessonSettingsUseCase,
     UpdateLessonSettingsUseCase,
     { provide: LESSON_REPOSITORY, useClass: DrizzleLessonRepository },
-    { provide: LESSON_SETTINGS_REPOSITORY, useClass: DrizzleLessonSettingsRepository },
+    {
+      provide: LESSON_SETTINGS_REPOSITORY,
+      useClass: DrizzleLessonSettingsRepository,
+    },
   ],
 })
 export class LessonsModule {}

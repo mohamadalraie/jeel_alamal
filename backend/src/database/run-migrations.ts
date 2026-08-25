@@ -18,13 +18,12 @@ async function run() {
   });
   const db = drizzle(pool);
   await migrate(db, { migrationsFolder: 'drizzle' });
-  // eslint-disable-next-line no-console
+
   console.log('Migrations applied.');
   await pool.end();
 }
 
 run().catch((err) => {
-  // eslint-disable-next-line no-console
   console.error('Migration failed:', err);
   process.exit(1);
 });

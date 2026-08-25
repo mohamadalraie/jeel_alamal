@@ -33,6 +33,15 @@ import type {
   LessonSettings,
   LessonTimer,
   EndLessonResult,
+  DinarRules,
+  DinarRule,
+  CreateDinarRuleInput,
+  UpdateDinarRuleInput,
+  AwardDinarInput,
+  BulkAwardDinarInput,
+  DinarLedgerItem,
+  StudentDinars,
+  DinarLeaderboard,
 } from './types';
 
 /**
@@ -150,6 +159,8 @@ export const login = (username: string, password: string) =>
   post<{ user: User }>('/api/auth/login', { username, password });
 export const logout = () => post<{ success: boolean }>('/api/auth/logout');
 export const getMe = () => request<{ user: User }>('/api/auth/me');
+export const changePassword = (currentPassword: string, newPassword: string) =>
+  patch<void>('/api/auth/change-password', { currentPassword, newPassword });
 
 // ── Institutes ──
 export const listInstitutes = () => request<Institute[]>('/api/institutes');
@@ -345,3 +356,29 @@ export const getLessonSettings = (instituteId: string) =>
   request<LessonSettings>(`/api/institutes/${instituteId}/lesson-settings`);
 export const updateLessonSettings = (instituteId: string, input: LessonSettings) =>
   put<LessonSettings>(`/api/institutes/${instituteId}/lesson-settings`, input);
+
+// ── Dinars (نظام الدنانير) — spec 010 ──
+export const getDinarRules = (instituteId: string) =>
+  request<DinarRules>(`/api/institutes/${instituteId}/dinar-rules`);
+export const getAwardableDinarRules = (instituteId: string) =>
+  request<DinarRule[]>(`/api/institutes/${instituteId}/dinar-rules/awardable`);
+export const createDinarRule = (instituteId: string, input: CreateDinarRuleInput) =>
+  post<DinarRule>(`/api/institutes/${instituteId}/dinar-rules`, input);
+export const updateDinarRule = (ruleId: string, input: UpdateDinarRuleInput) =>
+  patch<DinarRule>(`/api/dinar-rules/${ruleId}`, input);
+export const deleteDinarRule = (ruleId: string) =>
+  del<void>(`/api/dinar-rules/${ruleId}`);
+
+export const awardDinar = (studentId: string, input: AwardDinarInput) =>
+  post<DinarLedgerItem>(`/api/students/${studentId}/dinars`, input);
+export const bulkAwardDinars = (input: BulkAwardDinarInput) =>
+  post<{ awarded: number }>('/api/dinars/bulk', input);
+export const reverseDinar = (transactionId: string) =>
+  post<DinarLedgerItem>(`/api/dinars/${transactionId}/reverse`);
+
+export const getStudentDinars = (studentId: string) =>
+  request<StudentDinars>(`/api/students/${studentId}/dinars`);
+export const getDinarLeaderboard = (instituteId: string, classId?: string) =>
+  request<DinarLeaderboard>(
+    `/api/institutes/${instituteId}/dinar-leaderboard${classId ? `?classId=${classId}` : ''}`,
+  );

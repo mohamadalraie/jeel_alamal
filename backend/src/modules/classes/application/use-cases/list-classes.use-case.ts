@@ -13,7 +13,10 @@ export class ListClassesUseCase {
     @Inject(CLASS_REPOSITORY) private readonly classes: ClassRepository,
   ) {}
 
-  async execute(actor: Actor, instituteId: string): Promise<ClassResponseDto[]> {
+  async execute(
+    actor: Actor,
+    instituteId: string,
+  ): Promise<ClassResponseDto[]> {
     await this.policy.assertStaffOf(actor, instituteId);
     const list = await this.classes.findAllByInstitute(instituteId);
     return Promise.all(

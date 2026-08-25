@@ -77,7 +77,10 @@ export class DrizzleUserRepository implements UserRepository {
     return rows.map((row) => UserMapper.toDomain(row));
   }
 
-  async countByInstitute(instituteId: string, role?: UserRole): Promise<number> {
+  async countByInstitute(
+    instituteId: string,
+    role?: UserRole,
+  ): Promise<number> {
     const conditions = [
       eq(users.instituteId, instituteId),
       isNull(users.deletedAt),

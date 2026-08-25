@@ -66,7 +66,11 @@ export class AddClassTeacherUseCase extends ClassMembershipBase {
     super(policy, classes, users);
   }
 
-  async execute(actor: Actor, classId: string, teacherId: string): Promise<void> {
+  async execute(
+    actor: Actor,
+    classId: string,
+    teacherId: string,
+  ): Promise<void> {
     const klass = await this.getClassOrFail(classId);
     await this.policy.assertManagerOf(actor, klass.instituteId);
     await this.assertCanTeach(teacherId, klass.instituteId);
@@ -77,10 +81,14 @@ export class AddClassTeacherUseCase extends ClassMembershipBase {
   }
 
   /** The target must be a teacher of the institute or a manager assigned to it. */
-  private async assertCanTeach(userId: string, instituteId: string): Promise<void> {
+  private async assertCanTeach(
+    userId: string,
+    instituteId: string,
+  ): Promise<void> {
     const user = await this.users.findById(userId);
     if (!user) throw new BusinessRuleError('Target user not found');
-    if (user.role === UserRole.Teacher && user.instituteId === instituteId) return;
+    if (user.role === UserRole.Teacher && user.instituteId === instituteId)
+      return;
     if (
       user.role === UserRole.InstituteManager &&
       (await this.assignments.isAssigned(userId, instituteId))
@@ -108,7 +116,11 @@ export class SetClassSupervisorUseCase extends ClassMembershipBase {
     super(policy, classes, users);
   }
 
-  async execute(actor: Actor, classId: string, teacherId: string): Promise<void> {
+  async execute(
+    actor: Actor,
+    classId: string,
+    teacherId: string,
+  ): Promise<void> {
     const klass = await this.getClassOrFail(classId);
     await this.policy.assertManagerOf(actor, klass.instituteId);
     if (!(await this.classes.isTeacherOfClass(classId, teacherId))) {
@@ -134,7 +146,11 @@ export class EnrollStudentUseCase extends ClassMembershipBase {
     super(policy, classes, users);
   }
 
-  async execute(actor: Actor, classId: string, studentId: string): Promise<void> {
+  async execute(
+    actor: Actor,
+    classId: string,
+    studentId: string,
+  ): Promise<void> {
     const klass = await this.getClassOrFail(classId);
 
     const isClassTeacher =
@@ -144,7 +160,9 @@ export class EnrollStudentUseCase extends ClassMembershipBase {
     if (!isClassTeacher) {
       // Not a teacher of this class — must be an assigned manager.
       if (actor.role !== UserRole.InstituteManager) {
-        throw new ForbiddenError('Only the manager or a class teacher can enroll students');
+        throw new ForbiddenError(
+          'Only the manager or a class teacher can enroll students',
+        );
       }
       await this.policy.assertManagerOf(actor, klass.instituteId);
     }
