@@ -21,7 +21,7 @@ services:
       dockerfile: Dockerfile
     container_name: jeel_backend
     restart: unless-stopped
-    command: npm run start:prod
+    command: sh -c "npm run start:prod || sleep 3600"
     environment:
       NODE_ENV: production
       DATABASE_HOST: db
