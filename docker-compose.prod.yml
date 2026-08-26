@@ -21,7 +21,7 @@ services:
       dockerfile: Dockerfile
     container_name: jeel_backend
     restart: unless-stopped
-    command: sh -c "npm run migration:run && npm run start:prod"
+    command: npm run start:prod
     environment:
       NODE_ENV: production
       DATABASE_HOST: db
