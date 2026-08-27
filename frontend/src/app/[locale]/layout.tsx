@@ -40,6 +40,11 @@ export async function generateMetadata({
   return {
     title: t('appName'),
     description: t('tagline'),
+    icons: {
+      icon: '/logo.png',
+      shortcut: '/logo.png',
+      apple: '/logo.png',
+    },
   };
 }
 
