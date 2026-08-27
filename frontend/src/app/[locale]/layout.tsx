@@ -40,6 +40,12 @@ export async function generateMetadata({
   return {
     title: t('appName'),
     description: t('tagline'),
+    manifest: '/manifest.json',
+    appleWebApp: {
+      capable: true,
+      statusBarStyle: 'black-translucent',
+      title: 'جيل العمل',
+    },
     icons: {
       icon: '/logo.png',
       shortcut: '/logo.png',
