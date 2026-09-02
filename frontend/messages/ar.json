@@ -12,6 +12,20 @@
     "noData": "لا توجد بيانات بعد",
     "error": "حدث خطأ"
   },
+  "pwa": {
+    "installTitle": "ثبّت تطبيق جيل العمل",
+    "installSubtitle": "للوصول السريع وتجربة سلسة بدون متصفح",
+    "installButton": "تثبيت التطبيق",
+    "installing": "جارٍ التثبيت…",
+    "dismiss": "لاحقاً",
+    "alreadyInstalled": "التطبيق مثبّت لديك",
+    "badgeFast": "⚡ أداء سريع جداً",
+    "badgeOffline": "📱 شاشة كاملة للجوال",
+    "iosTitle": "تثبيت التطبيق على iPhone / iPad",
+    "iosStep1": "1. اضغط على زر المشاركة 📤 في أسفل متصفح Safari",
+    "iosStep2": "2. اختَر (إضافة إلى الشاشة الرئيسية ➕) من القائمة",
+    "iosGotIt": "فهمت ذلك"
+  },
   "dinars": {
     "tab": "الدنانير",
     "rulesTitle": "إعدادات الدنانير",

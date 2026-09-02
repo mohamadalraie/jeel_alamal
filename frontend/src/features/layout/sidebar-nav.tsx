@@ -6,6 +6,8 @@ import { Link, usePathname } from '@/i18n/navigation';
 import { cn } from '@/lib/utils';
 import { useInstitute } from './institute-context';
 
+import { PwaInstallButton } from '@/components/pwa/pwa-install-button';
+
 interface NavItem {
   href: string;
   labelKey: string;
@@ -74,6 +76,13 @@ export function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
           </Link>
         );
       })}
+
+      <div className="pt-3 mt-2 border-t border-border/50">
+        <PwaInstallButton
+          variant="outline"
+          className="w-full justify-start py-2.5 bg-background text-foreground hover:bg-accent"
+        />
+      </div>
     </nav>
   );
 }

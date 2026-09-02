@@ -12,6 +12,20 @@
     "noData": "No data yet",
     "error": "Something went wrong"
   },
+  "pwa": {
+    "installTitle": "Install Jeel Al-Amal App",
+    "installSubtitle": "Fast access & seamless mobile experience",
+    "installButton": "Install App",
+    "installing": "Installing...",
+    "dismiss": "Later",
+    "alreadyInstalled": "App is installed",
+    "badgeFast": "⚡ Super Fast",
+    "badgeOffline": "📱 Full Screen Mobile",
+    "iosTitle": "Install on iPhone / iPad",
+    "iosStep1": "1. Tap the Share button 📤 in Safari",
+    "iosStep2": "2. Select (Add to Home Screen ➕)",
+    "iosGotIt": "Got it"
+  },
   "dinars": {
     "tab": "Dinars",
     "rulesTitle": "Dinar settings",

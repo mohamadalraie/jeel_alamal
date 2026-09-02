@@ -8,6 +8,7 @@ import { Toaster } from 'sonner';
 import { routing } from '@/i18n/routing';
 import { ThemeProvider } from '@/features/layout/theme-provider';
 import { QueryProvider } from '@/features/layout/query-provider';
+import { PwaInstallBanner } from '@/components/pwa/pwa-install-banner';
 import '../globals.css';
 
 // Tajawal — a friendly, modern family covering Arabic + Latin (spec 003).
@@ -27,6 +28,7 @@ export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
   maximumScale: 5,
+  viewportFit: 'cover',
   themeColor: '#123b50',
 };
 
@@ -45,11 +47,17 @@ export async function generateMetadata({
       capable: true,
       statusBarStyle: 'black-translucent',
       title: 'جيل العمل',
+      startupImage: ['/hero-bg.png'],
     },
     icons: {
       icon: '/logo.png',
       shortcut: '/logo.png',
-      apple: '/logo.png',
+      apple: [
+        { url: '/logo.png', sizes: '180x180', type: 'image/png' },
+      ],
+    },
+    other: {
+      'mobile-web-app-capable': 'yes',
     },
   };
 }
@@ -86,6 +94,7 @@ export default async function LocaleLayout({
           <QueryProvider>
             <NextIntlClientProvider messages={messages}>
               {children}
+              <PwaInstallBanner />
               <Toaster richColors position="top-center" dir={direction} />
             </NextIntlClientProvider>
           </QueryProvider>
