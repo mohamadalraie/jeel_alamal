@@ -46,6 +46,7 @@ export interface LessonTimerRead {
   kind: LessonKind;
   name: string | null;
   date: string;
+  classId: string;
   className: string;
   expectedDurationMinutes: number | null;
   status: StoredLessonStatus;

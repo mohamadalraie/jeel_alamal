@@ -14,6 +14,8 @@ import { ConfirmDialog } from '@/features/shared/confirm-dialog';
 import { DinarBadge } from './dinar-badge';
 import { AwardDinarDialog } from './award-dinar-dialog';
 
+import { formatTeacherName } from '@/lib/utils';
+
 const MANUAL = new Set(['manual_rule', 'exceptional']);
 
 /** Student profile "الدنانير" tab: balance summary + ledger. */
@@ -129,7 +131,7 @@ function LedgerRow({
           </span>
           <span className="text-muted-foreground text-xs">
             {t(`context_${item.context}`)}
-            {item.awardedByName ? ` · ${item.awardedByName}` : ''} ·{' '}
+            {item.awardedByName ? ` · ${formatTeacherName(item.awardedByName)}` : ''} ·{' '}
             {new Date(item.createdAt).toLocaleDateString(locale)}
           </span>
         </div>

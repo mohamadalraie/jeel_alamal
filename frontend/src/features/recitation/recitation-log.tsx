@@ -4,6 +4,7 @@ import { useTranslations, useLocale } from 'next-intl';
 import type { RecitationLogItem } from '@/lib/types';
 import { Badge } from '@/components/ui/badge';
 import { ratingColor } from './recitation-colors';
+import { formatTeacherName } from '@/lib/utils';
 
 /** Recitation history list. Set `showStudent` for the class view. */
 export function RecitationLog({
@@ -31,7 +32,7 @@ export function RecitationLog({
               {r.surahName}
             </span>
             <span className="text-muted-foreground text-xs">
-              {t('ayahRange')}: {r.fromAyah}–{r.toAyah} · {t('by')} {r.recitedByName} ·{' '}
+              {t('ayahRange')}: {r.fromAyah}–{r.toAyah} · {t('by')} {formatTeacherName(r.recitedByName)} ·{' '}
               {new Date(r.createdAt).toLocaleDateString(locale)}
             </span>
           </div>

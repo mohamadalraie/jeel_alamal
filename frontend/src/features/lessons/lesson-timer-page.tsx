@@ -13,6 +13,7 @@ import { ListSkeleton } from '@/features/shared/skeletons';
 import { EmptyState } from '@/features/shared/empty-state';
 import { ConfirmDialog } from '@/features/shared/confirm-dialog';
 import { LessonStatusBadge } from './lesson-status-badge';
+import { LessonTimerDinars } from './lesson-timer-dinars';
 
 /** Format a whole number of seconds as MM:SS (or HH:MM:SS past an hour). */
 function formatElapsed(totalSeconds: number): string {
@@ -163,6 +164,9 @@ export function LessonTimerPage({ lessonClassId }: { lessonClassId: string }) {
               <ConfirmDialog
                 title={t('endLesson')}
                 message={t('endLessonConfirm')}
+                confirmText={t('endLesson')}
+                variant="default"
+                showSuccessToast={false}
                 onConfirm={end}
                 trigger={
                   <Button size="lg" className="w-full" disabled={busy}>
@@ -197,6 +201,11 @@ export function LessonTimerPage({ lessonClassId }: { lessonClassId: string }) {
           )}
         </CardContent>
       </Card>
+
+      {/* Dinar options for students during lesson execution */}
+      {data.status === 'started' && data.instituteId && data.classId && (
+        <LessonTimerDinars instituteId={data.instituteId} classId={data.classId} />
+      )}
     </div>
   );
 }

@@ -4,6 +4,7 @@ import { useTranslations } from 'next-intl';
 import { BookOpen, Clock, ExternalLink, FileText, ImageIcon, Link2 } from 'lucide-react';
 import type { ProgramEntry, LessonSourceView } from '@/lib/types';
 import { resolveAsset } from '@/lib/api';
+import { formatTeacherName } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { tint } from './lesson-colors';
 import { LessonStatusBadge } from './lesson-status-badge';
@@ -93,7 +94,7 @@ export function LessonCard({
           )}
           {showClass && <Badge variant="outline">{entry.className}</Badge>}
           {showTeacher && (
-            <span className="text-muted-foreground text-xs">{entry.teacher.name}</span>
+            <span className="text-muted-foreground text-xs">{formatTeacherName(entry.teacher.name)}</span>
           )}
         </div>
 
@@ -113,7 +114,7 @@ export function LessonCard({
   );
 }
 
-function SourceLink({ source, openLabel }: { source: LessonSourceView; openLabel: string }) {
+export function SourceLink({ source, openLabel }: { source: LessonSourceView; openLabel: string }) {
   const Icon = SOURCE_ICON[source.kind];
   const href = resolveAsset(source.url) ?? source.url;
   return (

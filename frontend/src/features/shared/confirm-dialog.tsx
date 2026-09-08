@@ -20,11 +20,17 @@ import {
 export function ConfirmDialog({
   title,
   message,
+  confirmText,
+  variant = 'destructive',
+  showSuccessToast = true,
   onConfirm,
   trigger,
 }: {
   title?: string;
   message?: string;
+  confirmText?: string;
+  variant?: 'destructive' | 'default' | 'outline' | 'secondary' | 'ghost' | 'link';
+  showSuccessToast?: boolean;
   onConfirm: () => Promise<void> | void;
   trigger: React.ReactNode;
 }) {
@@ -46,14 +52,16 @@ export function ConfirmDialog({
             {tc('cancel')}
           </Button>
           <Button
-            variant="destructive"
+            variant={variant}
             disabled={busy}
             onClick={async () => {
               setBusy(true);
               try {
                 await onConfirm();
                 setOpen(false);
-                notify.success(td('delete'));
+                if (showSuccessToast) {
+                  notify.success(td('delete'));
+                }
               } catch (err) {
                 notify.error(err, tc('error'));
               } finally {
@@ -61,7 +69,7 @@ export function ConfirmDialog({
               }
             }}
           >
-            {td('delete')}
+            {confirmText ?? td('delete')}
           </Button>
         </DialogFooter>
       </DialogContent>

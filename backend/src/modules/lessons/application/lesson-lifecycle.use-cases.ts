@@ -28,9 +28,10 @@ export class StartLessonUseCase {
   async execute(actor: Actor, lessonClassId: string): Promise<void> {
     const binding = await this.lessons.findBindingById(lessonClassId);
     if (!binding) throw new NotFoundError('Lesson assignment not found');
-    if (binding.teacherId !== actor.userId) {
+    const isManager = actor.role === 'institute_manager' || actor.role === 'super_admin';
+    if (binding.teacherId !== actor.userId && !isManager) {
       throw new ForbiddenError(
-        'Only the assigned teacher can start this lesson',
+        'Only the assigned teacher or manager can start this lesson',
       );
     }
     const lesson = await this.lessons.findLessonById(binding.lessonId);
@@ -67,8 +68,9 @@ export class EndLessonUseCase {
   async execute(actor: Actor, lessonClassId: string): Promise<EndLessonResult> {
     const binding = await this.lessons.findBindingById(lessonClassId);
     if (!binding) throw new NotFoundError('Lesson assignment not found');
-    if (binding.teacherId !== actor.userId) {
-      throw new ForbiddenError('Only the assigned teacher can end this lesson');
+    const isManager = actor.role === 'institute_manager' || actor.role === 'super_admin';
+    if (binding.teacherId !== actor.userId && !isManager) {
+      throw new ForbiddenError('Only the assigned teacher or manager can end this lesson');
     }
     const lesson = await this.lessons.findLessonById(binding.lessonId);
     if (!lesson) throw new NotFoundError('Lesson not found');
@@ -96,8 +98,7 @@ export class EndLessonUseCase {
 }
 
 /**
- * The timer page payload for one binding (spec 009). Assigned teacher only —
- * the page is a private teacher workspace.
+ * The timer page payload for one binding (spec 009). Assigned teacher or manager workspace.
  */
 @Injectable()
 export class GetLessonTimerUseCase {
@@ -108,9 +109,10 @@ export class GetLessonTimerUseCase {
   async execute(actor: Actor, lessonClassId: string): Promise<LessonTimerView> {
     const view = await this.lessons.getBindingTimerView(lessonClassId);
     if (!view) throw new NotFoundError('Lesson assignment not found');
-    if (view.teacherId !== actor.userId) {
+    const isManager = actor.role === 'institute_manager' || actor.role === 'super_admin';
+    if (view.teacherId !== actor.userId && !isManager) {
       throw new ForbiddenError(
-        'Only the assigned teacher can view this lesson timer',
+        'Only the assigned teacher or manager can view this lesson timer',
       );
     }
     return {
@@ -124,6 +126,8 @@ export class GetLessonTimerUseCase {
       actualStartTime: view.actualStartTime?.toISOString() ?? null,
       ordinal: view.ordinal,
       ofTotal: view.ofTotal,
+      classId: view.classId,
+      instituteId: view.instituteId,
     };
   }
 }

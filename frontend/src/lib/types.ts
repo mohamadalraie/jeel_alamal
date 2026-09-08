@@ -306,6 +306,8 @@ export interface LessonTimer {
   actualStartTime: string | null;
   ordinal: number;
   ofTotal: number;
+  classId?: string;
+  instituteId?: string;
 }
 
 /** Result of ending a lesson. */

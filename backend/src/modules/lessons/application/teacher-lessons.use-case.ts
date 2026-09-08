@@ -17,11 +17,10 @@ export class GetMyLessonsUseCase {
   async execute(actor: Actor): Promise<{ entries: TeacherProgramEntry[] }> {
     const raw = await this.lessons.getTeacherProgram(actor.userId); // sorted date,sort
     const today = todayISO();
-    // The next lesson = the first entry dated today or later.
-    const nextIdx = raw.findIndex((e) => e.date >= today);
-    const entries = raw.map((e, i) => ({
+    const upcomingDate = raw.find((e) => e.date >= today)?.date;
+    const entries = raw.map((e) => ({
       ...toEntryView(e, today),
-      isNext: i === nextIdx,
+      isNext: upcomingDate ? e.date === upcomingDate : false,
     }));
     return { entries };
   }

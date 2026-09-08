@@ -19,6 +19,22 @@ import {
   StudentRecitationResult,
 } from './dto/recitation.dto';
 
+function formatTeacherName(name: string): string {
+  if (!name) return '';
+  const trimmed = name.trim();
+  if (!trimmed) return '';
+  if (
+    trimmed.startsWith('الأستاذ') ||
+    trimmed.startsWith('الاستاذ') ||
+    trimmed.startsWith('الشيخ') ||
+    trimmed.startsWith('أ.') ||
+    trimmed.startsWith('د.')
+  ) {
+    return trimmed;
+  }
+  return `الأستاذ ${trimmed}`;
+}
+
 function toLogItem(
   r: Recitation,
   nameOf: (id: string) => string,
@@ -33,7 +49,7 @@ function toLogItem(
     fromAyah: r.fromAyah,
     toAyah: r.toAyah,
     rating: r.rating,
-    recitedByName: nameOf(r.recitedBy),
+    recitedByName: formatTeacherName(nameOf(r.recitedBy)),
     createdAt: r.createdAt.toISOString(),
   };
 }

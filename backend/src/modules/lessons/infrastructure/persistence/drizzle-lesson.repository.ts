@@ -335,6 +335,7 @@ export class DrizzleLessonRepository implements LessonRepository {
       kind: row.kind as LessonKind,
       name: row.name,
       date: row.date,
+      classId: row.classId,
       className: row.className,
       expectedDurationMinutes: row.expectedDurationMinutes,
       status: row.status as StoredLessonStatus,

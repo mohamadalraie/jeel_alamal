@@ -12,10 +12,12 @@ import {
   Plus,
 } from 'lucide-react';
 import type { ProgramEntry } from '@/lib/types';
+import { formatTeacherName } from '@/lib/utils';
 import { toYMD } from '@/features/attendance/calendar-utils';
 import { EmptyState } from '@/features/shared/empty-state';
 import { Button } from '@/components/ui/button';
 import { statusColor } from './lesson-status-badge';
+import { SourceLink } from './lesson-card';
 
 const TODAY_YMD = toYMD(new Date());
 
@@ -328,7 +330,7 @@ function metaParts(
 ): string[] {
   const parts: string[] = [];
   if (showClass) parts.push(entry.className);
-  if (showTeacher) parts.push(entry.teacher.name);
+  if (showTeacher) parts.push(formatTeacherName(entry.teacher.name));
   if (entry.category) parts.push(entry.category.name);
   if (entry.expectedDurationMinutes != null) {
     const actualMinutes =
@@ -414,6 +416,15 @@ function ProgramEntryRow({
         {/* Description */}
         {!isRecitation && entry.description && (
           <p className="text-muted-foreground truncate text-xs">{entry.description}</p>
+        )}
+
+        {/* Sources */}
+        {!isRecitation && entry.sources && entry.sources.length > 0 && (
+          <div className="mt-1 flex flex-col gap-1">
+            {entry.sources.map((s, i) => (
+              <SourceLink key={i} source={s} openLabel={t('open')} />
+            ))}
+          </div>
         )}
 
         {/* Actions */}

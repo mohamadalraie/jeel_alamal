@@ -23,23 +23,28 @@ export function TeacherLessonsView() {
   if (isLoading || !data) return <ListSkeleton />;
 
   const today = todayISO();
-  const next = data.entries.find((e) => e.isNext) ?? null;
+  const upcomingEntries = data.entries.filter((e) => e.isNext && e.date >= today);
 
   return (
     <div className="flex flex-col gap-5">
-      {/* Next lesson highlight (only if it is today or later) */}
-      {next && next.date >= today && (
+      {/* Next lessons highlight (all lessons on the upcoming date) */}
+      {upcomingEntries.length > 0 && (
         <Card className="border-primary/40 bg-primary/5">
-          <CardContent className="flex flex-col gap-2 py-4">
+          <CardContent className="flex flex-col gap-3 py-4">
             <span className="text-primary flex items-center gap-1.5 text-xs font-semibold">
               <CalendarClock className="size-4" />
               {t('nextLesson')}
             </span>
-            <LessonCard
-              entry={next}
-              showClass
-              actions={<LessonTimerActions entry={next} />}
-            />
+            <div className="flex flex-col gap-3">
+              {upcomingEntries.map((entry) => (
+                <LessonCard
+                  key={entry.lessonClassId}
+                  entry={entry}
+                  showClass
+                  actions={<LessonTimerActions entry={entry} />}
+                />
+              ))}
+            </div>
           </CardContent>
         </Card>
       )}
