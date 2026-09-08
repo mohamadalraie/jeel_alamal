@@ -23,18 +23,39 @@ async function bootstrap() {
   // Serve uploaded files (logos, etc.) read-only at /uploads.
   app.use(UPLOADS_URL_PREFIX, express.static(UPLOADS_DIR));
 
-  // CORS — in development reflect the caller's origin so the app is reachable
-  // from any device on the LAN (PC via localhost, phone via the host's IP). In
-  // production, restrict to the configured FRONTEND_ORIGIN allowlist.
+  // CORS — allow requests from local development, FRONTEND_ORIGIN allowlist, and almanshiah.io domains.
   const isProd = config.get<string>('NODE_ENV') === 'production';
-  const allowlist = config
-    .get<string>('FRONTEND_ORIGIN', '*')
+  const rawOrigin = config.get<string>('FRONTEND_ORIGIN', '*');
+  const allowlist = (rawOrigin || '*')
     .split(',')
     .map((s) => s.trim())
     .filter(Boolean);
+
   app.enableCors({
-    origin: isProd ? (allowlist.includes('*') ? true : allowlist) : true,
+    origin: (requestOrigin, callback) => {
+      if (!requestOrigin) {
+        return callback(null, true);
+      }
+      if (
+        !isProd ||
+        allowlist.includes('*') ||
+        allowlist.includes(requestOrigin) ||
+        requestOrigin.endsWith('.almanshiah.io') ||
+        requestOrigin === 'https://almanshiah.io'
+      ) {
+        return callback(null, true);
+      }
+      callback(null, false);
+    },
     credentials: true,
+    methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'],
+    allowedHeaders: [
+      'Content-Type',
+      'Accept',
+      'Authorization',
+      'X-Requested-With',
+      'X-Institute-Id',
+    ],
   });
 
   // Global validation: strips unknown props, transforms payloads to DTO instances
