@@ -23,30 +23,9 @@ async function bootstrap() {
   // Serve uploaded files (logos, etc.) read-only at /uploads.
   app.use(UPLOADS_URL_PREFIX, express.static(UPLOADS_DIR));
 
-  // CORS — allow requests from local development, FRONTEND_ORIGIN allowlist, and almanshiah.io domains.
-  const isProd = config.get<string>('NODE_ENV') === 'production';
-  const rawOrigin = config.get<string>('FRONTEND_ORIGIN', '*');
-  const allowlist = (rawOrigin || '*')
-    .split(',')
-    .map((s) => s.trim())
-    .filter(Boolean);
-
+  // CORS — reflect caller's origin with credentials support across environments.
   app.enableCors({
-    origin: (requestOrigin, callback) => {
-      if (!requestOrigin) {
-        return callback(null, true);
-      }
-      if (
-        !isProd ||
-        allowlist.includes('*') ||
-        allowlist.includes(requestOrigin) ||
-        requestOrigin.endsWith('.almanshiah.io') ||
-        requestOrigin === 'https://almanshiah.io'
-      ) {
-        return callback(null, true);
-      }
-      callback(null, false);
-    },
+    origin: true,
     credentials: true,
     methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'],
     allowedHeaders: [
