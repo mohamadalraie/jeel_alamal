@@ -108,7 +108,23 @@ export class ApiError extends Error {
   }
 }
 
-async function request<T>(path: string, init?: RequestInit): Promise<T> {
+let refreshTokenPromise: Promise<boolean> | null = null;
+
+async function attemptTokenRefresh(): Promise<boolean> {
+  try {
+    const res = await fetch(`${API_URL}/api/auth/refresh`, {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      cache: 'no-store',
+    });
+    return res.ok;
+  } catch {
+    return false;
+  }
+}
+
+async function request<T>(path: string, init?: RequestInit, isRetry = false): Promise<T> {
   const res = await fetch(`${API_URL}${path}`, {
     ...init,
     credentials: 'include',
@@ -120,6 +136,20 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   });
 
   if (!res.ok) {
+    const isAuthEndpoint =
+      path.startsWith('/api/auth/login') || path.startsWith('/api/auth/refresh');
+    if (res.status === 401 && !isAuthEndpoint && !isRetry) {
+      if (!refreshTokenPromise) {
+        refreshTokenPromise = attemptTokenRefresh().finally(() => {
+          refreshTokenPromise = null;
+        });
+      }
+      const refreshed = await refreshTokenPromise;
+      if (refreshed) {
+        return request<T>(path, init, true);
+      }
+    }
+
     let message = `Request failed (${res.status})`;
     try {
       const body = (await res.json()) as { message?: string | string[] };

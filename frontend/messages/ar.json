@@ -102,6 +102,7 @@
     "exploreCourses": "تسجيل الدخول"
   },
   "auth": {
+    "checkingSession": "جارٍ التحقق من الجلسة…",
     "loginTitle": "تسجيل الدخول",
     "loginSubtitle": "ادخل اسم المستخدم وكلمة المرور",
     "username": "اسم المستخدم",

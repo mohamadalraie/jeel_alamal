@@ -1,20 +1,36 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { useRouter } from '@/i18n/navigation';
-import { login, ApiError } from '@/lib/api';
+import { login, getMe, ApiError } from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 
 export function LoginForm() {
   const t = useTranslations('auth');
+  const tc = useTranslations('common');
   const router = useRouter();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [checkingSession, setCheckingSession] = useState(true);
+
+  useEffect(() => {
+    getMe()
+      .then(({ user }) => {
+        if (user) {
+          router.replace('/dashboard');
+        } else {
+          setCheckingSession(false);
+        }
+      })
+      .catch(() => {
+        setCheckingSession(false);
+      });
+  }, [router]);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -24,9 +40,19 @@ export function LoginForm() {
       await login(username, password);
       router.replace('/dashboard');
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : 'Error');
+      setError(err instanceof ApiError ? err.message : tc('error'));
       setBusy(false);
     }
+  }
+
+  if (checkingSession) {
+    return (
+      <div className="w-full z-10 flex flex-col items-center justify-center py-10">
+        <p className="text-white/80 text-sm font-medium animate-pulse">
+          {t('checkingSession')}
+        </p>
+      </div>
+    );
   }
 
   return (

@@ -55,8 +55,8 @@ class ChangePasswordDto {
   newPassword: string;
 }
 
-const ACCESS_COOKIE_MAX_AGE = 15 * 60 * 1000; // mirror JWT_EXPIRES_IN
-const REFRESH_COOKIE_MAX_AGE = 7 * 24 * 60 * 60 * 1000; // mirror refresh TTL
+const ACCESS_COOKIE_MAX_AGE = 24 * 60 * 60 * 1000; // 24 hours
+const REFRESH_COOKIE_MAX_AGE = 30 * 24 * 60 * 60 * 1000; // 30 days
 
 /**
  * HTTP delivery for auth. Tokens travel ONLY as httpOnly cookies — they are

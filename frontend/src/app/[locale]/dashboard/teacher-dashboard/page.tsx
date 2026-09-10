@@ -181,6 +181,7 @@ function TeacherClassCard({
 /** Teacher Quick Access Dashboard Page */
 export default function TeacherDashboardPage() {
   const t = useTranslations('dashboard');
+  const tLess = useTranslations('lessons');
   const tc = useTranslations('common');
   const router = useRouter();
   const { user, selected, loading } = useInstitute();
@@ -209,8 +210,10 @@ export default function TeacherDashboardPage() {
   // Filter teacher's assigned classes
   const teacherClasses = (classes ?? []).filter((c) => c.teacherIds.includes(user.id));
 
-  // Filter upcoming lessons (not finished, sorted by date)
-  const upcomingLessons = entries.filter((l) => l.status !== 'finished');
+  // Filter upcoming lessons (only pending or started, exclude ended/past status: finished, under_time, over_time, not_given)
+  const upcomingLessons = entries.filter(
+    (l) => l.status === 'pending' || l.status === 'started',
+  );
 
   const handleStartLesson = async (lessonClassId: string) => {
     try {
@@ -270,7 +273,7 @@ export default function TeacherDashboardPage() {
                   </Badge>
                 </h3>
                 <p className="text-xs text-muted-foreground mt-0.5">
-                  {activeLesson.name || t('lesson')} · {activeLesson.date}
+                  {activeLesson.name || tLess('lesson')} · {activeLesson.date}
                 </p>
               </div>
             </div>
@@ -347,6 +350,7 @@ export default function TeacherDashboardPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {upcomingLessons.slice(0, 4).map((lesson) => {
               const isStarted = lesson.status === 'started';
+              const isPending = lesson.status === 'pending';
               const isStartingThis = startingLessonId === lesson.lessonClassId;
 
               return (
@@ -363,7 +367,7 @@ export default function TeacherDashboardPage() {
                           {lesson.className}
                         </span>
                         <h3 className="font-bold text-base leading-tight">
-                          {lesson.name || (lesson.kind === 'recitation' ? t('recitation') : t('lesson'))}
+                          {lesson.name || (lesson.kind === 'recitation' ? tLess('recitation') : tLess('lesson'))}
                         </h3>
                       </div>
                       {lesson.category && (
@@ -386,7 +390,7 @@ export default function TeacherDashboardPage() {
                       {lesson.expectedDurationMinutes && (
                         <>
                           <span>•</span>
-                          <span>{t('durationMinutes', { n: lesson.expectedDurationMinutes })}</span>
+                          <span>{tLess('durationMinutes', { n: lesson.expectedDurationMinutes })}</span>
                         </>
                       )}
                     </p>
@@ -397,17 +401,19 @@ export default function TeacherDashboardPage() {
                       variant={isStarted ? 'default' : 'secondary'}
                       className={`text-xs ${isStarted ? 'bg-emerald-600' : ''}`}
                     >
-                      {t(`status_${lesson.status}`)}
+                      {tLess(`status_${lesson.status}`)}
                     </Badge>
 
-                    {isStarted ? (
+                    {isStarted && (
                       <Button asChild size="sm" className="bg-emerald-600 hover:bg-emerald-700 text-xs gap-1.5">
                         <Link href={`/dashboard/lesson-timer?id=${lesson.lessonClassId}`}>
                           <Play className="size-3.5 fill-white" />
                           <span>{t('continueTimer')}</span>
                         </Link>
                       </Button>
-                    ) : (
+                    )}
+
+                    {isPending && (
                       <Button
                         size="sm"
                         disabled={isStartingThis}
@@ -415,7 +421,7 @@ export default function TeacherDashboardPage() {
                         className="text-xs gap-1.5"
                       >
                         <Play className="size-3.5" />
-                        <span>{t('startLesson')}</span>
+                        <span>{tLess('startLesson')}</span>
                       </Button>
                     )}
                   </div>
