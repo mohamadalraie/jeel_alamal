@@ -52,6 +52,9 @@ export function AwardDinarDialog({
   const [ruleId, setRuleId] = useState('');
   const [amount, setAmount] = useState('');
   const [reason, setReason] = useState('');
+  const [selectedStudentIds, setSelectedStudentIds] = useState<string[]>(
+    students.map((s) => s.id),
+  );
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -63,11 +66,30 @@ export function AwardDinarDialog({
     setRuleId('');
     setAmount('');
     setReason('');
+    setSelectedStudentIds(students.map((s) => s.id));
     setError(null);
+  };
+
+  const toggleStudent = (id: string) => {
+    setSelectedStudentIds((prev) =>
+      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id],
+    );
+  };
+
+  const toggleAllStudents = () => {
+    if (selectedStudentIds.length === students.length) {
+      setSelectedStudentIds([]);
+    } else {
+      setSelectedStudentIds(students.map((s) => s.id));
+    }
   };
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isBulk && selectedStudentIds.length === 0) {
+      setError(t('noStudentsSelected'));
+      return;
+    }
     let input: AwardDinarInput;
     if (mode === 'rule') {
       if (!ruleId) return;
@@ -87,10 +109,12 @@ export function AwardDinarDialog({
     setBusy(true);
     setError(null);
     try {
-      if (isBulk) {
-        await bulkAwardDinars({ ...input, studentIds: students.map((s) => s.id) });
+      if (selectedStudentIds.length > 1) {
+        await bulkAwardDinars({ ...input, studentIds: selectedStudentIds });
       } else {
-        await awardDinar(students[0].id, input);
+        const targetId = selectedStudentIds[0] || students[0]?.id;
+        if (!targetId) return;
+        await awardDinar(targetId, input);
       }
       qc.invalidateQueries({ queryKey: ['student-dinars'] });
       qc.invalidateQueries({ queryKey: ['dinar-leaderboard'] });
@@ -121,13 +145,15 @@ export function AwardDinarDialog({
           </Button>
         )}
       </DialogTrigger>
-      <DialogContent className="sm:max-w-sm">
+      <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>
-            {isBulk ? t('awardToN', { n: students.length }) : t('awardTo', { name: students[0]?.name ?? '' })}
+            {isBulk
+              ? t('awardToN', { n: selectedStudentIds.length })
+              : t('awardTo', { name: students[0]?.name ?? '' })}
           </DialogTitle>
         </DialogHeader>
-        <form onSubmit={submit} className="flex flex-col gap-4">
+        <form onSubmit={submit} className="flex flex-col gap-4 max-h-[80vh] overflow-y-auto p-1">
           {/* Mode toggle */}
           <div className="flex items-center gap-1 rounded-lg border p-1">
             <Button
@@ -149,6 +175,48 @@ export function AwardDinarDialog({
               {t('exceptional')}
             </Button>
           </div>
+
+          {/* Student selection checklist */}
+          {isBulk && (
+            <div className="flex flex-col gap-2 rounded-lg border p-2.5 bg-muted/20">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-semibold">{t('selectStudents')}</span>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="h-6 text-[11px] px-2 text-primary"
+                  onClick={toggleAllStudents}
+                >
+                  {selectedStudentIds.length === students.length
+                    ? t('deselectAll')
+                    : t('selectAll')}
+                </Button>
+              </div>
+
+              <div className="max-h-36 overflow-y-auto space-y-1 pt-1 border-t border-border/50">
+                {students.map((s) => {
+                  const checked = selectedStudentIds.includes(s.id);
+                  return (
+                    <label
+                      key={s.id}
+                      className="flex items-center gap-2 text-xs p-1 rounded hover:bg-muted/60 cursor-pointer"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={checked}
+                        onChange={() => toggleStudent(s.id)}
+                        className="rounded border-border size-3.5 accent-primary"
+                      />
+                      <span className={checked ? 'font-medium text-foreground' : 'text-muted-foreground'}>
+                        {s.name}
+                      </span>
+                    </label>
+                  );
+                })}
+              </div>
+            </div>
+          )}
 
           {mode === 'rule' ? (
             <div className="flex flex-col gap-1.5">

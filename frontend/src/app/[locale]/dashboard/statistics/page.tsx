@@ -31,12 +31,13 @@ export default function StatisticsPage() {
   const { data: stats, isLoading } = useStats(selected?.id);
   const { data: classes } = useClasses(selected?.id);
 
-  // Students don't have access to institute statistics.
+  // Students and teachers don't have access to institute statistics.
   useEffect(() => {
     if (user.role === 'student') router.replace('/dashboard/my-profile');
+    if (user.role === 'teacher') router.replace('/dashboard/teacher-dashboard');
   }, [user.role, router]);
 
-  if (user.role === 'student') return null;
+  if (user.role === 'student' || user.role === 'teacher') return null;
   if (loading) return <CardsSkeleton />;
   if (!selected) return <p className="text-muted-foreground">{t('selectInstituteFirst')}</p>;
 

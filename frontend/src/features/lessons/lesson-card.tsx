@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { BookOpen, Clock, ExternalLink, FileText, ImageIcon, Link2 } from 'lucide-react';
 import type { ProgramEntry, LessonSourceView } from '@/lib/types';
@@ -8,6 +9,7 @@ import { formatTeacherName } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { tint } from './lesson-colors';
 import { LessonStatusBadge } from './lesson-status-badge';
+import { LessonDetailsDialog } from './lesson-details-dialog';
 
 const SOURCE_ICON = {
   link: Link2,
@@ -53,64 +55,70 @@ export function LessonCard({
         )
       : null;
 
+  const [detailsOpen, setDetailsOpen] = useState(false);
+
   return (
-    <div
-      className="border-border bg-card flex items-stretch gap-0 overflow-hidden rounded-lg border"
-      style={color ? { borderInlineStartColor: color, borderInlineStartWidth: 4 } : undefined}
-    >
-      <div className="flex flex-1 flex-col gap-1.5 p-3">
-        <div className="flex items-start justify-between gap-2">
-          <span className="flex items-center gap-1.5 font-semibold">
-            {index > 0 && (
-              <span className="text-muted-foreground text-xs font-medium">{index}.</span>
-            )}
-            <BookOpen className="text-primary size-4 shrink-0" />
-            {isRecitation ? t('recitation') : entry.name}
-          </span>
-          {actions}
-        </div>
-
-        <div className="flex flex-wrap items-center gap-1.5">
-          {showStatus && <LessonStatusBadge status={entry.status} />}
-          {entry.category && (
-            <span
-              className="inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[11px] font-medium"
-              style={{ backgroundColor: tint(entry.category.color, 0.18), color: entry.category.color }}
-            >
-              <span className="size-2 rounded-full" style={{ backgroundColor: entry.category.color }} />
-              {entry.category.name}
+    <>
+      <div
+        onClick={() => setDetailsOpen(true)}
+        className="border-border bg-card hover:bg-accent/40 cursor-pointer flex items-stretch gap-0 overflow-hidden rounded-lg border transition-colors"
+        style={color ? { borderInlineStartColor: color, borderInlineStartWidth: 4 } : undefined}
+      >
+        <div className="flex flex-1 flex-col gap-1.5 p-3">
+          <div className="flex items-start justify-between gap-2">
+            <span className="flex items-center gap-1.5 font-semibold">
+              {index > 0 && (
+                <span className="text-muted-foreground text-xs font-medium">{index}.</span>
+              )}
+              <BookOpen className="text-primary size-4 shrink-0" />
+              {isRecitation ? t('recitation') : entry.name}
             </span>
-          )}
-          {entry.expectedDurationMinutes != null && (
-            <span className="text-muted-foreground inline-flex items-center gap-1 text-[11px]">
-              <Clock className="size-3" />
-              {actualMinutes != null
-                ? t('durationActualExpected', {
-                    actual: actualMinutes,
-                    expected: entry.expectedDurationMinutes,
-                  })
-                : t('durationMinutes', { n: entry.expectedDurationMinutes })}
-            </span>
-          )}
-          {showClass && <Badge variant="outline">{entry.className}</Badge>}
-          {showTeacher && (
-            <span className="text-muted-foreground text-xs">{formatTeacherName(entry.teacher.name)}</span>
-          )}
-        </div>
-
-        {!isRecitation && entry.description && (
-          <p className="text-muted-foreground text-sm">{entry.description}</p>
-        )}
-
-        {!isRecitation && entry.sources.length > 0 && (
-          <div className="mt-0.5 flex flex-col gap-1">
-            {entry.sources.map((s, i) => (
-              <SourceLink key={i} source={s} openLabel={t('open')} />
-            ))}
+            <div onClick={(e) => e.stopPropagation()}>{actions}</div>
           </div>
-        )}
+
+          <div className="flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
+            {showStatus && <LessonStatusBadge status={entry.status} />}
+            {entry.category && (
+              <span
+                className="inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[11px] font-medium"
+                style={{ backgroundColor: tint(entry.category.color, 0.18), color: entry.category.color }}
+              >
+                <span className="size-2 rounded-full" style={{ backgroundColor: entry.category.color }} />
+                {entry.category.name}
+              </span>
+            )}
+            {entry.expectedDurationMinutes != null && (
+              <span className="inline-flex items-center gap-1 text-[11px]">
+                <Clock className="size-3" />
+                {actualMinutes != null
+                  ? t('durationActualExpected', {
+                      actual: actualMinutes,
+                      expected: entry.expectedDurationMinutes,
+                    })
+                  : t('durationMinutes', { n: entry.expectedDurationMinutes })}
+              </span>
+            )}
+            {showClass && <Badge variant="outline">{entry.className}</Badge>}
+            {showTeacher && (
+              <span>{formatTeacherName(entry.teacher.name)}</span>
+            )}
+            {!isRecitation && entry.sources.length > 0 && (
+              <Badge variant="secondary" className="text-[10px] gap-1 px-1.5 py-0">
+                <FileText className="size-3" />
+                <span>{entry.sources.length}</span>
+              </Badge>
+            )}
+          </div>
+        </div>
       </div>
-    </div>
+
+      <LessonDetailsDialog
+        entry={entry}
+        open={detailsOpen}
+        onOpenChange={setDetailsOpen}
+        actions={actions}
+      />
+    </>
   );
 }
 

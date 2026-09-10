@@ -11,6 +11,8 @@ export default function DashboardIndex() {
   useEffect(() => {
     if (user.role === 'student') {
       router.replace('/dashboard/my-profile');
+    } else if (user.role === 'teacher') {
+      router.replace('/dashboard/teacher-dashboard');
     } else {
       router.replace('/dashboard/statistics');
     }

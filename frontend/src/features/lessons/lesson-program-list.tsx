@@ -8,6 +8,7 @@ import {
   CalendarClock,
   ChevronLeft,
   ChevronRight,
+  FileText,
   LayoutList,
   Plus,
 } from 'lucide-react';
@@ -17,7 +18,7 @@ import { toYMD } from '@/features/attendance/calendar-utils';
 import { EmptyState } from '@/features/shared/empty-state';
 import { Button } from '@/components/ui/button';
 import { statusColor } from './lesson-status-badge';
-import { SourceLink } from './lesson-card';
+import { LessonDetailsDialog } from './lesson-details-dialog';
 
 const TODAY_YMD = toYMD(new Date());
 
@@ -374,62 +375,74 @@ function ProgramEntryRow({
   const isRecitation = entry.kind === 'recitation';
   const dotColor = statusColor(entry.status) ?? entry.category?.color ?? null;
   const meta = metaParts(entry, showTeacher, showClass, t);
+  const [detailsOpen, setDetailsOpen] = useState(false);
 
   return (
-    <div className="flex items-start gap-2">
-      {index > 0 && (
-        <bdi className="text-muted-foreground mt-0.5 w-4 shrink-0 text-center text-xs font-medium">
-          {index}
-        </bdi>
-      )}
-
-      <div className="flex min-w-0 flex-1 flex-col gap-0.5 text-start">
-        {/* Name + status */}
-        <div className="flex items-center gap-1.5">
-          {isRecitation ? (
-            <BookMarked className="text-primary size-4 shrink-0" />
-          ) : (
-            <BookOpen className="text-muted-foreground size-4 shrink-0" />
-          )}
-          <span className="min-w-0 truncate text-sm font-semibold">
-            {isRecitation ? t('recitation') : entry.name}
-          </span>
-          {dotColor && (
-            <span
-              className="size-1.5 shrink-0 rounded-full"
-              style={{ backgroundColor: dotColor }}
-              title={t(`status_${entry.status}`)}
-            />
-          )}
-          <span className="text-muted-foreground shrink-0 text-[11px]">
-            {t(`status_${entry.status}`)}
-          </span>
-        </div>
-
-        {/* Everything else, one muted line */}
-        {meta.length > 0 && (
-          <p className="text-muted-foreground truncate text-[11px]">
-            <bdi>{meta.join(' · ')}</bdi>
-          </p>
+    <>
+      <div
+        onClick={() => setDetailsOpen(true)}
+        className="flex items-start gap-2 p-1.5 rounded-lg hover:bg-muted/40 transition-colors cursor-pointer"
+      >
+        {index > 0 && (
+          <bdi className="text-muted-foreground mt-0.5 w-4 shrink-0 text-center text-xs font-medium">
+            {index}
+          </bdi>
         )}
 
-        {/* Description */}
-        {!isRecitation && entry.description && (
-          <p className="text-muted-foreground truncate text-xs">{entry.description}</p>
-        )}
-
-        {/* Sources */}
-        {!isRecitation && entry.sources && entry.sources.length > 0 && (
-          <div className="mt-1 flex flex-col gap-1">
-            {entry.sources.map((s, i) => (
-              <SourceLink key={i} source={s} openLabel={t('open')} />
-            ))}
+        <div className="flex min-w-0 flex-1 flex-col gap-0.5 text-start">
+          {/* Name + status */}
+          <div className="flex items-center gap-1.5">
+            {isRecitation ? (
+              <BookMarked className="text-primary size-4 shrink-0" />
+            ) : (
+              <BookOpen className="text-muted-foreground size-4 shrink-0" />
+            )}
+            <span className="min-w-0 truncate text-sm font-semibold hover:text-primary transition-colors">
+              {isRecitation ? t('recitation') : entry.name}
+            </span>
+            {dotColor && (
+              <span
+                className="size-1.5 shrink-0 rounded-full"
+                style={{ backgroundColor: dotColor }}
+                title={t(`status_${entry.status}`)}
+              />
+            )}
+            <span className="text-muted-foreground shrink-0 text-[11px]">
+              {t(`status_${entry.status}`)}
+            </span>
+            {!isRecitation && entry.sources && entry.sources.length > 0 && (
+              <span className="inline-flex items-center gap-0.5 text-[10px] text-muted-foreground bg-muted px-1.5 py-0.2 rounded-full">
+                <FileText className="size-3" />
+                <span>{entry.sources.length}</span>
+              </span>
+            )}
           </div>
-        )}
 
-        {/* Actions */}
-        {actions && <div className="mt-0.5 flex flex-wrap items-center gap-1.5">{actions}</div>}
+          {/* Everything else, one muted line */}
+          {meta.length > 0 && (
+            <p className="text-muted-foreground truncate text-[11px]">
+              <bdi>{meta.join(' · ')}</bdi>
+            </p>
+          )}
+
+          {/* Actions */}
+          {actions && (
+            <div
+              className="mt-1 flex flex-wrap items-center gap-1.5"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {actions}
+            </div>
+          )}
+        </div>
       </div>
-    </div>
+
+      <LessonDetailsDialog
+        entry={entry}
+        open={detailsOpen}
+        onOpenChange={setDetailsOpen}
+        actions={actions}
+      />
+    </>
   );
 }

@@ -280,6 +280,14 @@ export const changeStudentClass = (
   studentId: string,
   classId: string | null,
 ) => put<void>(`${inst(instituteId)}/students/${studentId}/class`, { classId });
+export const resetStudentPassword = (
+  instituteId: string,
+  studentId: string,
+  newPassword: string,
+) =>
+  patch<void>(`${inst(instituteId)}/students/${studentId}/password`, {
+    newPassword,
+  });
 
 // ── Student notes (spec 002) ──
 export const listNotes = (instituteId: string, studentId: string) =>

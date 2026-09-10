@@ -18,6 +18,7 @@ import {
   GetStudentProfileUseCase,
   UpdateStudentUseCase,
   ChangeStudentClassUseCase,
+  ResetStudentPasswordUseCase,
 } from './application/use-cases/student-profile.use-cases';
 import {
   ListStudentNotesUseCase,
@@ -49,6 +50,7 @@ import { DrizzleStudentNoteRepository } from './infrastructure/persistence/drizz
     GetStudentProfileUseCase,
     UpdateStudentUseCase,
     ChangeStudentClassUseCase,
+    ResetStudentPasswordUseCase,
     ListStudentNotesUseCase,
     AddStudentNoteUseCase,
     UpdateStudentNoteUseCase,

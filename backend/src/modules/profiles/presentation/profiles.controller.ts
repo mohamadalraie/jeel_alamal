@@ -26,6 +26,7 @@ import {
   GetStudentProfileUseCase,
   UpdateStudentUseCase,
   ChangeStudentClassUseCase,
+  ResetStudentPasswordUseCase,
 } from '../application/use-cases/student-profile.use-cases';
 import {
   ListStudentNotesUseCase,
@@ -38,6 +39,7 @@ import {
   AddCertificationDto,
   ChangeClassDto,
   NoteBodyDto,
+  ResetStudentPasswordDto,
   UpdateBasicInfoDto,
   UpdateTeacherDetailsDto,
 } from '../application/dto/profile.dto';
@@ -58,6 +60,7 @@ export class ProfilesController {
     private readonly getStudent: GetStudentProfileUseCase,
     private readonly updateStudent: UpdateStudentUseCase,
     private readonly changeStudentClass: ChangeStudentClassUseCase,
+    private readonly resetStudentPassword: ResetStudentPasswordUseCase,
     private readonly listNotes: ListStudentNotesUseCase,
     private readonly addNote: AddStudentNoteUseCase,
     private readonly updateNote: UpdateStudentNoteUseCase,
@@ -152,6 +155,22 @@ export class ProfilesController {
       instituteId,
       studentId,
       dto.classId ?? null,
+    );
+  }
+
+  @Patch('students/:studentId/password')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async resetPassword(
+    @CurrentUser() actor: Actor,
+    @Param('instituteId', ParseUUIDPipe) instituteId: string,
+    @Param('studentId', ParseUUIDPipe) studentId: string,
+    @Body() dto: ResetStudentPasswordDto,
+  ) {
+    await this.resetStudentPassword.execute(
+      actor,
+      instituteId,
+      studentId,
+      dto.newPassword,
     );
   }
 

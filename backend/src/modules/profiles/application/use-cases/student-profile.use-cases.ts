@@ -12,6 +12,8 @@ import { CLASS_REPOSITORY } from '../../../classes/domain/class.repository';
 import type { ClassRepository } from '../../../classes/domain/class.repository';
 import { ProfileAccessPolicy } from '../profile-access.policy';
 import { UpdateBasicInfoDto } from '../dto/profile.dto';
+import { PASSWORD_HASHER } from '../../../users/application/ports/password-hasher.port';
+import type { PasswordHasher } from '../../../users/application/ports/password-hasher.port';
 
 export interface StudentProfileResult {
   student: UserResponseDto;
@@ -101,6 +103,32 @@ export class ChangeStudentClassUseCase {
       }
     }
     await this.classes.transferStudent(studentId, targetClassId);
+  }
+}
+
+/** Reset a student's password without needing their current password. Staff only. */
+@Injectable()
+export class ResetStudentPasswordUseCase {
+  constructor(
+    private readonly policy: ProfileAccessPolicy,
+    @Inject(USER_REPOSITORY) private readonly users: UserRepository,
+    @Inject(PASSWORD_HASHER) private readonly passwordHasher: PasswordHasher,
+  ) {}
+
+  async execute(
+    actor: Actor,
+    instituteId: string,
+    studentId: string,
+    newPassword: string,
+  ): Promise<void> {
+    await this.policy.assertStaffOfInstitute(actor, instituteId);
+    if (!newPassword || newPassword.length < 8) {
+      throw new BusinessRuleError('Password must be at least 8 characters long');
+    }
+    const student = await loadStudent(this.users, instituteId, studentId);
+    const hash = await this.passwordHasher.hash(newPassword);
+    student.changePassword(hash);
+    await this.users.save(student);
   }
 }
 

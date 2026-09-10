@@ -79,6 +79,12 @@ export class ChangeClassDto {
   classId?: string | null;
 }
 
+export class ResetStudentPasswordDto {
+  @IsString()
+  @MinLength(8)
+  newPassword: string;
+}
+
 export class CertificationDto {
   id: string;
   title: string;

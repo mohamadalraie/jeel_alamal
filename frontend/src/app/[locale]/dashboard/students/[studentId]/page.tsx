@@ -10,6 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { BasicInfoCard } from '@/features/profiles/basic-info-card';
 import { ChangeClassCard } from '@/features/profiles/change-class-card';
 import { StudentNotesCard } from '@/features/profiles/student-notes-card';
+import { ResetStudentPasswordDialog } from '@/features/profiles/reset-student-password-dialog';
 import { ProfileHeader } from '@/features/profiles/profile-header';
 import { StudentRecitationTab } from '@/features/recitation/student-recitation-tab';
 import { StudentAttendanceView } from '@/features/attendance/student-attendance-view';
@@ -82,6 +83,11 @@ export default function StudentProfilePage({
             studentId={studentId}
             currentClass={currentClass}
             onChanged={load}
+          />
+          <ResetStudentPasswordDialog
+            instituteId={selected.id}
+            studentId={studentId}
+            studentName={`${student.firstName} ${student.lastName}`}
           />
           <StudentNotesCard instituteId={selected.id} studentId={studentId} />
         </TabsContent>
