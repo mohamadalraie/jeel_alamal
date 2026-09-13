@@ -34,10 +34,20 @@ export class Announcement extends Entity<string> {
     if (!content)
       throw new BusinessRuleError('Announcement content is required');
 
+    let targetHalkaId: string | null = null;
+    if (
+      input.targetHalkaId &&
+      typeof input.targetHalkaId === 'string' &&
+      input.targetHalkaId.trim().length > 0 &&
+      input.targetHalkaId !== 'all'
+    ) {
+      targetHalkaId = input.targetHalkaId.trim();
+    }
+
     return new Announcement(randomUUID(), {
       instituteId: input.instituteId,
       authorId: input.authorId,
-      targetHalkaId: input.targetHalkaId ?? null,
+      targetHalkaId,
       title,
       content,
       imageUrl: input.imageUrl?.trim() || null,

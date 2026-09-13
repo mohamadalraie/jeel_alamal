@@ -2,7 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const sharp = require('sharp');
 
-const sourceLogoPath = 'C:\\Users\\Administrator\\Desktop\\logo.jpg';
+const transparentPngPath = 'C:\\Users\\Administrator\\Desktop\\logo.png';
 const outputIconsDir = path.join(__dirname, '../public/icons');
 const outputPublicDir = path.join(__dirname, '../public');
 
@@ -11,61 +11,74 @@ if (!fs.existsSync(outputIconsDir)) {
 }
 
 async function buildIcons() {
-  if (!fs.existsSync(sourceLogoPath)) {
-    console.error('Source logo file not found at:', sourceLogoPath);
+  if (!fs.existsSync(transparentPngPath)) {
+    console.error('Source logo PNG not found at:', transparentPngPath);
     process.exit(1);
   }
 
-  console.log('Processing custom logo from:', sourceLogoPath);
+  console.log('Processing transparent logo from:', transparentPngPath);
 
-  // 1. Generate public/logo.png
-  await sharp(sourceLogoPath)
-    .png()
-    .toFile(path.join(outputPublicDir, 'logo.png'));
+  // 1. Copy transparent logo directly to public/logo.png
+  fs.copyFileSync(transparentPngPath, path.join(outputPublicDir, 'logo.png'));
 
-  // 2. Generate public/icons/icon-192.png (192x192)
-  await sharp(sourceLogoPath)
-    .resize(192, 192, { fit: 'cover' })
-    .png()
-    .toFile(path.join(outputIconsDir, 'icon-192.png'));
+  // 2. Generate PWA solid icons with #123b50 theme background
+  const brandBg = { r: 18, g: 59, b: 80, alpha: 1 };
 
-  // 3. Generate public/icons/icon-512.png (512x512)
-  await sharp(sourceLogoPath)
-    .resize(512, 512, { fit: 'cover' })
-    .png()
-    .toFile(path.join(outputIconsDir, 'icon-512.png'));
-
-  // 4. Generate public/icons/maskable-icon-512.png (Safe-padded for Android OS adaptive masks)
-  // Get dominant corner color or use #0b3846 background
-  const logoResized = await sharp(sourceLogoPath)
-    .resize(410, 410, { fit: 'contain', background: { r: 11, g: 56, b: 70, alpha: 1 } })
+  // Standard icon 192x192
+  const logo192 = await sharp(transparentPngPath)
+    .resize(150, 150, { fit: 'contain' })
     .toBuffer();
 
   await sharp({
-    create: {
-      width: 512,
-      height: 512,
-      channels: 4,
-      background: { r: 11, g: 56, b: 70, alpha: 1 },
-    },
+    create: { width: 192, height: 192, channels: 4, background: brandBg },
   })
-    .composite([{ input: logoResized, gravity: 'center' }])
+    .composite([{ input: logo192, gravity: 'center' }])
+    .png()
+    .toFile(path.join(outputIconsDir, 'icon-192.png'));
+
+  // Standard icon 512x512
+  const logo512 = await sharp(transparentPngPath)
+    .resize(400, 400, { fit: 'contain' })
+    .toBuffer();
+
+  await sharp({
+    create: { width: 512, height: 512, channels: 4, background: brandBg },
+  })
+    .composite([{ input: logo512, gravity: 'center' }])
+    .png()
+    .toFile(path.join(outputIconsDir, 'icon-512.png'));
+
+  // Maskable icon 512x512 (75% safe area = ~370px)
+  const logoMaskable = await sharp(transparentPngPath)
+    .resize(370, 370, { fit: 'contain' })
+    .toBuffer();
+
+  await sharp({
+    create: { width: 512, height: 512, channels: 4, background: brandBg },
+  })
+    .composite([{ input: logoMaskable, gravity: 'center' }])
     .png()
     .toFile(path.join(outputIconsDir, 'maskable-icon-512.png'));
 
-  // 5. Generate public/icons/apple-touch-icon.png (180x180)
-  await sharp(sourceLogoPath)
-    .resize(180, 180, { fit: 'cover' })
+  // Apple Touch Icon 180x180
+  const logoApple = await sharp(transparentPngPath)
+    .resize(140, 140, { fit: 'contain' })
+    .toBuffer();
+
+  await sharp({
+    create: { width: 180, height: 180, channels: 4, background: brandBg },
+  })
+    .composite([{ input: logoApple, gravity: 'center' }])
     .png()
     .toFile(path.join(outputIconsDir, 'apple-touch-icon.png'));
 
-  // 6. Generate public/favicon.ico (64x64 PNG)
-  await sharp(sourceLogoPath)
-    .resize(64, 64, { fit: 'cover' })
+  // Favicon 64x64
+  await sharp(transparentPngPath)
+    .resize(64, 64, { fit: 'contain' })
     .png()
     .toFile(path.join(outputPublicDir, 'favicon.ico'));
 
-  console.log('✅ Custom logo and all PWA icon assets generated successfully!');
+  console.log('✅ Transparent logo and PWA icon assets generated successfully!');
 }
 
 buildIcons().catch(console.error);

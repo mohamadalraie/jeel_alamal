@@ -45,16 +45,18 @@ export class CreateAnnouncementUseCase {
 
     try {
       let recipientIds: string[] = [];
-      if (dto.targetHalkaId) {
-        const membership = await this.classes.getMembership(dto.targetHalkaId);
+      if (announcement.targetHalkaId) {
+        const membership = await this.classes.getMembership(
+          announcement.targetHalkaId,
+        );
         recipientIds = [
-          ...membership.teacherIds,
-          ...membership.studentIds,
-          ...(membership.supervisorId ? [membership.supervisorId] : []),
+          ...(membership?.teacherIds ?? []),
+          ...(membership?.studentIds ?? []),
+          ...(membership?.supervisorId ? [membership.supervisorId] : []),
         ];
       } else {
         const instituteUsers = await this.users.findByInstitute(instituteId);
-        recipientIds = instituteUsers.map((u) => u.id);
+        recipientIds = (instituteUsers ?? []).map((u) => u.id);
       }
 
       const filteredRecipientIds = Array.from(new Set(recipientIds)).filter(
