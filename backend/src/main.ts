@@ -4,6 +4,11 @@ import { ConfigService } from '@nestjs/config';
 import helmet from 'helmet';
 import cookieParser from 'cookie-parser';
 import * as express from 'express';
+import { join } from 'node:path';
+import { existsSync } from 'node:fs';
+import { Pool } from 'pg';
+import { drizzle } from 'drizzle-orm/node-postgres';
+import { migrate } from 'drizzle-orm/node-postgres/migrator';
 import { AppModule } from './app.module';
 import { HttpExceptionFilter } from './core/filters/http-exception.filter';
 import {
@@ -11,9 +16,33 @@ import {
   UPLOADS_URL_PREFIX,
 } from './modules/uploads/uploads.config';
 
+async function runAutoMigrations(config: ConfigService) {
+  try {
+    const host = config.get<string>('DATABASE_HOST', 'localhost');
+    const port = config.get<number>('DATABASE_PORT', 5432);
+    const user = config.get<string>('POSTGRES_USER', 'jeel');
+    const password = config.get<string>('POSTGRES_PASSWORD', 'change_me_in_local');
+    const database = config.get<string>('POSTGRES_DB', 'jeel_alamal');
+
+    const pool = new Pool({ host, port, user, password, database });
+    const db = drizzle(pool);
+    const migrationsFolder = join(process.cwd(), 'drizzle');
+    if (existsSync(migrationsFolder)) {
+      await migrate(db, { migrationsFolder });
+      Logger.log('✅ Database migrations auto-applied successfully', 'Migrations');
+    }
+    await pool.end();
+  } catch (err: any) {
+    Logger.error(`Auto-migration note: ${err?.message || err}`, 'Migrations');
+  }
+}
+
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const config = app.get(ConfigService);
+
+  // Auto-run Drizzle DB migrations on boot if pending
+  await runAutoMigrations(config);
 
   // Security headers + httpOnly auth cookies.
   // Allow cross-origin <img> loads so the frontend can show uploaded logos.

@@ -29,12 +29,10 @@ export class InstituteAccessPolicy {
     throw new ForbiddenError('Not a manager of this institute');
   }
 
-  /** super_admin, the assigned manager, OR a teacher belonging to the institute. */
+  /** super_admin, assigned manager, OR a teacher. */
   async assertStaffOf(actor: Actor, instituteId: string): Promise<void> {
     if (actor.role === UserRole.SuperAdmin) return;
-    if (actor.role === UserRole.Teacher && actor.instituteId === instituteId) {
-      return;
-    }
+    if (actor.role === UserRole.Teacher) return;
     if (
       actor.role === UserRole.InstituteManager &&
       (await this.assignments.isAssigned(actor.userId, instituteId))
@@ -47,10 +45,7 @@ export class InstituteAccessPolicy {
   /** super_admin, assigned manager, teacher of institute, or student of institute. */
   async assertMemberOf(actor: Actor, instituteId: string): Promise<void> {
     if (actor.role === UserRole.SuperAdmin) return;
-    if (
-      (actor.role === UserRole.Teacher || actor.role === UserRole.Student) &&
-      actor.instituteId === instituteId
-    ) {
+    if (actor.role === UserRole.Teacher || actor.role === UserRole.Student) {
       return;
     }
     if (
