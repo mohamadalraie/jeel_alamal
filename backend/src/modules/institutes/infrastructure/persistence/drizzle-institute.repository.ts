@@ -86,4 +86,18 @@ export class DrizzleInstituteRepository implements InstituteRepository {
       });
     });
   }
+
+  async provisionWithExistingManager(
+    institute: Institute,
+    managerId: string,
+  ): Promise<void> {
+    await this.db.transaction(async (tx) => {
+      await tx.insert(institutes).values(toRow(institute));
+      await tx.insert(managerInstitutes).values({
+        managerId,
+        instituteId: institute.id,
+        assignedAt: new Date(),
+      });
+    });
+  }
 }

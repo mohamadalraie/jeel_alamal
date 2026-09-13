@@ -44,6 +44,9 @@ class InMemoryUserRepository implements UserRepository {
   countByInstitute() {
     return Promise.resolve(0);
   }
+  searchAllUsers() {
+    return Promise.resolve([]);
+  }
 }
 
 const fakeHasher: PasswordHasher = {
@@ -64,6 +67,9 @@ class FakeInstituteRepository implements InstituteRepository {
   }
   provisionWithManager(institute: Institute, manager: User) {
     this.provisioned.push({ institute, manager });
+    return Promise.resolve();
+  }
+  provisionWithExistingManager() {
     return Promise.resolve();
   }
   save() {
@@ -106,6 +112,7 @@ describe('CreateInstituteUseCase', () => {
     institutes = new FakeInstituteRepository();
     useCase = new CreateInstituteUseCase(
       institutes,
+      users,
       new CreateUserAccountUseCase(users, fakeHasher),
     );
   });

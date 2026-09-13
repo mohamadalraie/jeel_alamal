@@ -28,6 +28,8 @@ import { LogoUpload } from '@/features/shared/logo-upload';
 import { ListSkeleton } from '@/features/shared/skeletons';
 import { MemberFields, emptyMember, type MemberDraft } from './member-fields';
 
+import { UserSelectOrFields, type UserSearchResult } from './user-select-or-fields';
+
 /** Super-admin home: institutes list, create (with manager + logo), and edit. */
 export function SuperAdminView() {
   const t = useTranslations('dashboard');
@@ -44,6 +46,8 @@ export function SuperAdminView() {
   const [place, setPlace] = useState('');
   const [description, setDescription] = useState('');
   const [logoUrl, setLogoUrl] = useState('');
+  const [mgrMode, setMgrMode] = useState<'new' | 'existing'>('new');
+  const [selectedMgr, setSelectedMgr] = useState<UserSearchResult | null>(null);
   const [manager, setManager] = useState<MemberDraft>(emptyMember());
 
   const refresh = () => qc.invalidateQueries({ queryKey: qk.institutes });
@@ -53,6 +57,8 @@ export function SuperAdminView() {
     setPlace('');
     setDescription('');
     setLogoUrl('');
+    setMgrMode('new');
+    setSelectedMgr(null);
     setManager(emptyMember());
   }
 
@@ -66,7 +72,9 @@ export function SuperAdminView() {
         place,
         description: description || undefined,
         logoUrl: logoUrl || undefined,
-        manager,
+        existingManagerId:
+          mgrMode === 'existing' && selectedMgr ? selectedMgr.id : undefined,
+        manager: mgrMode === 'new' ? manager : undefined,
       });
       setCreateOpen(false);
       resetCreate();
@@ -181,9 +189,22 @@ export function SuperAdminView() {
               </div>
             </div>
             <h3 className="border-border border-t pt-3 font-medium">{t('managerAccount')}</h3>
-            <MemberFields value={manager} onChange={setManager} idPrefix="mgr" />
+            <UserSelectOrFields
+              role="institute_manager"
+              mode={mgrMode}
+              onModeChange={setMgrMode}
+              newDraft={manager}
+              onNewDraftChange={setManager}
+              selectedUserId={selectedMgr?.id ?? null}
+              onSelectUser={setSelectedMgr}
+              idPrefix="mgr"
+            />
             {error && <p role="alert" className="text-destructive text-sm">{error}</p>}
-            <Button type="submit" disabled={busy} className="w-full">
+            <Button
+              type="submit"
+              disabled={busy || (mgrMode === 'existing' && !selectedMgr)}
+              className="w-full"
+            >
               {busy ? tc('loading') : tc('create')}
             </Button>
           </form>

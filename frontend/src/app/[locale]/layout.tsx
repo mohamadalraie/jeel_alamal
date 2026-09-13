@@ -50,10 +50,13 @@ export async function generateMetadata({
       startupImage: ['/hero-bg.png'],
     },
     icons: {
-      icon: '/logo.png',
-      shortcut: '/logo.png',
+      icon: [
+        { url: '/icon.svg', type: 'image/svg+xml' },
+        { url: '/icons/icon-192.png', sizes: '192x192', type: 'image/png' },
+      ],
+      shortcut: '/icons/icon-192.png',
       apple: [
-        { url: '/logo.png', sizes: '180x180', type: 'image/png' },
+        { url: '/icons/apple-touch-icon.png', sizes: '180x180', type: 'image/png' },
       ],
     },
     other: {

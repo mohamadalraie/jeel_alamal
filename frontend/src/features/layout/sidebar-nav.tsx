@@ -1,7 +1,7 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
-import { GraduationCap, Users, BookOpen, Building2, BarChart3, UserCircle, ShieldCheck, CalendarClock, CalendarRange, Coins, Trophy, LayoutDashboard } from 'lucide-react';
+import { GraduationCap, Users, BookOpen, Building2, BarChart3, UserCircle, ShieldCheck, CalendarClock, CalendarRange, Coins, Trophy, LayoutDashboard, Megaphone } from 'lucide-react';
 import { Link, usePathname } from '@/i18n/navigation';
 import { cn } from '@/lib/utils';
 import { useInstitute } from './institute-context';
@@ -23,6 +23,7 @@ interface NavItem {
 }
 
 const ITEMS: NavItem[] = [
+  { href: '/dashboard/announcements', labelKey: 'announcements', icon: Megaphone },
   { href: '/dashboard/teacher-dashboard', labelKey: 'teacherDashboard', icon: LayoutDashboard, teacherOnly: true },
   { href: '/dashboard/my-profile', labelKey: 'myProfile', icon: UserCircle, studentOnly: true },
   { href: '/dashboard/statistics', labelKey: 'statistics', icon: BarChart3, hideForStudent: true, hideForTeacher: true },

@@ -29,6 +29,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { LocaleSwitcher } from '@/features/locale-switcher';
+import { NotificationBell } from '@/features/notifications/notification-bell';
 import { ThemeToggle } from './theme-toggle';
 import { SidebarNav } from './sidebar-nav';
 import { useInstitute } from './institute-context';
@@ -106,6 +107,7 @@ export function Topbar() {
       </div>
 
       <div className="flex items-center gap-1">
+        <NotificationBell />
         <ThemeToggle />
         <LocaleSwitcher />
         <DropdownMenu>

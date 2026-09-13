@@ -21,6 +21,7 @@ export class AddManagerUseCase {
   constructor(
     private readonly policy: InstituteAccessPolicy,
     private readonly createUserAccount: CreateUserAccountUseCase,
+    @Inject(USER_REPOSITORY) private readonly users: UserRepository,
     @Inject(MANAGER_ASSIGNMENTS)
     private readonly assignments: ManagerAssignmentRepository,
   ) {}
@@ -31,8 +32,19 @@ export class AddManagerUseCase {
     dto: CreateTeacherDto,
   ): Promise<UserResponseDto> {
     await this.policy.assertManagerOf(actor, instituteId);
+    if (dto.existingUserId) {
+      const manager = await this.users.findById(dto.existingUserId);
+      if (!manager) throw new BusinessRuleError('Manager account not found');
+      await this.assignments.assign(manager.id, instituteId);
+      return UserResponseDto.fromDomain(manager);
+    }
     const manager = await this.createUserAccount.execute({
-      ...dto,
+      firstName: dto.firstName!,
+      lastName: dto.lastName!,
+      birthDate: dto.birthDate!,
+      phone: dto.phone!,
+      username: dto.username!,
+      password: dto.password!,
       role: UserRole.InstituteManager,
       instituteId: null,
     });

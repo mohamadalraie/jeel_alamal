@@ -19,6 +19,8 @@ import { RecitationsModule } from './modules/recitations/recitations.module';
 import { AttendanceModule } from './modules/attendance/attendance.module';
 import { LessonsModule } from './modules/lessons/lessons.module';
 import { DinarsModule } from './modules/dinars/dinars.module';
+import { NotificationsModule } from './modules/notifications/notifications.module';
+import { AnnouncementsModule } from './modules/announcements/announcements.module';
 
 @Module({
   imports: [
@@ -52,6 +54,8 @@ import { DinarsModule } from './modules/dinars/dinars.module';
     AttendanceModule,
     LessonsModule,
     DinarsModule,
+    NotificationsModule,
+    AnnouncementsModule,
   ],
   providers: [
     { provide: APP_GUARD, useClass: ThrottlerGuard },

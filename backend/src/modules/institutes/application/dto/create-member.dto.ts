@@ -8,28 +8,33 @@ import {
 
 /** Teacher account details (spec 001). */
 export class CreateTeacherDto {
+  @IsOptional()
   @IsString()
-  @IsNotEmpty()
-  firstName: string;
+  existingUserId?: string;
 
+  @IsOptional()
   @IsString()
-  @IsNotEmpty()
-  lastName: string;
+  firstName?: string;
 
+  @IsOptional()
+  @IsString()
+  lastName?: string;
+
+  @IsOptional()
   @IsDateString()
-  birthDate: string;
+  birthDate?: string;
 
+  @IsOptional()
   @IsString()
-  @IsNotEmpty()
-  phone: string;
+  phone?: string;
 
+  @IsOptional()
   @IsString()
-  @MinLength(3)
-  username: string;
+  username?: string;
 
+  @IsOptional()
   @IsString()
-  @MinLength(8)
-  password: string;
+  password?: string;
 }
 
 /** Student account details (spec 001) — adds school grade. */

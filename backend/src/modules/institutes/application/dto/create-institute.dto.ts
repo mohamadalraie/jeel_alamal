@@ -47,12 +47,16 @@ export class CreateInstituteDto {
   @IsString()
   description?: string;
 
-  // Absolute URL or a relative /uploads path produced by the upload endpoint.
   @IsOptional()
   @IsString()
   logoUrl?: string;
 
+  @IsOptional()
+  @IsString()
+  existingManagerId?: string;
+
+  @IsOptional()
   @ValidateNested()
   @Type(() => CreateManagerDto)
-  manager: CreateManagerDto;
+  manager?: CreateManagerDto;
 }

@@ -143,6 +143,11 @@ export class User extends Entity<string> {
     }
   }
 
+  /** Change or assign home institute for student or teacher. */
+  assignToInstitute(instituteId: string): void {
+    this.props.instituteId = instituteId;
+  }
+
   /** Replace the stored password hash (called by ChangePasswordUseCase). */
   changePassword(newHash: string): void {
     if (!newHash) throw new BusinessRuleError('Password hash is required');

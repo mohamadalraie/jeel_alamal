@@ -77,6 +77,24 @@ export async function uploadPdf(file: File): Promise<{ url: string }> {
   return uploadTo('/api/uploads/pdf', file);
 }
 
+export async function uploadFile(
+  file: File,
+  type: 'image' | 'pdf' = 'image',
+): Promise<string> {
+  const res = type === 'pdf' ? await uploadPdf(file) : await uploadImage(file);
+  return res.url;
+}
+
+export async function apiFetch<T>(
+  path: string,
+  init?: RequestInit,
+): Promise<T> {
+  const fullPath = path.startsWith('/api')
+    ? path
+    : `/api${path.startsWith('/') ? '' : '/'}${path}`;
+  return request<T>(fullPath, init);
+}
+
 async function uploadTo(path: string, file: File): Promise<{ url: string }> {
   const body = new FormData();
   body.append('file', file);

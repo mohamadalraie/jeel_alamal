@@ -20,4 +20,6 @@ export interface UserRepository {
   findManyByIds(ids: string[]): Promise<User[]>;
   /** Count active users of an institute, optionally by role (stats). */
   countByInstitute(instituteId: string, role?: UserRole): Promise<number>;
+  /** Search all system users, optionally filtered by role and search string. */
+  searchAllUsers(role?: UserRole, query?: string): Promise<User[]>;
 }

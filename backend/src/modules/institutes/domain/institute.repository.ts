@@ -16,4 +16,9 @@ export interface InstituteRepository {
    * without a manager.
    */
   provisionWithManager(institute: Institute, manager: User): Promise<void>;
+  /** Create an institute and assign an existing manager account in ONE transaction. */
+  provisionWithExistingManager(
+    institute: Institute,
+    managerId: string,
+  ): Promise<void>;
 }

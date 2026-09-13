@@ -13,3 +13,5 @@ export * from '../../modules/recitations/infrastructure/persistence/recitation.s
 export * from '../../modules/attendance/infrastructure/persistence/attendance.schema';
 export * from '../../modules/lessons/infrastructure/persistence/lesson.schema';
 export * from '../../modules/dinars/infrastructure/persistence/dinar.schema';
+export * from '../../modules/announcements/infrastructure/persistence/announcement.schema';
+export * from '../../modules/notifications/infrastructure/persistence/notification.schema';

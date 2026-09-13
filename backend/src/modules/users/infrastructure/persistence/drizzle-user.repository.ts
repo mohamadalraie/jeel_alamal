@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { and, count, desc, eq, inArray, isNull } from 'drizzle-orm';
+import { and, count, desc, eq, ilike, inArray, isNull, or } from 'drizzle-orm';
 import { User } from '../../domain/user.entity';
 import { UserRole } from '../../../../shared/domain/user-role';
 import { Username } from '../../domain/value-objects/username.vo';
@@ -91,5 +91,26 @@ export class DrizzleUserRepository implements UserRepository {
       .from(users)
       .where(and(...conditions));
     return Number(row?.n ?? 0);
+  }
+
+  async searchAllUsers(role?: UserRole, query?: string): Promise<User[]> {
+    const conditions = [isNull(users.deletedAt)];
+    if (role) conditions.push(eq(users.role, role));
+    if (query && query.trim()) {
+      const q = `%${query.trim().toLowerCase()}%`;
+      conditions.push(
+        or(
+          ilike(users.username, q),
+          ilike(users.firstName, q),
+          ilike(users.lastName, q),
+        )!,
+      );
+    }
+    const rows = await this.db
+      .select()
+      .from(users)
+      .where(and(...conditions))
+      .limit(50);
+    return rows.map((row) => UserMapper.toDomain(row));
   }
 }

@@ -12,7 +12,8 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
-import { MemberFields, emptyMember, type MemberDraft } from './member-fields';
+import { emptyMember, type MemberDraft } from './member-fields';
+import { UserSelectOrFields, type UserSearchResult } from './user-select-or-fields';
 
 /** Reused for teachers, students, and managers (constitution V). */
 export function AddMemberDialog({
@@ -29,7 +30,9 @@ export function AddMemberDialog({
   const isStudent = role === 'student';
 
   const [open, setOpen] = useState(false);
+  const [mode, setMode] = useState<'new' | 'existing'>('new');
   const [draft, setDraft] = useState<MemberDraft>(emptyMember());
+  const [selectedUser, setSelectedUser] = useState<UserSearchResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
@@ -38,11 +41,19 @@ export function AddMemberDialog({
     setBusy(true);
     setError(null);
     try {
-      if (role === 'student') await createStudent(instituteId, draft);
-      else if (role === 'manager') await createManager(instituteId, draft);
-      else await createTeacher(instituteId, draft);
+      const payload =
+        mode === 'existing' && selectedUser
+          ? { existingUserId: selectedUser.id }
+          : draft;
+
+      if (role === 'student') await createStudent(instituteId, payload as any);
+      else if (role === 'manager') await createManager(instituteId, payload as any);
+      else await createTeacher(instituteId, payload as any);
+
       setOpen(false);
       setDraft(emptyMember());
+      setSelectedUser(null);
+      setMode('new');
       onCreated();
     } catch (err) {
       setError(err instanceof ApiError ? err.message : tc('error'));
@@ -51,7 +62,13 @@ export function AddMemberDialog({
     }
   }
 
-  const label = role === 'student' ? t('addStudent') : role === 'manager' ? t('addManager') : t('addTeacher');
+  const label =
+    role === 'student'
+      ? t('addStudent')
+      : role === 'manager'
+        ? t('addManager')
+        : t('addTeacher');
+  const backendRole = role === 'manager' ? 'institute_manager' : role;
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -66,9 +83,14 @@ export function AddMemberDialog({
           <DialogTitle>{label}</DialogTitle>
         </DialogHeader>
         <form onSubmit={onSubmit} className="flex flex-col gap-4">
-          <MemberFields
-            value={draft}
-            onChange={setDraft}
+          <UserSelectOrFields
+            role={backendRole}
+            mode={mode}
+            onModeChange={setMode}
+            newDraft={draft}
+            onNewDraftChange={setDraft}
+            selectedUserId={selectedUser?.id ?? null}
+            onSelectUser={setSelectedUser}
             withSchoolGrade={isStudent}
             idPrefix={role}
           />
@@ -77,7 +99,11 @@ export function AddMemberDialog({
               {error}
             </p>
           )}
-          <Button type="submit" disabled={busy} className="w-full">
+          <Button
+            type="submit"
+            disabled={busy || (mode === 'existing' && !selectedUser)}
+            className="w-full"
+          >
             {busy ? tc('loading') : tc('create')}
           </Button>
         </form>

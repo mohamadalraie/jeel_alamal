@@ -43,4 +43,22 @@ export class InstituteAccessPolicy {
     }
     throw new ForbiddenError('Not staff of this institute');
   }
+
+  /** super_admin, assigned manager, teacher of institute, or student of institute. */
+  async assertMemberOf(actor: Actor, instituteId: string): Promise<void> {
+    if (actor.role === UserRole.SuperAdmin) return;
+    if (
+      (actor.role === UserRole.Teacher || actor.role === UserRole.Student) &&
+      actor.instituteId === instituteId
+    ) {
+      return;
+    }
+    if (
+      actor.role === UserRole.InstituteManager &&
+      (await this.assignments.isAssigned(actor.userId, instituteId))
+    ) {
+      return;
+    }
+    throw new ForbiddenError('Not a member of this institute');
+  }
 }

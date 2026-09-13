@@ -273,7 +273,8 @@ export interface CreateInstituteInput {
   place: string;
   description?: string;
   logoUrl?: string;
-  manager: MemberInput;
+  existingManagerId?: string;
+  manager?: MemberInput;
 }
 
 // ── Lessons program (الدروس) — spec 008 ──
