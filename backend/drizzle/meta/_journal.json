@@ -43,6 +43,13 @@
       "when": 1783501601822,
       "tag": "0005_lovely_bloodstorm",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1789294963916,
+      "tag": "0006_open_red_ghost",
+      "breakpoints": true
     }
   ]
 }

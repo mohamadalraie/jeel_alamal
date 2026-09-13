@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { Megaphone, Plus, Trash2, Image as ImageIcon, Loader2 } from 'lucide-react';
 import { apiFetch, resolveAsset, uploadFile } from '@/lib/api';
 import { useInstitute } from '@/features/layout/institute-context';
+import type { ClassItem } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
@@ -16,6 +17,13 @@ import {
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 export interface Announcement {
   id: string;
@@ -31,12 +39,14 @@ export interface Announcement {
 export default function AnnouncementsPage() {
   const { selected, user } = useInstitute();
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
+  const [classList, setClassList] = useState<ClassItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
 
   // New announcement form state
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
+  const [targetHalkaId, setTargetHalkaId] = useState<string>('all');
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -49,10 +59,12 @@ export default function AnnouncementsPage() {
     if (!selected) return;
     setLoading(true);
     try {
-      const list = await apiFetch<Announcement[]>(
-        `/institutes/${selected.id}/announcements`,
-      );
-      setAnnouncements(list);
+      const [annList, classes] = await Promise.all([
+        apiFetch<Announcement[]>(`/institutes/${selected.id}/announcements`),
+        apiFetch<ClassItem[]>(`/institutes/${selected.id}/classes`).catch(() => []),
+      ]);
+      setAnnouncements(annList);
+      setClassList(classes);
     } catch (err: any) {
       console.error(err);
     } finally {
@@ -90,11 +102,13 @@ export default function AnnouncementsPage() {
           title: title.trim(),
           content: content.trim(),
           imageUrl: uploadedUrl,
+          targetHalkaId: targetHalkaId === 'all' ? undefined : targetHalkaId,
         }),
       });
 
       setTitle('');
       setContent('');
+      setTargetHalkaId('all');
       setImageFile(null);
       setImagePreview(null);
       setOpen(false);
@@ -174,13 +188,30 @@ export default function AnnouncementsPage() {
                 </div>
 
                 <div className="space-y-2">
+                  <Label htmlFor="targetScope">الفئة المستهدفة للإعلان *</Label>
+                  <Select value={targetHalkaId} onValueChange={setTargetHalkaId}>
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="اختر الفئة المستهدفة" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">جميع الحلقات (كل المعهد)</SelectItem>
+                      {classList.map((c) => (
+                        <SelectItem key={c.id} value={c.id}>
+                          {c.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
                   <Label htmlFor="content">تفاصيل الإعلان *</Label>
                   <Textarea
                     id="content"
                     value={content}
                     onChange={(e) => setContent(e.target.value)}
                     placeholder="اكتب تفاصيل الإعلان هنا..."
-                    rows={5}
+                    rows={4}
                     required
                   />
                 </div>
@@ -239,6 +270,7 @@ export default function AnnouncementsPage() {
         <div className="grid gap-6">
           {announcements.map((item) => {
             const imgSrc = resolveAsset(item.imageUrl);
+            const targetHalka = classList.find((c) => c.id === item.targetHalkaId);
             return (
               <Card
                 key={item.id}
@@ -256,9 +288,16 @@ export default function AnnouncementsPage() {
                 )}
                 <CardHeader className="pb-2">
                   <div className="flex items-start justify-between gap-4">
-                    <CardTitle className="text-xl font-bold text-foreground">
-                      {item.title}
-                    </CardTitle>
+                    <div>
+                      <CardTitle className="text-xl font-bold text-foreground">
+                        {item.title}
+                      </CardTitle>
+                      {targetHalka && (
+                        <span className="inline-block mt-1 text-xs px-2.5 py-0.5 rounded-full bg-primary/10 text-primary font-medium">
+                          {targetHalka.name}
+                        </span>
+                      )}
+                    </div>
                     {user.role === 'institute_manager' ||
                     user.role === 'super_admin' ? (
                       <Button

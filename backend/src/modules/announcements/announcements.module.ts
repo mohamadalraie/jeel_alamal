@@ -8,9 +8,10 @@ import { AnnouncementsController } from './presentation/announcements.controller
 import { InstitutesModule } from '../institutes/institutes.module';
 import { NotificationsModule } from '../notifications/notifications.module';
 import { UsersModule } from '../users/users.module';
+import { ClassesModule } from '../classes/classes.module';
 
 @Module({
-  imports: [InstitutesModule, NotificationsModule, UsersModule],
+  imports: [InstitutesModule, NotificationsModule, UsersModule, ClassesModule],
   controllers: [AnnouncementsController],
   providers: [
     CreateAnnouncementUseCase,

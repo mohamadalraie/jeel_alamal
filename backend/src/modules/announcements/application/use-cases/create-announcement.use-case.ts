@@ -9,6 +9,8 @@ import { InstituteAccessPolicy } from '../../../institutes/application/institute
 import { NotificationsService } from '../../../notifications/application/notifications.service';
 import { USER_REPOSITORY } from '../../../users/domain/user.repository';
 import type { UserRepository } from '../../../users/domain/user.repository';
+import { CLASS_REPOSITORY } from '../../../classes/domain/class.repository';
+import type { ClassRepository } from '../../../classes/domain/class.repository';
 
 @Injectable()
 export class CreateAnnouncementUseCase {
@@ -17,6 +19,8 @@ export class CreateAnnouncementUseCase {
     private readonly repository: AnnouncementRepository,
     @Inject(USER_REPOSITORY)
     private readonly users: UserRepository,
+    @Inject(CLASS_REPOSITORY)
+    private readonly classes: ClassRepository,
     private readonly policy: InstituteAccessPolicy,
     private readonly notifications: NotificationsService,
   ) {}
@@ -31,7 +35,7 @@ export class CreateAnnouncementUseCase {
     const announcement = Announcement.create({
       instituteId,
       authorId: actor.userId,
-      targetHalkaId: dto.targetHalkaId,
+      targetHalkaId: dto.targetHalkaId || null,
       title: dto.title,
       content: dto.content,
       imageUrl: dto.imageUrl,
@@ -40,19 +44,31 @@ export class CreateAnnouncementUseCase {
     await this.repository.save(announcement);
 
     try {
-      const instituteUsers = await this.users.findByInstitute(instituteId);
-      const recipientIds = instituteUsers
-        .map((u) => u.id)
-        .filter((id) => id !== actor.userId);
+      let recipientIds: string[] = [];
+      if (dto.targetHalkaId) {
+        const membership = await this.classes.getMembership(dto.targetHalkaId);
+        recipientIds = [
+          ...membership.teacherIds,
+          ...membership.studentIds,
+          ...(membership.supervisorId ? [membership.supervisorId] : []),
+        ];
+      } else {
+        const instituteUsers = await this.users.findByInstitute(instituteId);
+        recipientIds = instituteUsers.map((u) => u.id);
+      }
 
-      await this.notifications.sendToUsers(recipientIds, {
+      const filteredRecipientIds = Array.from(new Set(recipientIds)).filter(
+        (id) => id !== actor.userId,
+      );
+
+      await this.notifications.sendToUsers(filteredRecipientIds, {
         title: `إعلان جديد: ${announcement.title}`,
         message: announcement.content.slice(0, 100),
         type: 'announcement',
         link: '/dashboard/announcements',
       });
     } catch (err) {
-      // Ignore background notification error
+      // Notification errors must not break announcement creation
     }
 
     return AnnouncementResponseDto.fromDomain(announcement);
