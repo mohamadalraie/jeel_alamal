@@ -314,7 +314,16 @@
     "progress": "Completion",
     "amountChart": "Recitation activity (ayahs)",
     "ayahsShort": "ayah",
-    "classChart": "Class recitation activity (ayahs/day)"
+    "classChart": "Class recitation activity (ayahs/day)",
+    "filterMemorized": "Memorized Only",
+    "filterPartial": "In Progress",
+    "filterFull": "Completed",
+    "filterAll": "All 114 Surahs",
+    "selectSurahQuick": "Select a surah for quick view…",
+    "searchSurahPlaceholder": "Search surah name or number…",
+    "noMemorizedSurahs": "No memorized surahs recorded for this student yet.",
+    "showAllSurahs": "Show all 114 Surahs",
+    "showMemorizedOnly": "Show Memorized Only"
   },
   "attendance": {
     "tab": "Attendance",

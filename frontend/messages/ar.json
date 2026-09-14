@@ -314,7 +314,16 @@
     "progress": "نسبة الإكمال",
     "amountChart": "نشاط التسميع (عدد الآيات)",
     "ayahsShort": "آية",
-    "classChart": "نشاط التسميع في الحلقة (آيات/يوم)"
+    "classChart": "نشاط التسميع في الحلقة (آيات/يوم)",
+    "filterMemorized": "المحفوظة فقط",
+    "filterPartial": "قيد الحفظ",
+    "filterFull": "المكتملة",
+    "filterAll": "جميع السور (114)",
+    "selectSurahQuick": "اختر سورة للوصول السريع…",
+    "searchSurahPlaceholder": "بحث باسم السورة أو رقمها…",
+    "noMemorizedSurahs": "لم يتم تسجيل أي سور محفوظة لهذا الطالب بعد.",
+    "showAllSurahs": "عرض جميع السور (114)",
+    "showMemorizedOnly": "عرض المحفوظة فقط"
   },
   "attendance": {
     "tab": "الحضور",
