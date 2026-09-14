@@ -102,6 +102,119 @@ export interface InstituteStats {
   classes: number;
 }
 
+export interface ManagerAnalytics {
+  counts: {
+    teachers: number;
+    students: number;
+    classes: number;
+  };
+  attendance: {
+    overallRate: number;
+    present: number;
+    absent: number;
+    late: number;
+    justified: number;
+    totalRecords: number;
+  };
+  recitation: {
+    totalAyahs: number;
+    totalSessions: number;
+    ratings: Record<string, number>;
+  };
+  dinars: {
+    totalAwarded: number;
+  };
+  quranProgress: {
+    zeroTo9Parts: number;
+    tenTo19Parts: number;
+    twentyTo29Parts: number;
+    khatim: number;
+  };
+  topClasses: {
+    id: string;
+    name: string;
+    studentCount: number;
+    attendanceRate: number;
+    totalAyahs: number;
+  }[];
+  topTeachers: {
+    id: string;
+    name: string;
+    classesCount: number;
+    dinarsAwarded: number;
+  }[];
+  attendanceTrend: {
+    weekLabel: string;
+    present: number;
+    absent: number;
+    late: number;
+  }[];
+}
+
+export interface TeacherAnalytics {
+  teacherInfo: {
+    id: string;
+    name: string;
+  };
+  assignedClasses: {
+    id: string;
+    name: string;
+    studentCount: number;
+  }[];
+  totalStudents: number;
+  classAttendanceRate: number;
+  totalRecitationsVerified: number;
+  totalDinarsAwarded: number;
+  studentsNeedingAttention: {
+    studentId: string;
+    name: string;
+    className: string;
+    attendanceRate: number;
+    daysSinceLastRecitation: number | null;
+    reason: string;
+  }[];
+  studentsPerformance: {
+    studentId: string;
+    name: string;
+    className: string;
+    attendanceRate: number;
+    totalAyahs: number;
+    dinarsBalance: number;
+  }[];
+}
+
+export interface StudentAnalytics {
+  studentInfo: {
+    id: string;
+    name: string;
+    className: string | null;
+  };
+  recitation: {
+    totalAyahs: number;
+    totalSessions: number;
+    estimatedParts: number;
+    ratings: Record<string, number>;
+  };
+  attendance: {
+    rate: number;
+    present: number;
+    absent: number;
+    late: number;
+    justified: number;
+    totalSessions: number;
+  };
+  dinars: {
+    balance: number;
+    rankInClass: number | null;
+    rankInInstitute: number | null;
+    contextBreakdown: Record<string, number>;
+  };
+  dailyRecitationHistory: {
+    date: string;
+    ayahs: number;
+  }[];
+}
+
 export type RecitationRating =
   | 'excellent'
   | 'very_good'

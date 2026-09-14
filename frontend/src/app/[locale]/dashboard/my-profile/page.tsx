@@ -26,6 +26,7 @@ import { HeartMap } from '@/features/recitation/heart-map';
 import { StudentAttendanceView } from '@/features/attendance/student-attendance-view';
 import { StudentLessonsView } from '@/features/lessons/student-lessons-view';
 import { StudentDinarsView } from '@/features/dinars/student-dinars-view';
+import { StudentAnalyticsView } from '@/features/analytics/student-analytics-view';
 import { CardsSkeleton } from '@/features/shared/skeletons';
 
 /** Student portal — the student sees only their own profile, class, and recitation. */
@@ -71,6 +72,7 @@ export default function MyProfilePage() {
       <Tabs defaultValue="info">
         <TabsList className="w-full max-w-full justify-start overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden [&_[data-slot=tabs-trigger]]:flex-none sm:w-fit">
           <TabsTrigger value="info">{t('basicInfo')}</TabsTrigger>
+          <TabsTrigger value="analytics">الإحصائيات والإنجاز</TabsTrigger>
           <TabsTrigger value="class">{t('myClass')}</TabsTrigger>
           <TabsTrigger value="recitation">{tRec('tab')}</TabsTrigger>
           <TabsTrigger value="attendance">{tAtt('myAttendance')}</TabsTrigger>
@@ -79,6 +81,10 @@ export default function MyProfilePage() {
             <TabsTrigger value="lessons">{tLes('studentLessonsTab')}</TabsTrigger>
           )}
         </TabsList>
+
+        <TabsContent value="analytics" className="pt-4">
+          <StudentAnalyticsView instituteId={instituteId} studentId={user.id} />
+        </TabsContent>
 
         {/* Tab 1: Basic info — read-only for students */}
         <TabsContent value="info" className="pt-4">

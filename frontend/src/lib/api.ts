@@ -6,6 +6,9 @@ import type {
   CreateInstituteInput,
   Institute,
   InstituteStats,
+  ManagerAnalytics,
+  TeacherAnalytics,
+  StudentAnalytics,
   MemberInput,
   ScheduleSlot,
   StudentInput,
@@ -270,6 +273,16 @@ export const listUnassignedStudents = (instituteId: string) =>
 // ── Statistics (spec 004) ──
 export const getInstituteStats = (instituteId: string) =>
   request<InstituteStats>(`/api/institutes/${instituteId}/stats`);
+export const getManagerAnalytics = (instituteId: string) =>
+  request<ManagerAnalytics>(`/api/institutes/${instituteId}/analytics/manager`);
+export const getTeacherAnalytics = (instituteId: string, teacherId?: string) =>
+  request<TeacherAnalytics>(
+    `/api/institutes/${instituteId}/analytics/teacher${teacherId ? `?teacherId=${teacherId}` : ''}`,
+  );
+export const getStudentAnalytics = (instituteId: string, studentId?: string) =>
+  request<StudentAnalytics>(
+    `/api/institutes/${instituteId}/analytics/student${studentId ? `?studentId=${studentId}` : ''}`,
+  );
 
 // ── Quran recitation (spec 005) ──
 export const listSurahs = () => request<Surah[]>('/api/quran/surahs');

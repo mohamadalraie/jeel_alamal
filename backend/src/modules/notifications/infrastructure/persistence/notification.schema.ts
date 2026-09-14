@@ -18,3 +18,18 @@ export const notifications = pgTable('notifications', {
 });
 
 export type NotificationRow = InferSelectModel<typeof notifications>;
+
+export const pushSubscriptions = pgTable('push_subscriptions', {
+  id: uuid('id').primaryKey(),
+  userId: uuid('user_id')
+    .notNull()
+    .references(() => users.id, { onDelete: 'cascade' }),
+  endpoint: text('endpoint').notNull().unique(),
+  p256dh: text('p256dh').notNull(),
+  auth: text('auth').notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
+
+export type PushSubscriptionRow = InferSelectModel<typeof pushSubscriptions>;

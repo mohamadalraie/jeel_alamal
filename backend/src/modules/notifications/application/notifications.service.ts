@@ -3,12 +3,14 @@ import { NOTIFICATION_REPOSITORY } from '../domain/notification.repository';
 import type { NotificationRepository } from '../domain/notification.repository';
 import { NotificationItem } from '../domain/notification.entity';
 import { NotificationResponseDto } from './dto/notification-response.dto';
+import { WebPushService } from './web-push.service';
 
 @Injectable()
 export class NotificationsService {
   constructor(
     @Inject(NOTIFICATION_REPOSITORY)
     private readonly repository: NotificationRepository,
+    private readonly webPushService: WebPushService,
   ) {}
 
   async sendToUser(input: {
@@ -20,6 +22,10 @@ export class NotificationsService {
   }): Promise<void> {
     const item = NotificationItem.create(input);
     await this.repository.save(item);
+    // Send background Web Push notification
+    this.webPushService.sendPushNotification([input.userId], input).catch((err) => {
+      console.warn('Background web push failed:', err);
+    });
   }
 
   async sendToUsers(
@@ -42,6 +48,10 @@ export class NotificationsService {
       }),
     );
     await this.repository.saveMany(items);
+    // Send background Web Push notification to all target users
+    this.webPushService.sendPushNotification(userIds, input).catch((err) => {
+      console.warn('Background web push to many failed:', err);
+    });
   }
 
   async getUserNotifications(

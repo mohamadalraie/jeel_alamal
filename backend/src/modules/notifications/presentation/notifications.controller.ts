@@ -1,4 +1,5 @@
 import {
+  Body,
   Controller,
   Get,
   HttpCode,
@@ -12,10 +13,14 @@ import {
 import { CurrentUser } from '../../../core/auth/current-user.decorator';
 import type { Actor } from '../../../shared/application/actor';
 import { NotificationsService } from '../application/notifications.service';
+import { WebPushService } from '../application/web-push.service';
 
 @Controller('notifications')
 export class NotificationsController {
-  constructor(private readonly notificationsService: NotificationsService) {}
+  constructor(
+    private readonly notificationsService: NotificationsService,
+    private readonly webPushService: WebPushService,
+  ) {}
 
   @Get()
   getNotifications(
@@ -48,5 +53,14 @@ export class NotificationsController {
   @HttpCode(HttpStatus.NO_CONTENT)
   async markAllAsRead(@CurrentUser() actor: Actor) {
     await this.notificationsService.markAllAsRead(actor.userId);
+  }
+
+  @Post('push-subscription')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async savePushSubscription(
+    @CurrentUser() actor: Actor,
+    @Body() body: { endpoint: string; keys: { p256dh: string; auth: string } },
+  ) {
+    await this.webPushService.saveSubscription(actor.userId, body);
   }
 }

@@ -31,6 +31,11 @@ export const qk = {
   studentDinars: (id: string) => ['student-dinars', id] as const,
   dinarLeaderboard: (instituteId: string, classId: string) =>
     ['dinar-leaderboard', instituteId, classId] as const,
+  managerAnalytics: (id: string) => ['manager-analytics', id] as const,
+  teacherAnalytics: (inst: string, teacherId?: string) =>
+    ['teacher-analytics', inst, teacherId ?? ''] as const,
+  studentAnalytics: (inst: string, studentId?: string) =>
+    ['student-analytics', inst, studentId ?? ''] as const,
 };
 
 export const useInstitutes = () =>
@@ -40,6 +45,27 @@ export const useStats = (instituteId?: string) =>
   useQuery({
     queryKey: qk.stats(instituteId ?? ''),
     queryFn: () => api.getInstituteStats(instituteId!),
+    enabled: !!instituteId,
+  });
+
+export const useManagerAnalytics = (instituteId?: string) =>
+  useQuery({
+    queryKey: qk.managerAnalytics(instituteId ?? ''),
+    queryFn: () => api.getManagerAnalytics(instituteId!),
+    enabled: !!instituteId,
+  });
+
+export const useTeacherAnalytics = (instituteId?: string, teacherId?: string) =>
+  useQuery({
+    queryKey: qk.teacherAnalytics(instituteId ?? '', teacherId),
+    queryFn: () => api.getTeacherAnalytics(instituteId!, teacherId),
+    enabled: !!instituteId,
+  });
+
+export const useStudentAnalytics = (instituteId?: string, studentId?: string) =>
+  useQuery({
+    queryKey: qk.studentAnalytics(instituteId ?? '', studentId),
+    queryFn: () => api.getStudentAnalytics(instituteId!, studentId),
     enabled: !!instituteId,
   });
 

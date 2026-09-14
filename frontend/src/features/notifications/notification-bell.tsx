@@ -27,6 +27,7 @@ import { formatDateLocale } from '@/lib/utils';
 import {
   requestNotificationPermission,
   triggerNativeNotification,
+  registerPushSubscription,
 } from '@/features/notifications/device-notifications';
 
 export function NotificationBell() {
@@ -39,6 +40,9 @@ export function NotificationBell() {
   useEffect(() => {
     if (typeof window !== 'undefined' && 'Notification' in window) {
       setPermissionStatus(Notification.permission);
+      if (Notification.permission === 'granted') {
+        registerPushSubscription();
+      }
     }
   }, []);
 

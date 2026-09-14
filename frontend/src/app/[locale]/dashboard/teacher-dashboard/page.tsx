@@ -33,6 +33,7 @@ import { CardsSkeleton } from '@/features/shared/skeletons';
 import { TakeAttendanceDialog } from '@/features/attendance/take-attendance-dialog';
 import { AddRecitationDialog } from '@/features/recitation/add-recitation-dialog';
 import { AwardDinarDialog } from '@/features/dinars/award-dinar-dialog';
+import { TeacherAnalyticsView } from '@/features/analytics/teacher-analytics-view';
 import type { TeacherLessonEntry, ClassItem } from '@/lib/types';
 
 /** Component representing a single Class card for the teacher with quick actions. */
@@ -430,6 +431,11 @@ export default function TeacherDashboardPage() {
             })}
           </div>
         )}
+      </section>
+
+      {/* Teacher Performance & Student Analytics Section */}
+      <section className="pt-4 border-t border-border/40">
+        <TeacherAnalyticsView instituteId={selected.id} teacherId={user.id} />
       </section>
     </div>
   );

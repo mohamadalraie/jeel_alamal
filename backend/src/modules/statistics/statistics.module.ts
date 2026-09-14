@@ -4,14 +4,20 @@ import { ClassesModule } from '../classes/classes.module';
 import { InstitutesModule } from '../institutes/institutes.module';
 import { StatisticsController } from './presentation/statistics.controller';
 import { GetInstituteStatsUseCase } from './application/get-institute-stats.use-case';
+import {
+  GetManagerAnalyticsUseCase,
+  GetTeacherAnalyticsUseCase,
+  GetStudentAnalyticsUseCase,
+} from './application/get-analytics.use-cases';
 
-/**
- * Institute statistics (spec 004). Reuses repositories + the access policy
- * exported by the users, classes, and institutes modules.
- */
 @Module({
   imports: [UsersModule, ClassesModule, InstitutesModule],
   controllers: [StatisticsController],
-  providers: [GetInstituteStatsUseCase],
+  providers: [
+    GetInstituteStatsUseCase,
+    GetManagerAnalyticsUseCase,
+    GetTeacherAnalyticsUseCase,
+    GetStudentAnalyticsUseCase,
+  ],
 })
 export class StatisticsModule {}
