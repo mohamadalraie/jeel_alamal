@@ -175,7 +175,7 @@ export function TeacherAnalyticsView({
                       </td>
                       <td className="p-2.5 text-center tabular-nums font-semibold">{st.totalAyahs} آية</td>
                       <td className="p-2.5 text-center tabular-nums text-yellow-600 dark:text-yellow-400 font-bold">
-                        {st.dinarsBalance} د.ت
+                        {st.dinarsBalance} د
                       </td>
                     </tr>
                   ))}

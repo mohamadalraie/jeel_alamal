@@ -21,6 +21,7 @@ import {
   PieChart,
   ResponsiveContainer,
   Tooltip,
+  Legend,
   XAxis,
   YAxis,
   AreaChart,
@@ -70,7 +71,7 @@ export default function StatisticsPage() {
     },
     {
       label: 'الدنانير التحفيزية الممنوحة',
-      value: `${analytics?.dinars.totalAwarded ?? 0} د.ت`,
+      value: `${analytics?.dinars.totalAwarded ?? 0} د`,
       subText: 'مكافآت التميز والحفظ والتزام الطلاب',
       icon: Award,
       color: 'text-yellow-500',
@@ -123,17 +124,19 @@ export default function StatisticsPage() {
       </div>
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-5">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-5">
         {kpiCards.map(({ label, value, subText, icon: Icon, color }) => (
           <Card key={label} className="border border-border/60 shadow-sm transition-all hover:shadow-md">
-            <CardContent className="flex items-center gap-3.5 py-5 px-4">
-              <div className="bg-muted/50 grid size-11 place-items-center rounded-xl shrink-0">
-                <Icon className={`size-5 ${color}`} />
+            <CardContent className="flex flex-col justify-between p-4 h-full gap-2">
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-2xl font-extrabold tabular-nums text-foreground">{value}</span>
+                <div className="bg-muted/50 grid size-10 place-items-center rounded-xl shrink-0">
+                  <Icon className={`size-5 ${color}`} />
+                </div>
               </div>
-              <div className="flex flex-col min-w-0">
-                <span className="text-xl font-extrabold tabular-nums truncate">{value}</span>
-                <span className="text-xs font-bold text-foreground truncate">{label}</span>
-                <span className="text-[10px] text-muted-foreground truncate">{subText}</span>
+              <div>
+                <span className="text-xs font-bold text-foreground block leading-snug">{label}</span>
+                <span className="text-[11px] text-muted-foreground block leading-tight mt-0.5">{subText}</span>
               </div>
             </CardContent>
           </Card>
@@ -188,16 +191,17 @@ export default function StatisticsPage() {
                     data={quranPieData}
                     dataKey="value"
                     nameKey="name"
-                    innerRadius={50}
-                    outerRadius={80}
+                    innerRadius={45}
+                    outerRadius={75}
                     paddingAngle={3}
-                    label={({ name, value }) => `${name}: ${value}`}
+                    label={false}
                   >
                     {quranPieData.map((_, i) => (
                       <Cell key={i} fill={BRAND_COLORS[i % BRAND_COLORS.length]} />
                     ))}
                   </Pie>
-                  <Tooltip />
+                  <Tooltip formatter={(val: any) => [`${val} طالب`, 'العدد']} />
+                  <Legend verticalAlign="bottom" height={36} wrapperStyle={{ fontSize: '11px', paddingTop: '6px' }} />
                 </PieChart>
               </ResponsiveContainer>
             )}
@@ -276,7 +280,7 @@ export default function StatisticsPage() {
                       </div>
                     </div>
                     <Badge variant="secondary" className="text-[11px] font-bold text-yellow-600 dark:text-yellow-400">
-                      {tch.dinarsAwarded} د.ت ممنوحة
+                      {tch.dinarsAwarded} د ممنوحة
                     </Badge>
                   </div>
                 ))}

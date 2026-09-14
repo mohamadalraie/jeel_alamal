@@ -12,6 +12,7 @@ import {
   PieChart,
   Pie,
   Cell,
+  Legend,
 } from 'recharts';
 import { useStudentAnalytics } from '@/lib/queries';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -50,7 +51,7 @@ export function StudentAnalyticsView({
     },
     {
       label: 'رصيد الدنانير',
-      value: `${analytics.dinars.balance} د.ت`,
+      value: `${analytics.dinars.balance} د`,
       subText: `ترتيب الطالب بالحلقة: #${analytics.dinars.rankInClass ?? 1}`,
       icon: Award,
       color: 'text-yellow-500',
@@ -173,13 +174,14 @@ export function StudentAnalyticsView({
                     innerRadius={45}
                     outerRadius={75}
                     paddingAngle={3}
-                    label={({ name, value }) => `${name}: ${value}`}
+                    label={false}
                   >
                     {pieData.map((_, i) => (
                       <Cell key={i} fill={COLORS[i % COLORS.length]} />
                     ))}
                   </Pie>
-                  <Tooltip />
+                  <Tooltip formatter={(val: any) => [`${val} د`, 'المكافأة']} />
+                  <Legend verticalAlign="bottom" height={36} wrapperStyle={{ fontSize: '11px', paddingTop: '6px' }} />
                 </PieChart>
               </ResponsiveContainer>
             )}
