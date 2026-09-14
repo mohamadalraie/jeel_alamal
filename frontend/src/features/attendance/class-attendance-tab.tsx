@@ -14,6 +14,7 @@ import {
 } from 'recharts';
 import type { AttendanceCounts, StudentAttendanceStats } from '@/lib/types';
 import { useClassAttendance } from '@/lib/queries';
+import { formatDateLocale } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
@@ -54,7 +55,7 @@ export function ClassAttendanceTab({ classId }: { classId: string }) {
       .filter((s) => !cutoff || s.date.slice(0, 10) >= cutoff)
       .reverse()
       .map((s) => ({
-        date: new Date(s.date).toLocaleDateString(locale, { month: 'short', day: 'numeric' }),
+        date: new Date(s.date).toLocaleDateString(formatDateLocale(locale), { month: 'short', day: 'numeric' }),
         rate: rateOf(s.counts),
       }));
   }, [data?.sessions, locale, range]);

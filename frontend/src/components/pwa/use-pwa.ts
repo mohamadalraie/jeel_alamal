@@ -53,7 +53,7 @@ export function usePWA() {
     }
 
     // 4. Register Service Worker
-    if ('serviceWorker' in navigator && process.env.NODE_ENV === 'production') {
+    if ('serviceWorker' in navigator) {
       navigator.serviceWorker
         .register('/sw.js')
         .then((registration) => {

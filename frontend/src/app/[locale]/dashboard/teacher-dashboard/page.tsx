@@ -164,13 +164,13 @@ function TeacherClassCard({
             instituteId={instituteId}
             students={roster}
             context="general"
+            open={dinarOpen}
+            onOpenChange={setDinarOpen}
+            withTrigger={false}
             onDone={() => {
               qc.invalidateQueries({ queryKey: qk.dinarLeaderboard(instituteId, classItem.id) });
               setDinarOpen(false);
             }}
-            trigger={
-              <button id={`dinar-trigger-${classItem.id}`} className="hidden" />
-            }
           />
         )}
       </CardContent>

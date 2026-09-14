@@ -69,13 +69,16 @@ export function buildMonthGrid(month: Date, lessons: Set<number>): CalendarCell[
   return weeks;
 }
 
+import { formatDateLocale } from '@/lib/utils';
+
 /** Localised weekday headers in Saturday-first order. */
 export function weekdayHeaders(locale: string): string[] {
   // 2023-01-07 is a Saturday; step seven days for short names.
   const base = new Date(2023, 0, 7);
+  const loc = formatDateLocale(locale);
   return Array.from({ length: 7 }, (_, i) => {
     const d = new Date(base);
     d.setDate(base.getDate() + i);
-    return d.toLocaleDateString(locale, { weekday: 'short' });
+    return d.toLocaleDateString(loc, { weekday: 'short' });
   });
 }

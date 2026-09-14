@@ -3,6 +3,7 @@
 import { useTranslations, useLocale } from 'next-intl';
 import { BookOpen } from 'lucide-react';
 import { useStudentClassLessons } from '@/lib/queries';
+import { formatDateLocale } from '@/lib/utils';
 import { Card, CardContent } from '@/components/ui/card';
 import { ListSkeleton } from '@/features/shared/skeletons';
 import { EmptyState } from '@/features/shared/empty-state';
@@ -32,8 +33,9 @@ export function StudentLessonsView({ classId }: { classId: string }) {
                 <BookOpen className="text-primary size-4 shrink-0" />
                 {e.kind === 'recitation' ? t('recitation') : e.name}
               </span>
+
               <span className="text-muted-foreground text-xs">
-                {new Date(e.date).toLocaleDateString(locale, { day: 'numeric', month: 'long', year: 'numeric' })}
+                {new Date(e.date).toLocaleDateString(formatDateLocale(locale), { day: 'numeric', month: 'long', year: 'numeric' })}
               </span>
             </div>
             {e.kind === 'lesson' && e.description && (

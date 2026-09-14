@@ -79,3 +79,50 @@ self.addEventListener('fetch', (event) => {
       })
   );
 });
+
+// Push Event Listener
+self.addEventListener('push', (event) => {
+  let data = { title: 'جيل العمل - إشعار جديد', message: '', link: '/' };
+  if (event.data) {
+    try {
+      data = event.data.json();
+    } catch (e) {
+      data.message = event.data.text();
+    }
+  }
+
+  const options = {
+    body: data.message || data.body || '',
+    icon: '/logo.png',
+    badge: '/logo.png',
+    tag: data.id || 'jeel-notification',
+    data: { url: data.link || data.url || '/' },
+    dir: 'rtl',
+    lang: 'ar',
+  };
+
+  event.waitUntil(
+    self.registration.showNotification(data.title || 'جيل العمل', options)
+  );
+});
+
+// Notification Click Listener
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  const targetUrl = event.notification.data?.url || '/';
+
+  event.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then((windowClients) => {
+      for (let i = 0; i < windowClients.length; i++) {
+        const client = windowClients[i];
+        if (client.url === targetUrl || client.url.includes(targetUrl)) {
+          if ('focus' in client) return client.focus();
+        }
+      }
+      if (clients.openWindow) {
+        return clients.openWindow(targetUrl);
+      }
+    })
+  );
+});
+

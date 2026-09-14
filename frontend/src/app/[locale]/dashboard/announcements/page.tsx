@@ -5,6 +5,7 @@ import { Megaphone, Plus, Trash2, Image as ImageIcon, Loader2 } from 'lucide-rea
 import { apiFetch, resolveAsset, uploadFile } from '@/lib/api';
 import { useInstitute } from '@/features/layout/institute-context';
 import type { ClassItem } from '@/lib/types';
+import { formatDateLocale } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
@@ -310,8 +311,9 @@ export default function AnnouncementsPage() {
                       </Button>
                     ) : null}
                   </div>
+
                   <span className="text-xs text-muted-foreground block">
-                    {new Date(item.createdAt).toLocaleDateString('ar-SA', {
+                    {new Date(item.createdAt).toLocaleDateString(formatDateLocale('ar'), {
                       year: 'numeric',
                       month: 'long',
                       day: 'numeric',

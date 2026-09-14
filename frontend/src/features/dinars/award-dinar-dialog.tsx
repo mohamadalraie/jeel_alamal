@@ -37,17 +37,26 @@ export function AwardDinarDialog({
   context = 'general',
   onDone,
   trigger,
+  open: openProp,
+  onOpenChange,
+  withTrigger = true,
 }: {
   instituteId: string;
   students: { id: string; name: string }[];
   context?: DinarContext;
   onDone?: () => void;
   trigger?: React.ReactNode;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  withTrigger?: boolean;
 }) {
   const t = useTranslations('dinars');
   const tc = useTranslations('common');
   const qc = useQueryClient();
-  const [open, setOpen] = useState(false);
+  const [internalOpen, setInternalOpen] = useState(false);
+  const isControlled = openProp !== undefined;
+  const open = isControlled ? openProp : internalOpen;
+  const setOpen = (v: boolean) => (isControlled ? onOpenChange?.(v) : setInternalOpen(v));
   const [mode, setMode] = useState<'rule' | 'exceptional'>('rule');
   const [ruleId, setRuleId] = useState('');
   const [amount, setAmount] = useState('');
@@ -137,14 +146,16 @@ export function AwardDinarDialog({
         if (!o) reset();
       }}
     >
-      <DialogTrigger asChild>
-        {trigger ?? (
-          <Button size="sm" variant="outline">
-            <Coins data-icon="inline-start" />
-            {t('award')}
-          </Button>
-        )}
-      </DialogTrigger>
+      {withTrigger && (
+        <DialogTrigger asChild>
+          {trigger ?? (
+            <Button size="sm" variant="outline">
+              <Coins data-icon="inline-start" />
+              {t('award')}
+            </Button>
+          )}
+        </DialogTrigger>
+      )}
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>

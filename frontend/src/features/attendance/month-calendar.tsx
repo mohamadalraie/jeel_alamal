@@ -16,21 +16,34 @@ import {
  * navigation and delegates each day's content to `renderDay`. Non-month days
  * render dimmed and empty. RTL-aware via logical chevrons.
  */
+import { formatDateLocale } from '@/lib/utils';
+
 export function MonthCalendar({
-  lessons,
+  month: currentMonth,
+  onMonthChange,
+  lessons = new Set(),
   renderDay,
 }: {
-  lessons: Set<number>;
+  month?: Date;
+  onMonthChange?: (month: Date) => void;
+  lessons?: Set<number>;
   renderDay: (cell: CalendarCell) => React.ReactNode;
 }) {
   const locale = useLocale();
-  const [month, setMonth] = useState(() => {
-    const now = new Date();
-    return new Date(now.getFullYear(), now.getMonth(), 1);
-  });
+  const [internalMonth, setInternalMonth] = useState<Date>(
+    () => new Date(new Date().getFullYear(), new Date().getMonth(), 1),
+  );
+  const isControlled = currentMonth !== undefined;
+  const month = isControlled ? currentMonth : internalMonth;
+  const setMonth = (fn: (prev: Date) => Date) => {
+    const next = fn(month);
+    if (!isControlled) setInternalMonth(next);
+    onMonthChange?.(next);
+  };
 
   const weeks = useMemo(() => buildMonthGrid(month, lessons), [month, lessons]);
   const headers = useMemo(() => weekdayHeaders(locale), [locale]);
+
   const Prev = locale === 'ar' ? ChevronRight : ChevronLeft;
   const Next = locale === 'ar' ? ChevronLeft : ChevronRight;
 
@@ -45,7 +58,7 @@ export function MonthCalendar({
           <Prev className="size-4" />
         </Button>
         <span className="text-sm font-semibold">
-          {month.toLocaleDateString(locale, { month: 'long', year: 'numeric' })}
+          {month.toLocaleDateString(formatDateLocale(locale), { month: 'long', year: 'numeric' })}
         </span>
         <Button variant="ghost" size="icon" onClick={() => shift(1)} aria-label="next">
           <Next className="size-4" />

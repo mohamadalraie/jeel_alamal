@@ -21,3 +21,23 @@ export function formatTeacherName(name: string | null | undefined): string {
   return `الأستاذ ${trimmed}`;
 }
 
+/**
+ * Ensures Arabic date formatting uses Levant/Mashriqi month names (كانون، شباط، آذار، نيسان، أيار، حزيران، تموز، آب، أيلول، تشرين...).
+ */
+export function formatDateLocale(locale: string = 'ar'): string {
+  if (!locale || locale === 'ar' || locale.startsWith('ar')) {
+    return 'ar-SY-u-nu-latn';
+  }
+  return locale;
+}
+
+export function formatDate(
+  date: Date | string | number,
+  options?: Intl.DateTimeFormatOptions,
+  locale: string = 'ar',
+): string {
+  const d = typeof date === 'string' || typeof date === 'number' ? new Date(date) : date;
+  if (isNaN(d.getTime())) return '';
+  return d.toLocaleDateString(formatDateLocale(locale), options);
+}
+

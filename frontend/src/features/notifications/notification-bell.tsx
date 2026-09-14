@@ -23,16 +23,33 @@ export interface NotificationItem {
   createdAt: string;
 }
 
+import { formatDateLocale } from '@/lib/utils';
+import {
+  requestNotificationPermission,
+  triggerNativeNotification,
+} from '@/features/notifications/device-notifications';
+
 export function NotificationBell() {
   const router = useRouter();
   const [unreadCount, setUnreadCount] = useState<number>(0);
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [open, setOpen] = useState(false);
+  const [permissionStatus, setPermissionStatus] = useState<string>('default');
+
+  useEffect(() => {
+    if (typeof window !== 'undefined' && 'Notification' in window) {
+      setPermissionStatus(Notification.permission);
+    }
+  }, []);
 
   const fetchUnreadCount = async () => {
     try {
       const res = await apiFetch<{ count: number }>('/notifications/unread-count');
       setUnreadCount(res.count);
+      if (res.count > 0) {
+        // Fetch notifications to trigger native device push for unread items
+        fetchNotifications();
+      }
     } catch (err) {
       // Ignore auth / network errors silently
     }
@@ -42,6 +59,13 @@ export function NotificationBell() {
     try {
       const list = await apiFetch<NotificationItem[]>('/notifications?limit=20');
       setNotifications(list);
+
+      // Trigger native OS device notification for unread items
+      list.forEach((n) => {
+        if (!n.isRead) {
+          triggerNativeNotification(n);
+        }
+      });
     } catch (err) {
       // Ignore
     }
@@ -49,13 +73,15 @@ export function NotificationBell() {
 
   useEffect(() => {
     fetchUnreadCount();
-    const interval = setInterval(fetchUnreadCount, 30000); // refresh every 30s
+    const interval = setInterval(fetchUnreadCount, 20000); // refresh every 20s
     return () => clearInterval(interval);
   }, []);
 
-  const handleOpenChange = (isOpen: boolean) => {
+  const handleOpenChange = async (isOpen: boolean) => {
     setOpen(isOpen);
     if (isOpen) {
+      const status = await requestNotificationPermission();
+      setPermissionStatus(status);
       fetchNotifications();
     }
   };
@@ -125,25 +151,44 @@ export function NotificationBell() {
         align="end"
         className="w-80 sm:w-96 p-0 shadow-xl border-border bg-card"
       >
-        <div className="flex items-center justify-between border-b border-border p-3">
-          <div className="flex items-center gap-2">
-            <span className="font-semibold text-sm">الإشعارات</span>
+        <div className="flex flex-col border-b border-border">
+          <div className="flex items-center justify-between p-3">
+            <div className="flex items-center gap-2">
+              <span className="font-semibold text-sm">الإشعارات</span>
+              {unreadCount > 0 && (
+                <Badge variant="secondary" className="text-xs">
+                  {unreadCount} غير مقروء
+                </Badge>
+              )}
+            </div>
             {unreadCount > 0 && (
-              <Badge variant="secondary" className="text-xs">
-                {unreadCount} غير مقروء
-              </Badge>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleMarkAllRead}
+                className="h-7 text-xs gap-1 text-muted-foreground hover:text-foreground"
+              >
+                <CheckCheck className="size-3.5" />
+                تحديد الكل كمقروء
+              </Button>
             )}
           </div>
-          {unreadCount > 0 && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleMarkAllRead}
-              className="h-7 text-xs gap-1 text-muted-foreground hover:text-foreground"
-            >
-              <CheckCheck className="size-3.5" />
-              تحديد الكل كمقروء
-            </Button>
+
+          {permissionStatus === 'default' && (
+            <div className="bg-primary/10 px-3 py-2 flex items-center justify-between gap-2 text-xs border-t border-border/50">
+              <span className="text-muted-foreground">تفعيل إشعارات الجهاز والمنبهات</span>
+              <Button
+                size="sm"
+                variant="default"
+                className="h-6 text-[11px] px-2"
+                onClick={async () => {
+                  const status = await requestNotificationPermission();
+                  setPermissionStatus(status);
+                }}
+              >
+                تفعيل
+              </Button>
+            </div>
           )}
         </div>
 
@@ -176,8 +221,9 @@ export function NotificationBell() {
                     <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">
                       {n.message}
                     </p>
+
                     <span className="text-[10px] text-muted-foreground/70 mt-1.5 block">
-                      {new Date(n.createdAt).toLocaleDateString('ar-SA', {
+                      {new Date(n.createdAt).toLocaleDateString(formatDateLocale('ar'), {
                         hour: '2-digit',
                         minute: '2-digit',
                         day: 'numeric',

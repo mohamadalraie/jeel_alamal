@@ -51,10 +51,11 @@ export async function generateMetadata({
     },
     icons: {
       icon: [
-        { url: '/icon.svg', type: 'image/svg+xml' },
+        { url: '/favicon.ico', sizes: '32x32', type: 'image/x-icon' },
+        { url: '/logo.png', type: 'image/png' },
         { url: '/icons/icon-192.png', sizes: '192x192', type: 'image/png' },
       ],
-      shortcut: '/icons/icon-192.png',
+      shortcut: '/favicon.ico',
       apple: [
         { url: '/icons/apple-touch-icon.png', sizes: '180x180', type: 'image/png' },
       ],

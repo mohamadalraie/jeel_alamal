@@ -4,6 +4,7 @@ import { useMemo } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 import type { AttendanceStatus } from '@/lib/types';
 import { useStudentAttendance, useClassProfile } from '@/lib/queries';
+import { formatDateLocale } from '@/lib/utils';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ListSkeleton } from '@/features/shared/skeletons';
 import { EmptyState } from '@/features/shared/empty-state';
@@ -130,7 +131,7 @@ export function StudentAttendanceView({
           <ul className="flex flex-col divide-y">
             {data.log.map((item, i) => (
               <li key={`${item.date}-${i}`} className="flex items-center justify-between py-2 text-sm">
-                <span>{new Date(item.date).toLocaleDateString(locale, { year: 'numeric', month: 'long', day: 'numeric' })}</span>
+                <span>{new Date(item.date).toLocaleDateString(formatDateLocale(locale), { year: 'numeric', month: 'long', day: 'numeric' })}</span>
                 <span
                   className="rounded-md px-2 py-0.5 text-xs font-medium text-white"
                   style={{ backgroundColor: STATUS_COLOR[item.status] }}

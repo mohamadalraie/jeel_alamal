@@ -10,6 +10,7 @@ import {
   XAxis,
   YAxis,
 } from 'recharts';
+import { formatDateLocale } from '@/lib/utils';
 import { useClassRecitation, useSurahs, useQueryClient, qk } from '@/lib/queries';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ListSkeleton } from '@/features/shared/skeletons';
@@ -34,7 +35,7 @@ export function ClassRecitationTab({ classId }: { classId: string }) {
     return [...byDay.entries()]
       .sort((a, b) => (a[0] < b[0] ? -1 : 1))
       .map(([date, ayahs]) => ({
-        date: new Date(date).toLocaleDateString(locale, { month: 'short', day: 'numeric' }),
+        date: new Date(date).toLocaleDateString(formatDateLocale(locale), { month: 'short', day: 'numeric' }),
         ayahs,
       }));
   }, [data?.log, locale]);

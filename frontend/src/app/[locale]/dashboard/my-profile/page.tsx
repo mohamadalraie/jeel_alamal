@@ -16,6 +16,7 @@ import {
   useClassProfile,
   useStudentRecitation,
 } from '@/lib/queries';
+import { formatDateLocale } from '@/lib/utils';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { BasicInfoCard } from '@/features/profiles/basic-info-card';
@@ -52,7 +53,7 @@ export default function MyProfilePage() {
     return [...byDay.entries()]
       .sort((a, b) => (a[0] < b[0] ? -1 : 1))
       .map(([date, ayahs]) => ({
-        date: new Date(date).toLocaleDateString(locale, { month: 'short', day: 'numeric' }),
+        date: new Date(date).toLocaleDateString(formatDateLocale(locale), { month: 'short', day: 'numeric' }),
         ayahs,
       }));
   }, [recData?.log, locale]);

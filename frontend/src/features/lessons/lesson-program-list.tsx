@@ -13,7 +13,7 @@ import {
   Plus,
 } from 'lucide-react';
 import type { ProgramEntry } from '@/lib/types';
-import { formatTeacherName } from '@/lib/utils';
+import { formatTeacherName, formatDateLocale } from '@/lib/utils';
 import { toYMD } from '@/features/attendance/calendar-utils';
 import { EmptyState } from '@/features/shared/empty-state';
 import { Button } from '@/components/ui/button';
@@ -24,10 +24,10 @@ const TODAY_YMD = toYMD(new Date());
 
 // ── Week helpers ─────────────────────────────────────────────────────────────
 
-/** Monday of the week containing `d`. */
-function weekMonday(d: Date): Date {
+/** Saturday of the week containing `d` (Arabic week order). */
+function weekSaturday(d: Date): Date {
   const day = d.getDay(); // 0=Sun … 6=Sat
-  const diff = (day === 0 ? -6 : 1 - day); // days back to Monday
+  const diff = day === 6 ? 0 : -(day + 1); // days back to Saturday
   return new Date(d.getFullYear(), d.getMonth(), d.getDate() + diff);
 }
 
@@ -64,7 +64,7 @@ function groupByMonth(entries: ProgramEntry[]): MonthGroup[] {
 
 /**
  * Shared lessons list: chronological, grouped by month → day.
- * Defaults to "this week" view with ± navigation; a toggle switches to the
+ * Defaults to "this week" view (starting Saturday) with ± navigation; a toggle switches to the
  * full programme (all dates). Used by the hub, the class tab, and the teacher
  * feed so every page looks identical.
  */
@@ -87,7 +87,7 @@ export function LessonProgramList({
   const locale = useLocale();
 
   const [view, setView] = useState<'week' | 'all'>('week');
-  const [weekStart, setWeekStart] = useState<Date>(() => weekMonday(new Date()));
+  const [weekStart, setWeekStart] = useState<Date>(() => weekSaturday(new Date()));
 
   const weekEnd = addDays(weekStart, 6);
   const weekStartYMD = toYMD(weekStart);
@@ -101,9 +101,10 @@ export function LessonProgramList({
 
   const months = useMemo(() => groupByMonth(visibleEntries), [visibleEntries]);
 
-  const isCurrentWeek = weekStartYMD === toYMD(weekMonday(new Date()));
+  const isCurrentWeek = weekStartYMD === toYMD(weekSaturday(new Date()));
 
-  const weekLabel = `${weekStart.toLocaleDateString(locale, { day: 'numeric', month: 'short' })} – ${weekEnd.toLocaleDateString(locale, { day: 'numeric', month: 'short' })}`;
+  const dateLoc = formatDateLocale(locale);
+  const weekLabel = `${weekStart.toLocaleDateString(dateLoc, { day: 'numeric', month: 'short' })} – ${weekEnd.toLocaleDateString(dateLoc, { day: 'numeric', month: 'short' })}`;
 
   const Prev = locale === 'ar' ? ChevronRight : ChevronLeft;
   const Next = locale === 'ar' ? ChevronLeft : ChevronRight;
@@ -130,7 +131,7 @@ export function LessonProgramList({
               ) : (
                 <button
                   type="button"
-                  onClick={() => setWeekStart(weekMonday(new Date()))}
+                  onClick={() => setWeekStart(weekSaturday(new Date()))}
                   className="text-muted-foreground hover:text-primary text-[11px] font-medium underline-offset-2 hover:underline"
                 >
                   {t('goToToday')}
@@ -219,7 +220,7 @@ function MonthSection({
   renderActions?: (entry: ProgramEntry) => React.ReactNode;
   onAddDay?: (ymd: string) => void;
 }) {
-  const monthLabel = new Date(month + '-15').toLocaleDateString(locale, {
+  const monthLabel = new Date(month + '-15').toLocaleDateString(formatDateLocale(locale), {
     month: 'long',
     year: 'numeric',
   });
