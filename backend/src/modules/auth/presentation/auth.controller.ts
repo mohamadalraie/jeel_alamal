@@ -82,7 +82,11 @@ export class AuthController {
   ) {
     const result = await this.loginUseCase.execute(dto.username, dto.password);
     this.setAuthCookies(res, result);
-    return { user: result.user };
+    return {
+      user: result.user,
+      accessToken: result.accessToken,
+      refreshToken: result.refreshToken,
+    };
   }
 
   @Public()
@@ -90,16 +94,21 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   async refresh(
     @Req() req: Request,
+    @Body() body: { refreshToken?: string },
     @Res({ passthrough: true }) res: Response,
   ) {
     const cookies = req.cookies as Record<string, string> | undefined;
-    const token = cookies?.[REFRESH_TOKEN_COOKIE];
+    const token = cookies?.[REFRESH_TOKEN_COOKIE] || body?.refreshToken;
     if (!token) {
       throw new UnauthorizedError('No refresh token');
     }
     const result = await this.refreshUseCase.execute(token);
     this.setAuthCookies(res, result);
-    return { user: result.user };
+    return {
+      user: result.user,
+      accessToken: result.accessToken,
+      refreshToken: result.refreshToken,
+    };
   }
 
   @Post('logout')

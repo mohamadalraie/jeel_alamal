@@ -129,30 +129,74 @@ export class ApiError extends Error {
   }
 }
 
+const ACCESS_TOKEN_KEY = 'jeel_access_token';
+const REFRESH_TOKEN_KEY = 'jeel_refresh_token';
+
+export function getStoredAccessToken(): string | null {
+  if (typeof window === 'undefined') return null;
+  return localStorage.getItem(ACCESS_TOKEN_KEY);
+}
+
+export function getStoredRefreshToken(): string | null {
+  if (typeof window === 'undefined') return null;
+  return localStorage.getItem(REFRESH_TOKEN_KEY);
+}
+
+export function setStoredTokens(accessToken?: string, refreshToken?: string) {
+  if (typeof window === 'undefined') return;
+  if (accessToken) localStorage.setItem(ACCESS_TOKEN_KEY, accessToken);
+  if (refreshToken) localStorage.setItem(REFRESH_TOKEN_KEY, refreshToken);
+}
+
+export function clearStoredTokens() {
+  if (typeof window === 'undefined') return;
+  localStorage.removeItem(ACCESS_TOKEN_KEY);
+  localStorage.removeItem(REFRESH_TOKEN_KEY);
+}
+
 let refreshTokenPromise: Promise<boolean> | null = null;
 
 async function attemptTokenRefresh(): Promise<boolean> {
   try {
+    const refreshToken = getStoredRefreshToken();
     const res = await fetch(`${API_URL}/api/auth/refresh`, {
       method: 'POST',
       credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
+      body: refreshToken ? JSON.stringify({ refreshToken }) : undefined,
       cache: 'no-store',
     });
-    return res.ok;
+
+    if (res.ok) {
+      const data = (await res.json()) as { accessToken?: string; refreshToken?: string };
+      if (data.accessToken) {
+        setStoredTokens(data.accessToken, data.refreshToken);
+      }
+      return true;
+    } else {
+      clearStoredTokens();
+      return false;
+    }
   } catch {
     return false;
   }
 }
 
 async function request<T>(path: string, init?: RequestInit, isRetry = false): Promise<T> {
+  const token = getStoredAccessToken();
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    ...(init?.headers as Record<string, string>),
+  };
+
+  if (token && !headers['Authorization']) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+
   const res = await fetch(`${API_URL}${path}`, {
     ...init,
     credentials: 'include',
-    headers: {
-      'Content-Type': 'application/json',
-      ...init?.headers,
-    },
+    headers,
     cache: 'no-store',
   });
 
@@ -206,9 +250,25 @@ export interface HealthResponse {
 export const getHealth = () => request<HealthResponse>('/health');
 
 // ── Auth ──
-export const login = (username: string, password: string) =>
-  post<{ user: User }>('/api/auth/login', { username, password });
-export const logout = () => post<{ success: boolean }>('/api/auth/logout');
+export const login = async (username: string, password: string) => {
+  const res = await post<{ user: User; accessToken?: string; refreshToken?: string }>(
+    '/api/auth/login',
+    { username, password },
+  );
+  if (res.accessToken) {
+    setStoredTokens(res.accessToken, res.refreshToken);
+  }
+  return res;
+};
+
+export const logout = async () => {
+  try {
+    return await post<{ success: boolean }>('/api/auth/logout');
+  } finally {
+    clearStoredTokens();
+  }
+};
+
 export const getMe = () => request<{ user: User }>('/api/auth/me');
 export const changePassword = (currentPassword: string, newPassword: string) =>
   patch<void>('/api/auth/change-password', { currentPassword, newPassword });

@@ -9,6 +9,8 @@ import { InstituteProvider } from './institute-context';
 import { Topbar } from './topbar';
 import { SidebarNav } from './sidebar-nav';
 
+import { registerPushSubscription } from '@/features/notifications/device-notifications';
+
 /**
  * Authenticated app shell: loads the current user from the httpOnly-cookie
  * session (redirecting to /login if absent), then renders the topbar + a
@@ -21,7 +23,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     getMe()
-      .then(({ user }) => setUser(user))
+      .then(({ user }) => {
+        setUser(user);
+        registerPushSubscription();
+      })
       .catch(() => router.replace('/login'));
   }, [router]);
 
