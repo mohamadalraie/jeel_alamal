@@ -31,6 +31,15 @@ async function runAutoMigrations(config: ConfigService) {
       await migrate(db, { migrationsFolder });
       Logger.log('✅ Database migrations auto-applied successfully', 'Migrations');
     }
+    // Explicit safety check: ensure user_institutes table exists
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS "user_institutes" (
+        "user_id" uuid NOT NULL REFERENCES "public"."users"("id") ON DELETE CASCADE,
+        "institute_id" uuid NOT NULL REFERENCES "public"."institutes"("id") ON DELETE CASCADE,
+        "joined_at" timestamp with time zone DEFAULT now() NOT NULL,
+        PRIMARY KEY ("user_id", "institute_id")
+      );
+    `);
     await pool.end();
   } catch (err: any) {
     Logger.error(`Auto-migration note: ${err?.message || err}`, 'Migrations');

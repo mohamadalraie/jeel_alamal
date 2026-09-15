@@ -50,6 +50,13 @@
       "when": 1789294963916,
       "tag": "0006_open_red_ghost",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1789390000000,
+      "tag": "0007_user_institutes",
+      "breakpoints": true
     }
   ]
 }
