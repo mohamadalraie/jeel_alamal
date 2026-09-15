@@ -2,6 +2,7 @@ import {
   date,
   pgEnum,
   pgTable,
+  primaryKey,
   smallint,
   timestamp,
   uuid,
@@ -62,3 +63,20 @@ export const users = pgTable('users', {
 });
 
 export type UserRow = InferSelectModel<typeof users>;
+
+/** Multi-institute membership: a user can belong to multiple institutes/courses */
+export const userInstitutes = pgTable(
+  'user_institutes',
+  {
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    instituteId: uuid('institute_id')
+      .notNull()
+      .references(() => institutes.id, { onDelete: 'cascade' }),
+    joinedAt: timestamp('joined_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [primaryKey({ columns: [t.userId, t.instituteId] })],
+);

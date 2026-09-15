@@ -1,5 +1,4 @@
 import { setRequestLocale, getTranslations } from 'next-intl/server';
-import { LocaleSwitcher } from '@/features/locale-switcher';
 import { BackendStatus } from '@/features/backend-status';
 import { Button } from '@/components/ui/button';
 import { Link } from '@/i18n/navigation';
@@ -61,11 +60,6 @@ export default async function HomePage({
           <div className="relative flex w-full flex-col items-center justify-center gap-3.5 rounded-[2.5rem] border border-white/10 bg-white/[0.03] p-6 pb-8 backdrop-blur-3xl shadow-[0_30px_60px_-15px_rgba(0,0,0,0.6)] ring-1 ring-white/5">
             {/* Liquid Glass Highlight */}
             <div className="absolute inset-x-0 top-0 h-24 rounded-t-[2.5rem] bg-gradient-to-b from-white/5 to-transparent pointer-events-none"></div>
-
-            {/* Locale Switcher inside the card */}
-            <div className="absolute top-4 right-4 z-20">
-              <LocaleSwitcher />
-            </div>
 
             {/* Logo container with tight padding & no extra margins */}
             <div className="z-10 mt-1 flex items-center justify-center">

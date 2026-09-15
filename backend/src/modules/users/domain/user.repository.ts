@@ -22,4 +22,8 @@ export interface UserRepository {
   countByInstitute(instituteId: string, role?: UserRole): Promise<number>;
   /** Search all system users, optionally filtered by role and search string. */
   searchAllUsers(role?: UserRole, query?: string): Promise<User[]>;
+  /** Add a user membership to an institute */
+  addUserToInstitute(userId: string, instituteId: string): Promise<void>;
+  /** Get all institute IDs that a user belongs to */
+  findInstituteIdsByUser(userId: string): Promise<string[]>;
 }

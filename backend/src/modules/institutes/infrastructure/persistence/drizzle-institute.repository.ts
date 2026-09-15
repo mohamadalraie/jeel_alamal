@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { desc, eq } from 'drizzle-orm';
+import { desc, eq, inArray } from 'drizzle-orm';
 import { Institute } from '../../domain/institute.entity';
 import type { InstituteRepository } from '../../domain/institute.repository';
 import { User } from '../../../users/domain/user.entity';
@@ -39,6 +39,16 @@ export class DrizzleInstituteRepository implements InstituteRepository {
       .where(eq(institutes.id, id))
       .limit(1);
     return row ? toDomain(row) : null;
+  }
+
+  async findManyByIds(ids: string[]): Promise<Institute[]> {
+    if (ids.length === 0) return [];
+    const rows = await this.db
+      .select()
+      .from(institutes)
+      .where(inArray(institutes.id, ids))
+      .orderBy(desc(institutes.createdAt));
+    return rows.map(toDomain);
   }
 
   async save(institute: Institute): Promise<void> {

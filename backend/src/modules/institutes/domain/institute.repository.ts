@@ -5,6 +5,7 @@ export const INSTITUTE_REPOSITORY = Symbol('INSTITUTE_REPOSITORY');
 
 export interface InstituteRepository {
   findById(id: string): Promise<Institute | null>;
+  findManyByIds(ids: string[]): Promise<Institute[]>;
   findAll(): Promise<Institute[]>;
   findAllByManager(managerId: string): Promise<Institute[]>;
   /** Persist changes to an existing institute (e.g. logo, details). */

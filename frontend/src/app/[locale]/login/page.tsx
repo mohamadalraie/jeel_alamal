@@ -1,6 +1,5 @@
 import { setRequestLocale } from 'next-intl/server';
 import { LoginForm } from '@/features/auth/login-form';
-import { LocaleSwitcher } from '@/features/locale-switcher';
 import { BackendStatus } from '@/features/backend-status';
 import Image from 'next/image';
 
@@ -42,11 +41,6 @@ export default async function LoginPage({
           <div className="relative flex w-full flex-col items-center justify-center gap-4 rounded-[2.5rem] border border-white/10 bg-white/[0.03] p-6 pb-8 backdrop-blur-3xl shadow-[0_30px_60px_-15px_rgba(0,0,0,0.6)] ring-1 ring-white/5">
             {/* Liquid Glass Highlight */}
             <div className="absolute inset-x-0 top-0 h-24 rounded-t-[2.5rem] bg-gradient-to-b from-white/5 to-transparent pointer-events-none"></div>
-
-            {/* Locale Switcher inside card */}
-            <div className="absolute top-4 right-4 z-20">
-              <LocaleSwitcher />
-            </div>
 
             {/* Logo */}
             <div className="z-10 mt-1 flex items-center justify-center">

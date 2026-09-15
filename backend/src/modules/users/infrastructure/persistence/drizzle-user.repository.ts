@@ -6,7 +6,8 @@ import { Username } from '../../domain/value-objects/username.vo';
 import type { UserRepository } from '../../domain/user.repository';
 import { DRIZZLE } from '../../../../core/database/drizzle.provider';
 import type { DrizzleDb } from '../../../../core/database/drizzle.provider';
-import { users } from './user.schema';
+import { users, userInstitutes } from './user.schema';
+import { managerInstitutes } from '../../../institutes/infrastructure/persistence/manager-assignment.schema';
 import { UserMapper } from './user.mapper';
 
 /**
@@ -44,6 +45,10 @@ export class DrizzleUserRepository implements UserRepository {
       .insert(users)
       .values(row)
       .onConflictDoUpdate({ target: users.id, set: row });
+
+    if (row.instituteId) {
+      await this.addUserToInstitute(row.id, row.instituteId);
+    }
   }
 
   /** Soft delete — preserves the row (and authored records) but hides it. */
@@ -54,12 +59,50 @@ export class DrizzleUserRepository implements UserRepository {
       .where(eq(users.id, id));
   }
 
-  async findByInstitute(instituteId: string, role?: UserRole): Promise<User[]> {
-    const conditions = [
-      eq(users.instituteId, instituteId),
-      isNull(users.deletedAt),
+  async addUserToInstitute(userId: string, instituteId: string): Promise<void> {
+    await this.db
+      .insert(userInstitutes)
+      .values({ userId, instituteId })
+      .onConflictDoNothing();
+  }
+
+  async findInstituteIdsByUser(userId: string): Promise<string[]> {
+    const directRows = await this.db
+      .select({ instituteId: userInstitutes.instituteId })
+      .from(userInstitutes)
+      .where(eq(userInstitutes.userId, userId));
+
+    const mgrRows = await this.db
+      .select({ instituteId: managerInstitutes.instituteId })
+      .from(managerInstitutes)
+      .where(eq(managerInstitutes.managerId, userId));
+
+    const userObj = await this.findById(userId);
+    const homeInst = userObj?.instituteId ? [userObj.instituteId] : [];
+
+    const all = [
+      ...homeInst,
+      ...directRows.map((r) => r.instituteId),
+      ...mgrRows.map((r) => r.instituteId),
     ];
-    if (role) conditions.push(eq(users.role, role));
+    return Array.from(new Set(all));
+  }
+
+  async findByInstitute(instituteId: string, role?: UserRole): Promise<User[]> {
+    const memberRows = await this.db
+      .select({ userId: userInstitutes.userId })
+      .from(userInstitutes)
+      .where(eq(userInstitutes.instituteId, instituteId));
+
+    const memberUserIds = memberRows.map((r) => r.userId);
+
+    const conditions = [
+      isNull(users.deletedAt),
+      memberUserIds.length > 0
+        ? or(eq(users.instituteId, instituteId), inArray(users.id, memberUserIds))
+        : eq(users.instituteId, instituteId),
+    ];
+    if (role) conditions.push(eq(users.role, role!));
     const rows = await this.db
       .select()
       .from(users)
@@ -81,11 +124,20 @@ export class DrizzleUserRepository implements UserRepository {
     instituteId: string,
     role?: UserRole,
   ): Promise<number> {
+    const memberRows = await this.db
+      .select({ userId: userInstitutes.userId })
+      .from(userInstitutes)
+      .where(eq(userInstitutes.instituteId, instituteId));
+
+    const memberUserIds = memberRows.map((r) => r.userId);
+
     const conditions = [
-      eq(users.instituteId, instituteId),
       isNull(users.deletedAt),
+      memberUserIds.length > 0
+        ? or(eq(users.instituteId, instituteId), inArray(users.id, memberUserIds))
+        : eq(users.instituteId, instituteId),
     ];
-    if (role) conditions.push(eq(users.role, role));
+    if (role) conditions.push(eq(users.role, role!));
     const [row] = await this.db
       .select({ n: count() })
       .from(users)

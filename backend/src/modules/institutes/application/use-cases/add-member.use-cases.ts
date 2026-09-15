@@ -30,10 +30,8 @@ export class AddTeacherUseCase {
     if (dto.existingUserId) {
       const teacher = await this.users.findById(dto.existingUserId);
       if (!teacher) throw new NotFoundError('Teacher account not found');
-      if (!teacher.instituteId) {
-        teacher.assignToInstitute(instituteId);
-        await this.users.save(teacher);
-      }
+      teacher.assignToInstitute(instituteId);
+      await this.users.save(teacher);
       return UserResponseDto.fromDomain(teacher);
     }
     const teacher = await this.createUserAccount.execute({
@@ -71,10 +69,8 @@ export class AddStudentUseCase {
     if (dto.existingUserId) {
       const student = await this.users.findById(dto.existingUserId);
       if (!student) throw new NotFoundError('Student account not found');
-      if (!student.instituteId) {
-        student.assignToInstitute(instituteId);
-        await this.users.save(student);
-      }
+      student.assignToInstitute(instituteId);
+      await this.users.save(student);
       return UserResponseDto.fromDomain(student);
     }
     const student = await this.createUserAccount.execute({

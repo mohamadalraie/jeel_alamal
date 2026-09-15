@@ -2,8 +2,9 @@
 
 import { useState } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
-import { Menu, LogOut, Building2, ChevronDown, KeyRound } from 'lucide-react';
-import { useRouter } from '@/i18n/navigation';
+import { Menu, LogOut, Building2, ChevronDown, KeyRound, Globe } from 'lucide-react';
+import { usePathname, useRouter } from '@/i18n/navigation';
+import { routing } from '@/i18n/routing';
 import { logout, resolveAsset } from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import {
@@ -28,7 +29,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { LocaleSwitcher } from '@/features/locale-switcher';
 import { NotificationBell } from '@/features/notifications/notification-bell';
 import { ThemeToggle } from './theme-toggle';
 import { SidebarNav } from './sidebar-nav';
@@ -37,7 +37,7 @@ import { ChangePasswordDialog } from './change-password-dialog';
 
 /**
  * Top bar: mobile menu trigger, the selected-institute picker (the tenant
- * context for every page), theme + locale controls, and the user menu.
+ * context for every page), theme control, and the user menu.
  */
 export function Topbar() {
   const t = useTranslations('dashboard');
@@ -45,12 +45,16 @@ export function Topbar() {
   const tr = useTranslations('roles');
   const ta = useTranslations('auth');
   const router = useRouter();
+  const pathname = usePathname();
   const locale = useLocale();
   const { user, institutes, selected, selectInstitute } = useInstitute();
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [changePwOpen, setChangePwOpen] = useState(false);
   // Drawer opens from the start side: right in Arabic (RTL), left in English.
   const drawerSide = locale === 'ar' ? 'right' : 'left';
+
+  const otherLocale = routing.locales.find((l) => l !== locale) ?? routing.defaultLocale;
+  const otherLocaleLabel = otherLocale === 'ar' ? tc('switchToArabic') : tc('switchToEnglish');
 
   return (
     <header className="bg-card border-border sticky top-0 z-20 flex h-14 items-center gap-2 border-b px-3 sm:px-4">
@@ -109,7 +113,6 @@ export function Topbar() {
       <div className="flex items-center gap-1">
         <NotificationBell />
         <ThemeToggle />
-        <LocaleSwitcher />
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="sm" className="gap-1.5">
@@ -135,6 +138,11 @@ export function Topbar() {
               <KeyRound className="size-4" />
               {ta('changePassword')}
             </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => router.replace(pathname, { locale: otherLocale })}>
+              <Globe className="size-4" />
+              {otherLocaleLabel}
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
             <DropdownMenuItem
               onClick={async () => {
                 await logout().catch(() => undefined);
