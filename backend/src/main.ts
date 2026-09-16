@@ -40,6 +40,16 @@ async function runAutoMigrations(config: ConfigService) {
         PRIMARY KEY ("user_id", "institute_id")
       );
     `);
+    // Backfill: sync existing users that have institute_id into user_institutes
+    // so multi-institute membership queries always find them.
+    await pool.query(`
+      INSERT INTO "user_institutes" ("user_id", "institute_id", "joined_at")
+      SELECT u.id, u.institute_id, COALESCE(u.created_at, now())
+      FROM "users" u
+      WHERE u.institute_id IS NOT NULL
+        AND u.deleted_at IS NULL
+      ON CONFLICT DO NOTHING;
+    `);
     await pool.end();
   } catch (err: any) {
     Logger.error(`Auto-migration note: ${err?.message || err}`, 'Migrations');
