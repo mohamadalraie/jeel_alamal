@@ -51,7 +51,7 @@ export function PwaInstallBanner() {
               <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-xl border border-border/50 bg-background shadow-md">
                 <Image
                   src="/logo.png"
-                  alt="جيل العمل"
+                  alt="جيل الأمل"
                   fill
                   className="object-cover p-1"
                 />
@@ -122,7 +122,7 @@ export function PwaInstallBanner() {
         <DialogContent className="max-w-sm rounded-2xl p-5 text-center">
           <DialogHeader className="items-center text-center">
             <div className="relative h-14 w-14 overflow-hidden rounded-2xl border border-border bg-background p-1.5 mb-2 shadow-md">
-              <Image src="/logo.png" alt="جيل العمل" fill className="object-contain" />
+              <Image src="/logo.png" alt="جيل الأمل" fill className="object-contain" />
             </div>
             <DialogTitle className="text-lg font-bold">
               {t('iosTitle')}
