@@ -50,6 +50,18 @@ async function runAutoMigrations(config: ConfigService) {
         AND u.deleted_at IS NULL
       ON CONFLICT DO NOTHING;
     `);
+    // Ensure push_subscriptions table exists for Web Push notifications
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS "push_subscriptions" (
+        "id" uuid PRIMARY KEY NOT NULL,
+        "user_id" uuid NOT NULL REFERENCES "public"."users"("id") ON DELETE CASCADE,
+        "endpoint" text NOT NULL UNIQUE,
+        "p256dh" text NOT NULL,
+        "auth" text NOT NULL,
+        "created_at" timestamp with time zone DEFAULT now() NOT NULL
+      );
+    `);
+    Logger.log('✅ push_subscriptions table ensured', 'Migrations');
     await pool.end();
   } catch (err: any) {
     Logger.error(`Auto-migration note: ${err?.message || err}`, 'Migrations');

@@ -1,4 +1,4 @@
-import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
+import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import * as webpush from 'web-push';
 import { eq, inArray } from 'drizzle-orm';
 import { randomUUID } from 'crypto';
@@ -7,6 +7,7 @@ import { pushSubscriptions } from '../infrastructure/persistence/notification.sc
 
 @Injectable()
 export class WebPushService implements OnModuleInit {
+  private readonly logger = new Logger('WebPush');
   private readonly publicKey =
     process.env.VAPID_PUBLIC_KEY ||
     'BIIMJ0pdAD1EstuhIXmsK3XiQs-yZPvQbFj_EMKfBpvAWz-_K-j3Ru_lXAUxLiLOChuQ1uCiFD4v9PP7oxwkjJ4';
@@ -21,8 +22,9 @@ export class WebPushService implements OnModuleInit {
   onModuleInit() {
     try {
       webpush.setVapidDetails(this.subject, this.publicKey, this.privateKey);
+      this.logger.log('✅ VAPID details set successfully');
     } catch (err) {
-      console.warn('WebPush initialization warning:', err);
+      this.logger.error('❌ VAPID initialization failed:', err);
     }
   }
 
@@ -34,28 +36,35 @@ export class WebPushService implements OnModuleInit {
     userId: string,
     subscription: { endpoint: string; keys: { p256dh: string; auth: string } },
   ): Promise<void> {
-    const existing = await this.db
-      .select()
-      .from(pushSubscriptions)
-      .where(eq(pushSubscriptions.endpoint, subscription.endpoint));
+    try {
+      const existing = await this.db
+        .select()
+        .from(pushSubscriptions)
+        .where(eq(pushSubscriptions.endpoint, subscription.endpoint));
 
-    if (existing.length > 0) {
-      await this.db
-        .update(pushSubscriptions)
-        .set({
+      if (existing.length > 0) {
+        await this.db
+          .update(pushSubscriptions)
+          .set({
+            userId,
+            p256dh: subscription.keys.p256dh,
+            auth: subscription.keys.auth,
+          })
+          .where(eq(pushSubscriptions.endpoint, subscription.endpoint));
+        this.logger.log(`Push subscription updated for user ${userId}`);
+      } else {
+        await this.db.insert(pushSubscriptions).values({
+          id: randomUUID(),
           userId,
+          endpoint: subscription.endpoint,
           p256dh: subscription.keys.p256dh,
           auth: subscription.keys.auth,
-        })
-        .where(eq(pushSubscriptions.endpoint, subscription.endpoint));
-    } else {
-      await this.db.insert(pushSubscriptions).values({
-        id: randomUUID(),
-        userId,
-        endpoint: subscription.endpoint,
-        p256dh: subscription.keys.p256dh,
-        auth: subscription.keys.auth,
-      });
+        });
+        this.logger.log(`Push subscription saved for user ${userId}`);
+      }
+    } catch (err) {
+      this.logger.error(`Failed to save push subscription for user ${userId}:`, err);
+      throw err;
     }
   }
 
@@ -71,12 +80,23 @@ export class WebPushService implements OnModuleInit {
   ): Promise<void> {
     if (userIds.length === 0) return;
 
-    const subs = await this.db
-      .select()
-      .from(pushSubscriptions)
-      .where(inArray(pushSubscriptions.userId, userIds));
+    let subs: any[];
+    try {
+      subs = await this.db
+        .select()
+        .from(pushSubscriptions)
+        .where(inArray(pushSubscriptions.userId, userIds));
+    } catch (err) {
+      this.logger.error('❌ Failed to query push_subscriptions table:', err);
+      return;
+    }
 
-    if (subs.length === 0) return;
+    if (subs.length === 0) {
+      this.logger.warn(`No push subscriptions found for ${userIds.length} user(s) — push skipped`);
+      return;
+    }
+
+    this.logger.log(`Sending push to ${subs.length} subscription(s) for ${userIds.length} user(s)`);
 
     const jsonPayload = JSON.stringify({
       id: payload.id || randomUUID(),
@@ -86,7 +106,7 @@ export class WebPushService implements OnModuleInit {
       type: payload.type || 'general',
     });
 
-    await Promise.all(
+    const results = await Promise.allSettled(
       subs.map(async (sub) => {
         const pushSubscription: webpush.PushSubscription = {
           endpoint: sub.endpoint,
@@ -97,14 +117,22 @@ export class WebPushService implements OnModuleInit {
         };
         try {
           await webpush.sendNotification(pushSubscription, jsonPayload);
+          this.logger.log(`✅ Push sent to ${sub.endpoint.slice(-20)}`);
         } catch (err: any) {
+          this.logger.error(
+            `❌ Push failed (${err?.statusCode || 'unknown'}): ${err?.body || err?.message || err}`,
+          );
           if (err?.statusCode === 410 || err?.statusCode === 404) {
             await this.db
               .delete(pushSubscriptions)
               .where(eq(pushSubscriptions.endpoint, sub.endpoint));
+            this.logger.warn(`Removed stale subscription: ${sub.endpoint.slice(-20)}`);
           }
         }
       }),
     );
+
+    const succeeded = results.filter((r) => r.status === 'fulfilled').length;
+    this.logger.log(`Push delivery: ${succeeded}/${subs.length} succeeded`);
   }
 }
