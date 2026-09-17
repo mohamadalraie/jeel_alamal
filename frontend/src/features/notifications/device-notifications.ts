@@ -54,16 +54,54 @@ export async function registerPushSubscription() {
     return;
   }
 
-  const vapidKey =
-    process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY ||
-    'BNpLIXaj8bbNnX3nkMgqP3Ma1_v6emPFQRwbkJ0nUHGjWngmlz2efBDvQX1beHwZ58PC5n8PYqL9dRSUlrvczzg';
-
   try {
-    const registration = await navigator.serviceWorker.ready;
+    // 1. Ensure service worker is registered & ready
+    let registration = await navigator.serviceWorker.getRegistration('/sw.js');
+    if (!registration) {
+      registration = await navigator.serviceWorker.register('/sw.js');
+    }
+    await navigator.serviceWorker.ready;
+
+    // 2. Dynamically fetch the backend's active VAPID public key
+    let vapidKey =
+      process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY ||
+      'BIIMJ0pdAD1EstuhIXmsK3XiQs-yZPvQbFj_EMKfBpvAWz-_K-j3Ru_lXAUxLiLOChuQ1uCiFD4v9PP7oxwkjJ4';
+
+    try {
+      const res = await apiFetch<{ publicKey: string }>('/notifications/vapid-public-key');
+      if (res?.publicKey) {
+        vapidKey = res.publicKey;
+      }
+    } catch {
+      // Use fallback key
+    }
+
+    const applicationServerKey = urlBase64ToUint8Array(vapidKey);
     let subscription = await registration.pushManager.getSubscription();
 
+    // 3. If an existing subscription exists, test sending to server. If server rejects (stale key), unsubscribe & re-create.
+    if (subscription) {
+      try {
+        const subJson = subscription.toJSON();
+        if (subJson.endpoint && subJson.keys) {
+          await apiFetch('/notifications/push-subscription', {
+            method: 'POST',
+            body: JSON.stringify({
+              endpoint: subJson.endpoint,
+              keys: subJson.keys,
+            }),
+          });
+          return;
+        }
+      } catch (err) {
+        console.warn('Existing push subscription rejected, re-subscribing...', err);
+        await subscription.unsubscribe();
+        subscription = null;
+      }
+    }
+
+    // 4. Create fresh subscription with current VAPID key
     if (!subscription) {
-      const applicationServerKey = urlBase64ToUint8Array(vapidKey);
       subscription = await registration.pushManager.subscribe({
         userVisibleOnly: true,
         applicationServerKey,

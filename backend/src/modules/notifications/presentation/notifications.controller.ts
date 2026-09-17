@@ -10,6 +10,7 @@ import {
   Post,
   Query,
 } from '@nestjs/common';
+import { Public } from '../../../core/auth/public.decorator';
 import { CurrentUser } from '../../../core/auth/current-user.decorator';
 import type { Actor } from '../../../shared/application/actor';
 import { NotificationsService } from '../application/notifications.service';
@@ -21,6 +22,12 @@ export class NotificationsController {
     private readonly notificationsService: NotificationsService,
     private readonly webPushService: WebPushService,
   ) {}
+
+  @Public()
+  @Get('vapid-public-key')
+  getVapidPublicKey() {
+    return { publicKey: this.webPushService.getPublicKey() };
+  }
 
   @Get()
   getNotifications(

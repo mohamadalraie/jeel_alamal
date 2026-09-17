@@ -9,10 +9,10 @@ import { pushSubscriptions } from '../infrastructure/persistence/notification.sc
 export class WebPushService implements OnModuleInit {
   private readonly publicKey =
     process.env.VAPID_PUBLIC_KEY ||
-    'BNpLIXaj8bbNnX3nkMgqP3Ma1_v6emPFQRwbkJ0nUHGjWngmlz2efBDvQX1beHwZ58PC5n8PYqL9dRSUlrvczzg';
+    'BIIMJ0pdAD1EstuhIXmsK3XiQs-yZPvQbFj_EMKfBpvAWz-_K-j3Ru_lXAUxLiLOChuQ1uCiFD4v9PP7oxwkjJ4';
   private readonly privateKey =
     process.env.VAPID_PRIVATE_KEY ||
-    'UFWXudPjqzi30PZunJpr8KvFGZ4z8SSSSGO_uvwbYdw';
+    '_MuSgUVUOuYrS4mtSrd-kgOADvcaprQ1GgM6qx775Xg';
   private readonly subject =
     process.env.VAPID_SUBJECT || 'mailto:admin@jeel.almanshiah.io';
 

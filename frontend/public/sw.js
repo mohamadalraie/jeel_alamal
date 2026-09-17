@@ -82,7 +82,7 @@ self.addEventListener('fetch', (event) => {
 
 // Push Event Listener
 self.addEventListener('push', (event) => {
-  let data = { title: 'جيل العمل - إشعار جديد', message: '', link: '/' };
+  let data = { title: 'جيل الأمل - إشعار جديد', message: '', link: '/' };
   if (event.data) {
     try {
       data = event.data.json();
@@ -95,14 +95,16 @@ self.addEventListener('push', (event) => {
     body: data.message || data.body || '',
     icon: '/logo.png',
     badge: '/logo.png',
-    tag: data.id || 'jeel-notification',
+    tag: data.id || `jeel-notif-${Date.now()}`,
+    renotify: true,
+    vibrate: [200, 100, 200],
     data: { url: data.link || data.url || '/' },
     dir: 'rtl',
     lang: 'ar',
   };
 
   event.waitUntil(
-    self.registration.showNotification(data.title || 'جيل العمل', options)
+    self.registration.showNotification(data.title || 'جيل الأمل', options)
   );
 });
 
