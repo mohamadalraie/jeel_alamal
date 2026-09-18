@@ -1,45 +1,59 @@
-import { setRequestLocale, getTranslations } from 'next-intl/server';
-import { BackendStatus } from '@/features/backend-status';
-import { Button } from '@/components/ui/button';
-import { Link } from '@/i18n/navigation';
+'use client';
+
+import { useEffect, useState } from 'react';
+import { useRouter } from '@/i18n/navigation';
+import { useTranslations } from 'next-intl';
 import Image from 'next/image';
 import { Amiri } from 'next/font/google';
+import { Button } from '@/components/ui/button';
+import { Link } from '@/i18n/navigation';
+import { BackendStatus } from '@/features/backend-status';
 
 const amiri = Amiri({
   subsets: ['arabic'],
   weight: ['400', '700'],
 });
 
-export default async function HomePage({
-  params,
-}: {
-  params: Promise<{ locale: string }>;
-}) {
-  const { locale } = await params;
-  setRequestLocale(locale);
-  const t = await getTranslations('home');
+const ACCESS_TOKEN_KEY = 'jeel_access_token';
+
+export default function HomePage() {
+  const router = useRouter();
+  const t = useTranslations('home');
+  const [checking, setChecking] = useState(true);
+
+  useEffect(() => {
+    // If the user has a stored token they're already logged in — skip the landing page
+    const token = localStorage.getItem(ACCESS_TOKEN_KEY);
+    if (token) {
+      router.replace('/dashboard');
+    } else {
+      setChecking(false);
+    }
+  }, [router]);
+
+  // Show a minimal spinner while checking — prevents flash of landing page
+  if (checking) {
+    return (
+      <div className="min-h-dvh w-full bg-gradient-to-b from-[#1d526e] via-[#123b50] to-[#091e2b] flex items-center justify-center">
+        <div className="w-10 h-10 rounded-full border-2 border-white/20 border-t-[#e8c37d] animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="relative min-h-dvh w-full overflow-hidden bg-gradient-to-b from-[#1d526e] via-[#123b50] to-[#091e2b] dark:bg-transparent flex flex-col">
-      {/* Damascene Window Ornament Lattice (زخرفة حديد/خشب الشباك الدمشقي المفرغ) Ultra-Low Contrast */}
+      {/* Damascene Window Ornament Lattice */}
       <div className="absolute inset-0 z-0 opacity-[0.05] pointer-events-none text-white overflow-hidden">
         <svg className="w-full h-full" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
           <defs>
             <pattern id="damascene-lattice-pattern" width="80" height="80" patternUnits="userSpaceOnUse">
-              {/* Outer Damascene Diamond Mesh */}
               <path d="M 40 0 L 80 40 L 40 80 L 0 40 Z" fill="none" stroke="currentColor" strokeWidth="0.7" />
-
-              {/* Central Damascene Floral Rosette Ornament */}
               <circle cx="40" cy="40" r="7" fill="none" stroke="currentColor" strokeWidth="0.6" />
               <circle cx="40" cy="40" r="2.5" fill="none" stroke="currentColor" strokeWidth="0.5" />
-              
-              {/* 4 Petal Swirls branching inside diamond */}
               <path d="M 40 18 Q 33 29 40 33 Q 47 29 40 18 Z" fill="none" stroke="currentColor" strokeWidth="0.5" />
               <path d="M 40 62 Q 33 51 40 47 Q 47 51 40 62 Z" fill="none" stroke="currentColor" strokeWidth="0.5" />
               <path d="M 18 40 Q 29 33 33 40 Q 29 47 18 40 Z" fill="none" stroke="currentColor" strokeWidth="0.5" />
               <path d="M 62 40 Q 51 33 47 40 Q 51 47 62 40 Z" fill="none" stroke="currentColor" strokeWidth="0.5" />
-
-              {/* Corner Intersecting Rosettes for Seamless Repeating Mesh */}
               <path d="M 0 0 L 80 80 M 80 0 L 0 80" stroke="currentColor" strokeWidth="0.4" />
               <circle cx="0" cy="0" r="5" fill="none" stroke="currentColor" strokeWidth="0.6" />
               <circle cx="80" cy="0" r="5" fill="none" stroke="currentColor" strokeWidth="0.6" />
@@ -59,9 +73,9 @@ export default async function HomePage({
         <section className="flex flex-col items-center justify-center w-full">
           <div className="relative flex w-full flex-col items-center justify-center gap-3.5 rounded-[2.5rem] border border-white/10 bg-white/[0.03] p-6 pb-8 backdrop-blur-3xl shadow-[0_30px_60px_-15px_rgba(0,0,0,0.6)] ring-1 ring-white/5">
             {/* Liquid Glass Highlight */}
-            <div className="absolute inset-x-0 top-0 h-24 rounded-t-[2.5rem] bg-gradient-to-b from-white/5 to-transparent pointer-events-none"></div>
+            <div className="absolute inset-x-0 top-0 h-24 rounded-t-[2.5rem] bg-gradient-to-b from-white/5 to-transparent pointer-events-none" />
 
-            {/* Logo container with tight padding & no extra margins */}
+            {/* Logo */}
             <div className="z-10 mt-1 flex items-center justify-center">
               <Image
                 src="/logo.png"
@@ -78,15 +92,19 @@ export default async function HomePage({
               <span className="mt-2 block text-4xl text-[#e8c37d] drop-shadow-lg font-bold">جيل الأمل</span>
             </h1>
 
-            {/* Elegant Quranic Verse in Amiri Font */}
+            {/* Elegant Quranic Verse */}
             <div className="z-10 flex flex-col items-center justify-center my-2 py-3 px-4 border-y border-[#e8c37d]/20 w-full bg-white/[0.02] rounded-xl shadow-sm">
               <p className={`${amiri.className} text-[#e8c37d] text-center text-xl sm:text-2xl font-bold leading-relaxed drop-shadow-[0_2px_4px_rgba(0,0,0,0.4)]`}>
-                ﴿ يَرْفَعِ اللَّهُ الَّذِينَ آمَنُوا مِنكُمْ وَالَّذِينَ أُوتُوا الْعِلْمَ دَرَجَاتٍ ﴾
+                ﴿ يَرْفَعِ اللَّهُ الَّذِينَ آمَنُوا مِنكُمْ وَالَّذِينَ أُوتُوا الْعِلْمَ دَرَجَاتٍ ﴾
               </p>
               <span className="text-white/40 text-[11px] mt-1 font-sans">[المجادلة: 11]</span>
             </div>
 
-            <Button size="lg" className="z-10 h-13 w-full rounded-2xl text-base mt-2 shadow-xl hover:shadow-2xl transition-all border border-white/10 bg-gradient-to-r from-[#e8c37d] to-[#d4b06b] hover:from-[#d4b06b] hover:to-[#c29e5a] text-[#123b50] font-bold" asChild>
+            <Button
+              size="lg"
+              className="z-10 h-13 w-full rounded-2xl text-base mt-2 shadow-xl hover:shadow-2xl transition-all border border-white/10 bg-gradient-to-r from-[#e8c37d] to-[#d4b06b] hover:from-[#d4b06b] hover:to-[#c29e5a] text-[#123b50] font-bold"
+              asChild
+            >
               <Link href="/login">{t('exploreCourses')}</Link>
             </Button>
           </div>
