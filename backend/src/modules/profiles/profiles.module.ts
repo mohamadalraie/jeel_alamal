@@ -3,6 +3,7 @@ import { Module } from '@nestjs/common';
 import { UsersModule } from '../users/users.module';
 import { InstitutesModule } from '../institutes/institutes.module';
 import { ClassesModule } from '../classes/classes.module';
+import { LessonsModule } from '../lessons/lessons.module';
 import { ProfilesController } from './presentation/profiles.controller';
 import { ProfileAccessPolicy } from './application/profile-access.policy';
 import {
@@ -27,6 +28,7 @@ import {
   DeleteStudentNoteUseCase,
 } from './application/use-cases/student-note.use-cases';
 import { DeleteMemberUseCase } from './application/use-cases/delete-member.use-case';
+import { GetTeacherLessonsUseCase } from './application/use-cases/teacher-lessons.use-case';
 import { CERTIFICATION_REPOSITORY } from './domain/teacher-certification.repository';
 import { STUDENT_NOTE_REPOSITORY } from './domain/student-note.repository';
 import { DrizzleCertificationRepository } from './infrastructure/persistence/drizzle-certification.repository';
@@ -38,7 +40,7 @@ import { DrizzleStudentNoteRepository } from './infrastructure/persistence/drizz
  * exported by their owning modules.
  */
 @Module({
-  imports: [UsersModule, InstitutesModule, ClassesModule],
+  imports: [UsersModule, InstitutesModule, ClassesModule, LessonsModule],
   controllers: [ProfilesController],
   providers: [
     ProfileAccessPolicy,
@@ -56,6 +58,7 @@ import { DrizzleStudentNoteRepository } from './infrastructure/persistence/drizz
     UpdateStudentNoteUseCase,
     DeleteStudentNoteUseCase,
     DeleteMemberUseCase,
+    GetTeacherLessonsUseCase,
     {
       provide: CERTIFICATION_REPOSITORY,
       useClass: DrizzleCertificationRepository,

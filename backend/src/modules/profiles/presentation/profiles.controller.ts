@@ -18,6 +18,7 @@ import {
   UpdateTeacherBasicUseCase,
   UpdateTeacherDetailsUseCase,
 } from '../application/use-cases/teacher-profile.use-cases';
+import { GetTeacherLessonsUseCase } from '../application/use-cases/teacher-lessons.use-case';
 import {
   AddCertificationUseCase,
   RemoveCertificationUseCase,
@@ -57,6 +58,7 @@ export class ProfilesController {
     private readonly updateTeacherDetails: UpdateTeacherDetailsUseCase,
     private readonly addCertification: AddCertificationUseCase,
     private readonly removeCertification: RemoveCertificationUseCase,
+    private readonly getTeacherLessons: GetTeacherLessonsUseCase,
     private readonly getStudent: GetStudentProfileUseCase,
     private readonly updateStudent: UpdateStudentUseCase,
     private readonly changeStudentClass: ChangeStudentClassUseCase,
@@ -76,6 +78,15 @@ export class ProfilesController {
     @Param('teacherId', ParseUUIDPipe) teacherId: string,
   ) {
     return this.getTeacher.execute(actor, instituteId, teacherId);
+  }
+
+  @Get('teachers/:teacherId/lessons')
+  teacherLessons(
+    @CurrentUser() actor: Actor,
+    @Param('instituteId', ParseUUIDPipe) instituteId: string,
+    @Param('teacherId', ParseUUIDPipe) teacherId: string,
+  ) {
+    return this.getTeacherLessons.execute(actor, instituteId, teacherId);
   }
 
   @Patch('teachers/:teacherId')

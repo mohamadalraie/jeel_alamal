@@ -16,6 +16,7 @@ import type {
   StudentProfile,
   TeacherDetails,
   TeacherProfile,
+  TeacherLessonsProfile,
   UpdateInstituteInput,
   User,
   Surah,
@@ -387,6 +388,8 @@ export const addCertification = (
   });
 export const removeCertification = (instituteId: string, certId: string) =>
   del<void>(`${inst(instituteId)}/certifications/${certId}`);
+export const getTeacherLessons = (instituteId: string, teacherId: string) =>
+  request<TeacherLessonsProfile>(`${inst(instituteId)}/teachers/${teacherId}/lessons`);
 
 // ── Student profile (spec 002) ──
 export const getStudentProfile = (instituteId: string, studentId: string) =>

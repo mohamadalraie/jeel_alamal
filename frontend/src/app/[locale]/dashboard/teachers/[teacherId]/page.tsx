@@ -2,15 +2,25 @@
 
 import { use, useCallback, useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
-import type { TeacherProfile } from '@/lib/types';
-import { getTeacherProfile, updateTeacherBasic } from '@/lib/api';
+import type { TeacherProfile, TeacherLessonsProfile } from '@/lib/types';
+import {
+  getTeacherProfile,
+  getTeacherLessons,
+  updateTeacherBasic,
+} from '@/lib/api';
 import { useRouter } from '@/i18n/navigation';
 import { useInstitute } from '@/features/layout/institute-context';
 import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { BasicInfoCard } from '@/features/profiles/basic-info-card';
 import { TeacherExtendedCard } from '@/features/profiles/teacher-extended-card';
 import { ProfileHeader } from '@/features/profiles/profile-header';
+import { TeacherLessonsCard } from '@/features/profiles/teacher-lessons-card';
 
 export default function TeacherProfilePage({
   params,
@@ -23,20 +33,31 @@ export default function TeacherProfilePage({
   const router = useRouter();
   const { selected, user } = useInstitute();
   const [profile, setProfile] = useState<TeacherProfile | null>(null);
+  const [lessonsData, setLessonsData] = useState<TeacherLessonsProfile | null>(null);
   const [notFound, setNotFound] = useState(false);
 
-  const canManage = user.role === 'super_admin' || user.role === 'institute_manager';
+  const canManage =
+    user.role === 'super_admin' || user.role === 'institute_manager';
 
   const load = useCallback(() => {
     if (!selected) return;
     getTeacherProfile(selected.id, teacherId)
       .then(setProfile)
       .catch(() => setNotFound(true));
+    // Load lessons & stats (accessible to teacher themselves + managers)
+    getTeacherLessons(selected.id, teacherId)
+      .then(setLessonsData)
+      .catch(() => {
+        /* silently skip if not authorised */
+      });
   }, [selected, teacherId]);
+
   useEffect(load, [load]);
 
   if (!selected) {
-    return <p className="text-muted-foreground">{t('selectInstituteFirst')}</p>;
+    return (
+      <p className="text-muted-foreground">{t('selectInstituteFirst')}</p>
+    );
   }
   if (notFound) {
     router.replace('/dashboard/teachers');
@@ -64,7 +85,7 @@ export default function TeacherProfilePage({
         }}
       />
 
-      {/* Extended details are returned by the API only for manager/super_admin. */}
+      {/* Extended details — visible to manager/super_admin only */}
       {teacher.teacherDetails ? (
         <TeacherExtendedCard
           instituteId={selected.id}
@@ -74,16 +95,21 @@ export default function TeacherProfilePage({
           onChanged={load}
         />
       ) : (
-        <p className="text-muted-foreground text-sm">{t('detailsRestricted')}</p>
+        <p className="text-muted-foreground text-sm">
+          {t('detailsRestricted')}
+        </p>
       )}
 
+      {/* Assigned classes */}
       <Card>
         <CardHeader>
           <CardTitle>{t('teacherClasses')}</CardTitle>
         </CardHeader>
         <CardContent>
           {classes.length === 0 ? (
-            <p className="text-muted-foreground text-sm">{t('notInAnyClass')}</p>
+            <p className="text-muted-foreground text-sm">
+              {t('notInAnyClass')}
+            </p>
           ) : (
             <div className="flex flex-wrap gap-2">
               {classes.map((c) => (
@@ -95,6 +121,18 @@ export default function TeacherProfilePage({
           )}
         </CardContent>
       </Card>
+
+      {/* Lessons stats + history — shown when data is available */}
+      {lessonsData && (
+        <Card>
+          <CardHeader>
+            <CardTitle>إحصائيات الدروس وسجلها</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <TeacherLessonsCard data={lessonsData} />
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }

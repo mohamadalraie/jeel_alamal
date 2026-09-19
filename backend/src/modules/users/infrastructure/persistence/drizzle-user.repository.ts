@@ -88,6 +88,24 @@ export class DrizzleUserRepository implements UserRepository {
     return Array.from(new Set(all));
   }
 
+  async isInInstitute(userId: string, instituteId: string): Promise<boolean> {
+    // Check direct instituteId column
+    const user = await this.findById(userId);
+    if (user?.instituteId === instituteId) return true;
+    // Check user_institutes join table (multi-institute membership)
+    const [row] = await this.db
+      .select({ userId: userInstitutes.userId })
+      .from(userInstitutes)
+      .where(
+        and(
+          eq(userInstitutes.userId, userId),
+          eq(userInstitutes.instituteId, instituteId),
+        ),
+      )
+      .limit(1);
+    return !!row;
+  }
+
   async findByInstitute(instituteId: string, role?: UserRole): Promise<User[]> {
     const memberRows = await this.db
       .select({ userId: userInstitutes.userId })

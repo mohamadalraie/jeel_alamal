@@ -26,4 +26,6 @@ export interface UserRepository {
   addUserToInstitute(userId: string, instituteId: string): Promise<void>;
   /** Get all institute IDs that a user belongs to */
   findInstituteIdsByUser(userId: string): Promise<string[]>;
+  /** Check whether a user is a member of a given institute (direct or via user_institutes) */
+  isInInstitute(userId: string, instituteId: string): Promise<boolean>;
 }

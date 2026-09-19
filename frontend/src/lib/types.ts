@@ -62,6 +62,20 @@ export interface TeacherProfile {
   certifications: Certification[];
 }
 
+export interface TeacherLessonStats {
+  totalLessons: number;
+  finishedLessons: number;
+  pendingLessons: number;
+  notGivenLessons: number;
+  completionRate: number;
+  averageDurationMinutes: number | null;
+}
+
+export interface TeacherLessonsProfile {
+  stats: TeacherLessonStats;
+  lessons: ProgramEntry[];
+}
+
 export interface StudentProfile {
   student: User;
   currentClass: { id: string; name: string } | null;

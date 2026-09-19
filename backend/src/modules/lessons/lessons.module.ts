@@ -69,5 +69,7 @@ import { DrizzleLessonSettingsRepository } from './infrastructure/persistence/dr
       useClass: DrizzleLessonSettingsRepository,
     },
   ],
+  exports: [LESSON_REPOSITORY],
 })
 export class LessonsModule {}
+

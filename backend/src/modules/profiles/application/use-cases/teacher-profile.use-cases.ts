@@ -60,11 +60,12 @@ export class GetTeacherProfileUseCase {
 
   private async loadTeacher(instituteId: string, teacherId: string) {
     const teacher = await this.users.findById(teacherId);
-    if (
-      !teacher ||
-      teacher.role !== UserRole.Teacher ||
-      teacher.instituteId !== instituteId
-    ) {
+    if (!teacher || teacher.role !== UserRole.Teacher) {
+      throw new NotFoundError('Teacher not found in this institute');
+    }
+    // Support multi-institute: teacher may be linked via user_institutes
+    const inInstitute = await this.users.isInInstitute(teacherId, instituteId);
+    if (!inInstitute) {
       throw new NotFoundError('Teacher not found in this institute');
     }
     return teacher;
@@ -87,13 +88,11 @@ export class UpdateTeacherBasicUseCase {
   ): Promise<void> {
     await this.policy.assertManagesInstitute(actor, instituteId);
     const teacher = await this.users.findById(teacherId);
-    if (
-      !teacher ||
-      teacher.role !== UserRole.Teacher ||
-      teacher.instituteId !== instituteId
-    ) {
+    if (!teacher || teacher.role !== UserRole.Teacher) {
       throw new NotFoundError('Teacher not found in this institute');
     }
+    const inInstitute = await this.users.isInInstitute(teacherId, instituteId);
+    if (!inInstitute) throw new NotFoundError('Teacher not found in this institute');
     teacher.editBasicInfo({
       firstName: dto.firstName,
       lastName: dto.lastName,
@@ -120,13 +119,11 @@ export class UpdateTeacherDetailsUseCase {
   ): Promise<void> {
     await this.policy.assertManagesInstitute(actor, instituteId);
     const teacher = await this.users.findById(teacherId);
-    if (
-      !teacher ||
-      teacher.role !== UserRole.Teacher ||
-      teacher.instituteId !== instituteId
-    ) {
+    if (!teacher || teacher.role !== UserRole.Teacher) {
       throw new NotFoundError('Teacher not found in this institute');
     }
+    const inInstitute = await this.users.isInInstitute(teacherId, instituteId);
+    if (!inInstitute) throw new NotFoundError('Teacher not found in this institute');
     teacher.editTeacherDetails({
       studyDegree: dto.studyDegree ?? null,
       studyField: dto.studyField ?? null,
