@@ -116,7 +116,13 @@ export class WebPushService implements OnModuleInit {
           },
         };
         try {
-          await webpush.sendNotification(pushSubscription, jsonPayload);
+          await webpush.sendNotification(pushSubscription, jsonPayload, {
+            urgency: 'high',
+            TTL: 86400, // 24 hours
+            headers: {
+              Urgency: 'high',
+            },
+          });
           this.logger.log(`✅ Push sent to ${sub.endpoint.slice(-20)}`);
         } catch (err: any) {
           this.logger.error(

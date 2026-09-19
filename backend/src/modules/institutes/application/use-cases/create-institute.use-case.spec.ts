@@ -53,6 +53,9 @@ class InMemoryUserRepository implements UserRepository {
   findInstituteIdsByUser() {
     return Promise.resolve([]);
   }
+  isInInstitute() {
+    return Promise.resolve(false);
+  }
 }
 
 const fakeHasher: PasswordHasher = {

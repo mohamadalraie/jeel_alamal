@@ -25,9 +25,21 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     getMe()
       .then(({ user }) => {
         setUser(user);
+        // Always attempt to register/refresh push subscription when app opens.
         registerPushSubscription();
       })
       .catch(() => router.replace('/login'));
+
+    // Re-verify push subscription whenever user switches back to the app tab
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        registerPushSubscription();
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
   }, [router]);
 
   if (!user) {
