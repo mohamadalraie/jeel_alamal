@@ -55,11 +55,11 @@ self.addEventListener('fetch', (event) => {
           networkResponse.status === 200 &&
           networkResponse.type === 'basic' &&
           (url.pathname.endsWith('.png') ||
-           url.pathname.endsWith('.jpg') ||
-           url.pathname.endsWith('.svg') ||
-           url.pathname.endsWith('.ico') ||
-           url.pathname.endsWith('.css') ||
-           url.pathname.endsWith('.js'))
+            url.pathname.endsWith('.jpg') ||
+            url.pathname.endsWith('.svg') ||
+            url.pathname.endsWith('.ico') ||
+            url.pathname.endsWith('.css') ||
+            url.pathname.endsWith('.js'))
         ) {
           const responseToCache = networkResponse.clone();
           caches.open(CACHE_NAME).then((cache) => {
@@ -82,7 +82,7 @@ self.addEventListener('fetch', (event) => {
 
 // Push Event Listener
 self.addEventListener('push', (event) => {
-  let data = { title: 'جيل الأمل - إشعار جديد', message: '', link: '/' };
+  let data = { title: 'جيل العمل - إشعار جديد', message: '', link: '/' };
   if (event.data) {
     try {
       data = event.data.json();
@@ -104,7 +104,7 @@ self.addEventListener('push', (event) => {
   };
 
   event.waitUntil(
-    self.registration.showNotification(data.title || 'جيل الأمل', options)
+    self.registration.showNotification(data.title || 'جيل العمل', options)
   );
 });
 

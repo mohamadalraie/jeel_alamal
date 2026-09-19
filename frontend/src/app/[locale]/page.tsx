@@ -89,7 +89,7 @@ export default function HomePage() {
 
             <h1 className="z-10 text-white text-2xl font-extrabold drop-shadow-md leading-snug text-center">
               مرحبا بك في دورة
-              <span className="mt-2 block text-4xl text-[#e8c37d] drop-shadow-lg font-bold">جيل الأمل</span>
+              <span className="mt-2 block text-4xl text-[#e8c37d] drop-shadow-lg font-bold">جيل العمل</span>
             </h1>
 
             {/* Elegant Quranic Verse */}

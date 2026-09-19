@@ -46,7 +46,7 @@ export async function generateMetadata({
     appleWebApp: {
       capable: true,
       statusBarStyle: 'black-translucent',
-      title: 'جيل الأمل',
+      title: 'جيل العمل',
       startupImage: ['/hero-bg.png'],
     },
     icons: {

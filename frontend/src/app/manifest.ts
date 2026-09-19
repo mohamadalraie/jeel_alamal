@@ -2,9 +2,9 @@ import type { MetadataRoute } from 'next';
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: 'جيل الأمل - المنصّة التعليمية',
-    short_name: 'جيل الأمل',
-    description: 'منصة جيل الأمل لإدارة المعاهد والتعليم القرآني والتربوي',
+    name: 'جيل العمل - المنصّة التعليمية',
+    short_name: 'جيل العمل',
+    description: 'منصة جيل العمل لإدارة المعاهد والتعليم القرآني والتربوي',
     start_url: '/?source=pwa',
     scope: '/',
     id: 'jeel-alamal-pwa',
@@ -51,14 +51,14 @@ export default function manifest(): MetadataRoute.Manifest {
         sizes: '1280x720',
         type: 'image/png',
         form_factor: 'wide',
-        label: 'لوحة تحكم جيل الأمل',
+        label: 'لوحة تحكم جيل العمل',
       },
       {
         src: '/icons/icon-512.png',
         sizes: '512x512',
         type: 'image/png',
         form_factor: 'narrow',
-        label: 'تطبيق جيل الأمل للجوال',
+        label: 'تطبيق جيل العمل للجوال',
       },
     ],
   };
