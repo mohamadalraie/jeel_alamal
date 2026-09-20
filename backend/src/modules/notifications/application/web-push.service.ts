@@ -10,10 +10,10 @@ export class WebPushService implements OnModuleInit {
   private readonly logger = new Logger('WebPush');
   private readonly publicKey =
     process.env.VAPID_PUBLIC_KEY ||
-    'BIIMJ0pdAD1EstuhIXmsK3XiQs-yZPvQbFj_EMKfBpvAWz-_K-j3Ru_lXAUxLiLOChuQ1uCiFD4v9PP7oxwkjJ4';
+    'BNpLIXaj8bbNnX3nkMgqP3Ma1_v6emPFQRwbkJ0nUHGjWngmlz2efBDvQX1beHwZ58PC5n8PYqL9dRSUlrvczzg';
   private readonly privateKey =
     process.env.VAPID_PRIVATE_KEY ||
-    '_MuSgUVUOuYrS4mtSrd-kgOADvcaprQ1GgM6qx775Xg';
+    'UFWXudPjqzi30PZunJpr8KvFGZ4z8SSSSGO_uvwbYdw';
   private readonly subject =
     process.env.VAPID_SUBJECT || 'mailto:admin@jeel.almanshiah.io';
 

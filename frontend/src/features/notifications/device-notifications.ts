@@ -55,7 +55,7 @@ function urlBase64ToUint8Array(base64String: string): Uint8Array {
 async function fetchVapidKey(): Promise<string> {
   const fallback =
     process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY ||
-    'BIIMJ0pdAD1EstuhIXmsK3XiQs-yZPvQbFj_EMKfBpvAWz-_K-j3Ru_lXAUxLiLOChuQ1uCiFD4v9PP7oxwkjJ4';
+    'BNpLIXaj8bbNnX3nkMgqP3Ma1_v6emPFQRwbkJ0nUHGjWngmlz2efBDvQX1beHwZ58PC5n8PYqL9dRSUlrvczzg';
   try {
     const res = await apiFetch<{ publicKey: string }>('/notifications/vapid-public-key');
     return res?.publicKey || fallback;
@@ -71,18 +71,12 @@ async function fetchVapidKey(): Promise<string> {
 async function ensureServiceWorker(): Promise<ServiceWorkerRegistration | null> {
   if (!('serviceWorker' in navigator)) return null;
   try {
-    // Simply register or update the service worker directly.
-    // This is robust and resolves immediately even if installing in the background.
     const reg = await navigator.serviceWorker.register('/sw.js', { scope: '/' });
-    
-    // Attempt to force an update check if we already have it
     try {
       await reg.update();
     } catch {
       // ignore update errors (e.g. offline)
     }
-
-    // Return the ready promise which guarantees it's active for this scope
     return await navigator.serviceWorker.ready;
   } catch (err) {
     console.warn('[Push] ServiceWorker setup failed:', err);
@@ -94,18 +88,18 @@ async function ensureServiceWorker(): Promise<ServiceWorkerRegistration | null> 
  * Register background Web Push subscription with NestJS backend.
  * Safe to call multiple times — will re-subscribe only when needed.
  */
-export async function registerPushSubscription(): Promise<void> {
+export async function registerPushSubscription(forceResubscribe = false): Promise<boolean> {
   if (
     typeof window === 'undefined' ||
     !('serviceWorker' in navigator) ||
     !('PushManager' in window)
   ) {
     console.info('[Push] PushManager not available on this browser/OS');
-    return;
+    return false;
   }
   if (Notification.permission !== 'granted') {
     console.info('[Push] Notification permission not granted yet');
-    return;
+    return false;
   }
 
   try {
@@ -113,7 +107,7 @@ export async function registerPushSubscription(): Promise<void> {
     const reg = await ensureServiceWorker();
     if (!reg) {
       console.warn('[Push] Could not get a ready ServiceWorker');
-      return;
+      return false;
     }
 
     // Step 2: Get VAPID public key from backend
@@ -123,20 +117,41 @@ export async function registerPushSubscription(): Promise<void> {
     // Step 3: Check existing subscription
     let subscription = await reg.pushManager.getSubscription();
 
+    if (subscription && forceResubscribe) {
+      console.info('[Push] Forcing resubscription...');
+      try {
+        await subscription.unsubscribe();
+      } catch {}
+      subscription = null;
+    }
+
     // Step 4: If subscription exists, validate it against current VAPID key
     if (subscription) {
-      // Check if the key matches (subscription.options.applicationServerKey)
-      const existingKey = subscription.options?.applicationServerKey;
-      if (existingKey) {
-        const existingKeyArray = new Uint8Array(existingKey as ArrayBuffer);
-        const matches =
-          existingKeyArray.length === applicationServerKey.length &&
-          existingKeyArray.every((v, i) => v === applicationServerKey[i]);
-        if (!matches) {
-          console.info('[Push] VAPID key mismatch, re-subscribing...');
-          await subscription.unsubscribe();
-          subscription = null;
+      try {
+        const existingKeyRaw = subscription.options?.applicationServerKey;
+        if (existingKeyRaw) {
+          const existingKeyArray = new Uint8Array(
+            existingKeyRaw instanceof ArrayBuffer
+              ? existingKeyRaw
+              : (existingKeyRaw as ArrayBufferView).buffer
+          );
+          const matches =
+            existingKeyArray.length === applicationServerKey.length &&
+            existingKeyArray.every((v, i) => v === applicationServerKey[i]);
+          if (!matches) {
+            console.info('[Push] VAPID key mismatch detected, unsubscribing...');
+            await subscription.unsubscribe();
+            subscription = null;
+          }
         }
+      } catch (err) {
+        console.warn('[Push] Key validation error, renewing subscription:', err);
+        if (subscription) {
+          try {
+            await subscription.unsubscribe();
+          } catch {}
+        }
+        subscription = null;
       }
     }
 
@@ -162,9 +177,26 @@ export async function registerPushSubscription(): Promise<void> {
       });
       localStorage.setItem(PUSH_REGISTERED_KEY, new Date().toISOString());
       console.info('[Push] Subscription saved to backend ✅');
+      return true;
     }
   } catch (err) {
     console.error('[Push] registerPushSubscription failed:', err);
+  }
+  return false;
+}
+
+/**
+ * Send a test background Web Push notification to the current user.
+ */
+export async function sendTestPushNotification(): Promise<boolean> {
+  try {
+    const ok = await registerPushSubscription(true); // ensure fresh subscription
+    if (!ok) return false;
+    await apiFetch('/notifications/test', { method: 'POST' });
+    return true;
+  } catch (err) {
+    console.error('[Push] sendTestPushNotification failed:', err);
+    return false;
   }
 }
 

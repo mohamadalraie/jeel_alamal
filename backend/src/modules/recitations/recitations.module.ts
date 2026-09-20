@@ -13,12 +13,14 @@ import {
 import { RECITATION_REPOSITORY } from './domain/recitation.repository';
 import { DrizzleRecitationRepository } from './infrastructure/persistence/drizzle-recitation.repository';
 
+import { NotificationsModule } from '../notifications/notifications.module';
+
 /**
  * Quran recitation (تسميع) — spec 005. Reuses USER_REPOSITORY, CLASS_REPOSITORY,
  * and the InstituteAccessPolicy exported by their modules.
  */
 @Module({
-  imports: [UsersModule, ClassesModule, InstitutesModule, DinarsModule],
+  imports: [UsersModule, ClassesModule, InstitutesModule, DinarsModule, NotificationsModule],
   controllers: [RecitationsController],
   providers: [
     ListSurahsUseCase,

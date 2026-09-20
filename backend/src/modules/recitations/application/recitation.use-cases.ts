@@ -62,6 +62,8 @@ export class ListSurahsUseCase {
   }
 }
 
+import { NotificationsService } from '../../notifications/application/notifications.service';
+
 /** Log a recitation for a student (institute staff). */
 @Injectable()
 export class AddRecitationUseCase {
@@ -71,6 +73,7 @@ export class AddRecitationUseCase {
     @Inject(RECITATION_REPOSITORY)
     private readonly recitations: RecitationRepository,
     private readonly applyDinar: ApplyRecitationDinarUseCase,
+    private readonly notifications: NotificationsService,
   ) {}
 
   async execute(
@@ -103,6 +106,17 @@ export class AddRecitationUseCase {
       rating: dto.rating,
       recitedBy: actor.userId,
     });
+
+    // Send push notification to student
+    const surahObj = getSurah(dto.surahNumber);
+    const surahName = surahObj ? surahObj.name : `سورة رقم ${dto.surahNumber}`;
+    this.notifications.sendToUser({
+      userId: studentId,
+      title: '📖 تسميع جديد',
+      message: `تم تسجيل تسميع ${surahName} (من الآية ${dto.fromAyah} إلى ${dto.toAyah})`,
+      link: '/recitations',
+      type: 'recitation',
+    }).catch(() => {});
   }
 }
 

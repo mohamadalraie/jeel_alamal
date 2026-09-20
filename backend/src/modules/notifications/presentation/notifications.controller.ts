@@ -70,4 +70,16 @@ export class NotificationsController {
   ) {
     await this.webPushService.saveSubscription(actor.userId, body);
   }
+
+  @Post('test')
+  async sendTestNotification(@CurrentUser() actor: Actor) {
+    await this.notificationsService.sendToUser({
+      userId: actor.userId,
+      title: 'جيل العمل — إشعار تجريبي 📲',
+      message: 'وصلك هذا الإشعار في الخلفية بنجاح! نظام الإشعارات يعمل بكفاءة.',
+      link: '/notifications',
+      type: 'test',
+    });
+    return { success: true, message: 'Test notification queued' };
+  }
 }
