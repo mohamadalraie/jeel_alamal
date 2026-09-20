@@ -27,6 +27,7 @@ import { AnnouncementsModule } from './modules/announcements/announcements.modul
     // Global, validated configuration sourced from .env
     ConfigModule.forRoot({
       isGlobal: true,
+      envFilePath: ['.env', '../.env'],
       validate: validateEnv,
     }),
 
