@@ -71,32 +71,19 @@ async function fetchVapidKey(): Promise<string> {
 async function ensureServiceWorker(): Promise<ServiceWorkerRegistration | null> {
   if (!('serviceWorker' in navigator)) return null;
   try {
-    // Register if not yet registered
-    let reg = await navigator.serviceWorker.getRegistration('/');
-    if (!reg) {
-      reg = await navigator.serviceWorker.register('/sw.js', { scope: '/' });
+    // Simply register or update the service worker directly.
+    // This is robust and resolves immediately even if installing in the background.
+    const reg = await navigator.serviceWorker.register('/sw.js', { scope: '/' });
+    
+    // Attempt to force an update check if we already have it
+    try {
+      await reg.update();
+    } catch {
+      // ignore update errors (e.g. offline)
     }
-    // Wait until the SW is active (not just installing)
-    if (reg.installing || reg.waiting) {
-      await new Promise<void>((resolve) => {
-        const sw = reg!.installing || reg!.waiting;
-        if (!sw) { resolve(); return; }
-        sw.addEventListener('statechange', function handler() {
-          if (sw.state === 'activated') {
-            sw.removeEventListener('statechange', handler);
-            resolve();
-          }
-        });
-        // Timeout after 5s to not block forever
-        setTimeout(resolve, 5000);
-      });
-    }
-    // Final wait for ready
-    const ready = await Promise.race([
-      navigator.serviceWorker.ready,
-      new Promise<null>((resolve) => setTimeout(() => resolve(null), 5000)),
-    ]);
-    return ready as ServiceWorkerRegistration | null;
+
+    // Return the ready promise which guarantees it's active for this scope
+    return await navigator.serviceWorker.ready;
   } catch (err) {
     console.warn('[Push] ServiceWorker setup failed:', err);
     return null;

@@ -110,10 +110,13 @@ self.addEventListener('push', (event) => {
     }
   }
 
+  // Use absolute URLs for images. Relative URLs can cause Android/Windows to drop the notification silently.
+  const origin = self.location.origin;
+
   const options = {
     body: data.message || '',
-    icon: '/logo.png',
-    badge: '/logo.png',
+    icon: `${origin}/logo.png`,
+    badge: `${origin}/logo.png`,
     tag: data.id,
     renotify: true,
     vibrate: [200, 100, 200],
@@ -123,10 +126,12 @@ self.addEventListener('push', (event) => {
     requireInteraction: false,
   };
 
-  console.info('[SW] Showing notification:', data.title);
+  console.info('[SW] Showing notification:', data.title, options);
 
   event.waitUntil(
-    self.registration.showNotification(data.title, options)
+    self.registration.showNotification(data.title, options).catch((err) => {
+      console.error('[SW] Failed to show notification:', err);
+    })
   );
 });
 

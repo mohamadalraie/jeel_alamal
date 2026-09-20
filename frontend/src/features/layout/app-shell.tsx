@@ -25,6 +25,14 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     getMe()
       .then(({ user }) => {
         setUser(user);
+        
+        // Ensure service worker is registered and updating regardless of push permission
+        if ('serviceWorker' in navigator) {
+          navigator.serviceWorker.register('/sw.js', { scope: '/' }).then(reg => {
+            reg.update().catch(() => {});
+          }).catch(console.warn);
+        }
+
         // Always attempt to register/refresh push subscription when app opens.
         registerPushSubscription();
       })
