@@ -7,6 +7,7 @@ import {
   Param,
   ParseUUIDPipe,
   Post,
+  Query,
 } from '@nestjs/common';
 import { CurrentUser } from '../../../core/auth/current-user.decorator';
 import type { Actor } from '../../../shared/application/actor';
@@ -50,8 +51,9 @@ export class AttendanceController {
     @CurrentUser() actor: Actor,
     @Param('classId', ParseUUIDPipe) classId: string,
     @Param('date') date: string,
+    @Query('trackType') trackType?: 'regular' | 'intensive',
   ) {
-    return this.getSession.execute(actor, classId, date);
+    return this.getSession.execute(actor, classId, date, trackType ?? 'regular');
   }
 
   @Get('students/:studentId/attendance')

@@ -20,6 +20,7 @@ const toSession = (r: AttendanceSessionRow): AttendanceSession =>
     instituteId: r.instituteId,
     classId: r.classId,
     date: r.date,
+    trackType: (r.trackType as 'regular' | 'intensive') ?? 'regular',
     takenBy: r.takenBy,
     createdAt: r.createdAt,
   });
@@ -33,13 +34,14 @@ export class DrizzleAttendanceRepository implements AttendanceRepository {
     records: AttendanceRecord[],
   ): Promise<void> {
     await this.db.transaction(async (tx) => {
-      // Replace any existing session for this class+date (records cascade away).
+      // Replace any existing session for this class+date+trackType (records cascade away).
       await tx
         .delete(attendanceSessions)
         .where(
           and(
             eq(attendanceSessions.classId, session.classId),
             eq(attendanceSessions.date, session.date),
+            eq(attendanceSessions.trackType, session.trackType),
           ),
         );
       await tx.insert(attendanceSessions).values({
@@ -47,6 +49,7 @@ export class DrizzleAttendanceRepository implements AttendanceRepository {
         instituteId: session.instituteId,
         classId: session.classId,
         date: session.date,
+        trackType: session.trackType,
         takenBy: session.takenBy,
         createdAt: session.createdAt,
       });
@@ -66,6 +69,7 @@ export class DrizzleAttendanceRepository implements AttendanceRepository {
   async findByClassAndDate(
     classId: string,
     date: string,
+    trackType: 'regular' | 'intensive' = 'regular',
   ): Promise<{
     session: AttendanceSession;
     records: AttendanceRecord[];
@@ -77,6 +81,7 @@ export class DrizzleAttendanceRepository implements AttendanceRepository {
         and(
           eq(attendanceSessions.classId, classId),
           eq(attendanceSessions.date, date),
+          eq(attendanceSessions.trackType, trackType),
         ),
       );
     if (!sessionRow) return null;
@@ -110,6 +115,7 @@ export class DrizzleAttendanceRepository implements AttendanceRepository {
       .select({
         sessionId: attendanceRecords.sessionId,
         date: attendanceSessions.date,
+        trackType: attendanceSessions.trackType,
         studentId: attendanceRecords.studentId,
         status: attendanceRecords.status,
       })
@@ -122,6 +128,7 @@ export class DrizzleAttendanceRepository implements AttendanceRepository {
     return rows.map((r) => ({
       sessionId: r.sessionId,
       date: r.date,
+      trackType: (r.trackType as 'regular' | 'intensive') ?? 'regular',
       studentId: r.studentId,
       status: r.status as AttendanceStatus,
     }));
@@ -134,6 +141,7 @@ export class DrizzleAttendanceRepository implements AttendanceRepository {
       .select({
         sessionId: attendanceRecords.sessionId,
         date: attendanceSessions.date,
+        trackType: attendanceSessions.trackType,
         studentId: attendanceRecords.studentId,
         status: attendanceRecords.status,
       })
@@ -146,6 +154,7 @@ export class DrizzleAttendanceRepository implements AttendanceRepository {
     return rows.map((r) => ({
       sessionId: r.sessionId,
       date: r.date,
+      trackType: (r.trackType as 'regular' | 'intensive') ?? 'regular',
       studentId: r.studentId,
       status: r.status as AttendanceStatus,
     }));

@@ -90,11 +90,14 @@ export interface Anchor {
   value: string; // 'HH:MM' when time, prayer key when prayer
 }
 
+export type TrackType = 'regular' | 'intensive';
+
 export interface ScheduleSlot {
   id?: string;
   dayOfWeek: Weekday;
   start: Anchor;
   end: Anchor | null;
+  trackType?: TrackType;
 }
 
 export interface ClassProfile {
@@ -107,7 +110,12 @@ export interface ClassProfile {
   };
   schedule: (ScheduleSlot & { id: string })[];
   teachers: { id: string; name: string; isSupervisor: boolean }[];
-  students: { id: string; name: string; schoolGrade: string | null }[];
+  students: {
+    id: string;
+    name: string;
+    schoolGrade: string | null;
+    isIntensive?: boolean;
+  }[];
 }
 
 export interface InstituteStats {
@@ -312,6 +320,7 @@ export interface StudentAttendanceStats {
 
 export interface AttendanceSessionSummary {
   date: string;
+  trackType?: TrackType;
   counts: AttendanceCounts;
   total: number;
 }
@@ -327,6 +336,7 @@ export interface ClassAttendance {
 
 export interface StudentAttendanceItem {
   date: string;
+  trackType?: TrackType;
   status: AttendanceStatus;
 }
 
@@ -339,11 +349,13 @@ export interface StudentAttendance {
 
 export interface SessionDetail {
   date: string;
+  trackType?: TrackType;
   entries: { studentId: string; status: AttendanceStatus }[];
 }
 
 export interface TakeAttendanceInput {
   date: string;
+  trackType?: TrackType;
   entries: { studentId: string; status: AttendanceStatus }[];
 }
 

@@ -48,14 +48,23 @@ export class TakeAttendanceUseCase {
     if (!klass) throw new NotFoundError('Class not found');
     await this.policy.assertStaffOf(actor, klass.instituteId);
 
+    const trackType = dto.trackType ?? 'regular';
     const membership = await this.classes.getMembership(classId);
-    const enrolled = new Set(membership.studentIds);
+    const validStudentIds =
+      trackType === 'intensive'
+        ? membership.intensiveStudentIds
+        : membership.studentIds;
+    const enrolled = new Set(validStudentIds);
 
-    // Every entry must be for a currently-enrolled student; reject duplicates.
+    // Every entry must be for a currently-enrolled student for this track; reject duplicates.
     const seen = new Set<string>();
     for (const e of dto.entries) {
       if (!enrolled.has(e.studentId)) {
-        throw new BusinessRuleError('A student is not enrolled in this class');
+        throw new BusinessRuleError(
+          trackType === 'intensive'
+            ? 'A student is not enrolled in the intensive track of this class'
+            : 'A student is not enrolled in this class',
+        );
       }
       if (seen.has(e.studentId)) {
         throw new BusinessRuleError('Duplicate student in attendance entries');
@@ -67,6 +76,7 @@ export class TakeAttendanceUseCase {
       instituteId: klass.instituteId,
       classId,
       date: dto.date,
+      trackType,
       takenBy: actor.userId,
     });
     const records = dto.entries.map((e) =>
@@ -148,15 +158,21 @@ export class GetSessionUseCase {
     actor: Actor,
     classId: string,
     date: string,
+    trackType: 'regular' | 'intensive' = 'regular',
   ): Promise<SessionDetailResult | null> {
     const klass = await this.classes.findById(classId);
     if (!klass) throw new NotFoundError('Class not found');
     await this.policy.assertStaffOf(actor, klass.instituteId);
 
-    const found = await this.attendance.findByClassAndDate(classId, date);
+    const found = await this.attendance.findByClassAndDate(
+      classId,
+      date,
+      trackType,
+    );
     if (!found) return null;
     return {
       date: found.session.date,
+      trackType: found.session.trackType,
       entries: found.records.map((r) => ({
         studentId: r.studentId,
         status: r.status,

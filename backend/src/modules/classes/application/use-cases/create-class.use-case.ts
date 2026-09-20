@@ -30,6 +30,7 @@ export class CreateClassUseCase {
       teacherIds: [],
       supervisorId: null,
       studentIds: [],
+      intensiveStudentIds: [],
     });
   }
 }

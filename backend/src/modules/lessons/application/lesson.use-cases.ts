@@ -77,6 +77,7 @@ abstract class LessonBase {
           lessonId,
           classId: a.classId,
           teacherId: a.teacherId,
+          targetTrack: a.targetTrack,
         }),
       );
     }

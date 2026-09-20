@@ -50,6 +50,7 @@ export class GetClassProfileUseCase {
     const ids = [...membership.teacherIds, ...membership.studentIds];
     const people = await this.users.findManyByIds(ids);
     const byId = new Map(people.map((u) => [u.id, u]));
+    const intensiveSet = new Set(membership.intensiveStudentIds);
 
     return {
       class: {
@@ -64,6 +65,7 @@ export class GetClassProfileUseCase {
         dayOfWeek: s.dayOfWeek,
         start: { kind: s.start.kind, value: s.start.value },
         end: s.end ? { kind: s.end.kind, value: s.end.value } : null,
+        trackType: s.trackType ?? 'regular',
       })),
       teachers: membership.teacherIds.map((id) => ({
         id,
@@ -74,6 +76,7 @@ export class GetClassProfileUseCase {
         id,
         name: byId.get(id)?.fullName ?? '—',
         schoolGrade: byId.get(id)?.schoolGrade ?? null,
+        isIntensive: intensiveSet.has(id),
       })),
     };
   }
@@ -152,6 +155,7 @@ export class SetClassScheduleUseCase {
       dayOfWeek: string;
       start: { kind: string; value: string };
       end?: { kind: string; value: string } | null;
+      trackType?: 'regular' | 'intensive';
     }[],
   ): Promise<void> {
     const klass = await this.classes.findById(classId);
@@ -164,6 +168,7 @@ export class SetClassScheduleUseCase {
       end: s.end
         ? { kind: s.end.kind as AnchorKind, value: s.end.value }
         : null,
+      trackType: s.trackType ?? 'regular',
     }));
     typed.forEach(assertValidSlot);
     await this.classes.setSchedule(classId, typed);

@@ -33,6 +33,7 @@ export class ClassResponseDto {
   teacherIds: string[];
   supervisorId: string | null;
   studentIds: string[];
+  intensiveStudentIds: string[];
 
   static fromDomain(
     klass: Class,
@@ -47,6 +48,7 @@ export class ClassResponseDto {
     dto.teacherIds = membership.teacherIds;
     dto.supervisorId = membership.supervisorId;
     dto.studentIds = membership.studentIds;
+    dto.intensiveStudentIds = membership.intensiveStudentIds;
     return dto;
   }
 }

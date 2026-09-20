@@ -5,6 +5,7 @@ import {
   IsBoolean,
   IsEnum,
   IsHexColor,
+  IsIn,
   IsInt,
   IsOptional,
   IsString,
@@ -63,6 +64,10 @@ export class LessonAssignmentDto {
 
   @IsUUID()
   teacherId: string;
+
+  @IsOptional()
+  @IsIn(['regular', 'intensive'])
+  targetTrack?: 'regular' | 'intensive';
 }
 
 export class CreateLessonDto {
@@ -181,6 +186,7 @@ export interface ProgramEntryView {
   category: CategoryView | null;
   date: string;
   sort: number;
+  targetTrack?: 'regular' | 'intensive';
   expectedDurationMinutes: number | null;
   status: LessonBindingStatus;
   actualStartTime: string | null;
@@ -209,6 +215,7 @@ export interface StudentLessonView {
   name: string | null;
   description: string | null;
   date: string;
+  targetTrack?: 'regular' | 'intensive';
 }
 
 /** One lesson in the institute-wide hub, grouped across the classes it serves. */

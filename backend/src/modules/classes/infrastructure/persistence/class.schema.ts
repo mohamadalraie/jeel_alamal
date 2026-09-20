@@ -74,6 +74,26 @@ export const classStudents = pgTable(
   (t) => [primaryKey({ columns: [t.classId, t.studentId] })],
 );
 
+/** Intensive track enrollment within a class. */
+export const classIntensiveStudents = pgTable(
+  'class_intensive_students',
+  {
+    classId: uuid('class_id')
+      .notNull()
+      .references(() => classes.id, { onDelete: 'cascade' }),
+    studentId: uuid('student_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    addedAt: timestamp('added_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [primaryKey({ columns: [t.classId, t.studentId] })],
+);
+
+/** Track type: regular class vs intensive track. */
+export const trackTypeEnum = pgEnum('track_type', ['regular', 'intensive']);
+
 /** Weekly lesson times (أوقات الدروس) — spec 004 (prayer-aware). */
 export const weekdayEnum = pgEnum('weekday', [
   'sat',
@@ -98,7 +118,9 @@ export const classSchedule = pgTable('class_schedule', {
   startValue: varchar('start_value', { length: 16 }).notNull(), // 'HH:MM' or prayer key
   endKind: anchorKindEnum('end_kind'), // optional end (spec 004)
   endValue: varchar('end_value', { length: 16 }),
+  trackType: trackTypeEnum('track_type').notNull().default('regular'),
 });
 
 export type ClassRow = InferSelectModel<typeof classes>;
 export type ClassScheduleRow = InferSelectModel<typeof classSchedule>;
+

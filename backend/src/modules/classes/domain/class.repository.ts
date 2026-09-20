@@ -7,6 +7,7 @@ export interface ClassMembership {
   teacherIds: string[];
   supervisorId: string | null;
   studentIds: string[];
+  intensiveStudentIds: string[];
 }
 
 export type StoredSlot = ScheduleSlot & { id: string };
@@ -22,6 +23,11 @@ export interface ClassRepository {
   setSupervisor(classId: string, teacherId: string): Promise<void>;
   addStudent(classId: string, studentId: string): Promise<void>;
   isStudentOfClass(classId: string, studentId: string): Promise<boolean>;
+  /** Intensive track enrollment methods */
+  addIntensiveStudent(classId: string, studentId: string): Promise<void>;
+  removeIntensiveStudent(classId: string, studentId: string): Promise<void>;
+  isIntensiveStudentOfClass(classId: string, studentId: string): Promise<boolean>;
+  getIntensiveStudentIds(classId: string): Promise<string[]>;
   /** Classes a teacher belongs to, scoped to one institute (profile view). */
   findClassesByTeacher(teacherId: string): Promise<Class[]>;
   /** The single class a student is currently in, if any (spec 002: one at a time). */

@@ -40,6 +40,10 @@ export class ScheduleSlotDto {
   @ValidateNested()
   @Type(() => AnchorDto)
   end?: AnchorDto | null;
+
+  @IsOptional()
+  @IsIn(['regular', 'intensive'])
+  trackType?: 'regular' | 'intensive';
 }
 
 export class SetScheduleDto {
@@ -54,6 +58,7 @@ interface SlotView {
   dayOfWeek: string;
   start: { kind: string; value: string };
   end: { kind: string; value: string } | null;
+  trackType: string;
 }
 
 export class SetLessonsVisibilityDto {
@@ -71,5 +76,10 @@ export interface ClassProfileResult {
   };
   schedule: SlotView[];
   teachers: { id: string; name: string; isSupervisor: boolean }[];
-  students: { id: string; name: string; schoolGrade: string | null }[];
+  students: {
+    id: string;
+    name: string;
+    schoolGrade: string | null;
+    isIntensive: boolean;
+  }[];
 }

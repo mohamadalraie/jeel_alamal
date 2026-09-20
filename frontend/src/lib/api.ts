@@ -322,12 +322,21 @@ export const deleteClass = (classId: string) =>
   del<void>(`/api/classes/${classId}`);
 export const setClassSchedule = (classId: string, slots: ScheduleSlot[]) =>
   put<void>(`/api/classes/${classId}/schedule`, {
-    slots: slots.map(({ dayOfWeek, start, end }) => ({ dayOfWeek, start, end })),
+    slots: slots.map(({ dayOfWeek, start, end, trackType }) => ({
+      dayOfWeek,
+      start,
+      end,
+      trackType: trackType ?? 'regular',
+    })),
   });
 export const removeClassTeacher = (classId: string, teacherId: string) =>
   del<void>(`/api/classes/${classId}/teachers/${teacherId}`);
 export const removeClassStudent = (classId: string, studentId: string) =>
   del<void>(`/api/classes/${classId}/students/${studentId}`);
+export const addIntensiveStudent = (classId: string, userId: string) =>
+  post<void>(`/api/classes/${classId}/intensive-students`, { userId });
+export const removeIntensiveStudent = (classId: string, studentId: string) =>
+  del<void>(`/api/classes/${classId}/intensive-students/${studentId}`);
 export const listUnassignedStudents = (instituteId: string) =>
   request<User[]>(`/api/institutes/${instituteId}/unassigned-students`);
 
@@ -357,8 +366,14 @@ export const getClassRecitation = (classId: string) =>
 // ── Attendance (الحضور) — spec 007 ──
 export const getClassAttendance = (classId: string) =>
   request<ClassAttendance>(`/api/classes/${classId}/attendance`);
-export const getSessionAttendance = (classId: string, date: string) =>
-  request<SessionDetail | null>(`/api/classes/${classId}/attendance/${date}`);
+export const getSessionAttendance = (
+  classId: string,
+  date: string,
+  trackType?: 'regular' | 'intensive',
+) =>
+  request<SessionDetail | null>(
+    `/api/classes/${classId}/attendance/${date}${trackType ? `?trackType=${trackType}` : ''}`,
+  );
 export const takeAttendance = (classId: string, input: TakeAttendanceInput) =>
   post<void>(`/api/classes/${classId}/attendance`, input);
 export const getStudentAttendance = (studentId: string) =>

@@ -11,6 +11,7 @@ interface LessonClassBindingProps {
   classId: string;
   teacherId: string;
   sort: number;
+  targetTrack: 'regular' | 'intensive';
   status: StoredLessonStatus;
   actualStartTime: Date | null;
   actualEndTime: Date | null;
@@ -35,12 +36,14 @@ export class LessonClassBinding extends Entity<string> {
     classId: string;
     teacherId: string;
     sort?: number;
+    targetTrack?: 'regular' | 'intensive';
   }): LessonClassBinding {
     return new LessonClassBinding(randomUUID(), {
       lessonId: input.lessonId,
       classId: input.classId,
       teacherId: input.teacherId,
       sort: input.sort ?? 0,
+      targetTrack: input.targetTrack ?? 'regular',
       status: 'pending',
       actualStartTime: null,
       actualEndTime: null,
@@ -100,6 +103,9 @@ export class LessonClassBinding extends Entity<string> {
   }
   get sort() {
     return this.props.sort;
+  }
+  get targetTrack() {
+    return this.props.targetTrack;
   }
   get status() {
     return this.props.status;

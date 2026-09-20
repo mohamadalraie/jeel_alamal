@@ -20,6 +20,8 @@ import {
   AddClassTeacherUseCase,
   SetClassSupervisorUseCase,
   EnrollStudentUseCase,
+  AddIntensiveStudentUseCase,
+  RemoveIntensiveStudentUseCase,
 } from '../application/use-cases/manage-class-members.use-cases';
 import {
   RemoveClassTeacherUseCase,
@@ -47,6 +49,8 @@ export class ClassesController {
     private readonly addClassTeacher: AddClassTeacherUseCase,
     private readonly setClassSupervisor: SetClassSupervisorUseCase,
     private readonly enrollStudent: EnrollStudentUseCase,
+    private readonly addIntensiveStudentUseCase: AddIntensiveStudentUseCase,
+    private readonly removeIntensiveStudentUseCase: RemoveIntensiveStudentUseCase,
     private readonly removeClassTeacher: RemoveClassTeacherUseCase,
     private readonly removeClassStudent: RemoveClassStudentUseCase,
     private readonly getClassProfile: GetClassProfileUseCase,
@@ -181,5 +185,30 @@ export class ClassesController {
     @Param('studentId', ParseUUIDPipe) studentId: string,
   ) {
     await this.removeClassStudent.execute(actor, classId, studentId);
+  }
+
+  // ── Intensive Track Students ──
+  @Post('classes/:classId/intensive-students')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async addIntensiveStudent(
+    @CurrentUser() actor: Actor,
+    @Param('classId', ParseUUIDPipe) classId: string,
+    @Body() dto: MemberIdDto,
+  ) {
+    await this.addIntensiveStudentUseCase.execute(actor, classId, dto.userId);
+  }
+
+  @Delete('classes/:classId/intensive-students/:studentId')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async removeIntensiveStudent(
+    @CurrentUser() actor: Actor,
+    @Param('classId', ParseUUIDPipe) classId: string,
+    @Param('studentId', ParseUUIDPipe) studentId: string,
+  ) {
+    await this.removeIntensiveStudentUseCase.execute(
+      actor,
+      classId,
+      studentId,
+    );
   }
 }

@@ -7,8 +7,9 @@ const DATE = /^\d{4}-\d{2}-\d{2}$/;
 interface AttendanceSessionProps {
   instituteId: string;
   classId: string;
-  /** The lesson day, 'YYYY-MM-DD'. One session per class per date. */
+  /** The lesson day, 'YYYY-MM-DD'. One session per class per date per track. */
   date: string;
+  trackType: 'regular' | 'intensive';
   takenBy: string;
   createdAt: Date;
 }
@@ -29,6 +30,7 @@ export class AttendanceSession extends Entity<string> {
     instituteId: string;
     classId: string;
     date: string;
+    trackType?: 'regular' | 'intensive';
     takenBy: string;
   }): AttendanceSession {
     if (!DATE.test(input.date)) {
@@ -41,6 +43,7 @@ export class AttendanceSession extends Entity<string> {
     }
     return new AttendanceSession(randomUUID(), {
       ...input,
+      trackType: input.trackType ?? 'regular',
       createdAt: new Date(),
     });
   }
@@ -60,6 +63,9 @@ export class AttendanceSession extends Entity<string> {
   }
   get date() {
     return this.props.date;
+  }
+  get trackType() {
+    return this.props.trackType;
   }
   get takenBy() {
     return this.props.takenBy;

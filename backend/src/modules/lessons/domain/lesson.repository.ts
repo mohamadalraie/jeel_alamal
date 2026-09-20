@@ -27,6 +27,7 @@ export interface ProgramEntryRead {
   category: { id: string; name: string; color: string } | null;
   date: string; // YYYY-MM-DD
   sort: number;
+  targetTrack?: 'regular' | 'intensive';
   expectedDurationMinutes: number | null;
   status: StoredLessonStatus;
   actualStartTime: Date | null;

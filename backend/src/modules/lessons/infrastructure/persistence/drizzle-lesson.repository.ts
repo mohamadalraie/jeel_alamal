@@ -65,6 +65,7 @@ const toBinding = (r: LessonClassRow): LessonClassBinding =>
     classId: r.classId,
     teacherId: r.teacherId,
     sort: r.sort,
+    targetTrack: (r.targetTrack as 'regular' | 'intensive') ?? 'regular',
     status: r.status as StoredLessonStatus,
     actualStartTime: r.actualStartTime,
     actualEndTime: r.actualEndTime,
@@ -169,6 +170,7 @@ export class DrizzleLessonRepository implements LessonRepository {
           classId: b.classId,
           teacherId: b.teacherId,
           sort,
+          targetTrack: b.targetTrack,
         });
       }
     });
@@ -229,6 +231,7 @@ export class DrizzleLessonRepository implements LessonRepository {
           classId: b.classId,
           teacherId: b.teacherId,
           sort,
+          targetTrack: b.targetTrack,
         });
       }
     });
@@ -412,6 +415,7 @@ export class DrizzleLessonRepository implements LessonRepository {
         description: lessons.description,
         date: lessons.date,
         sort: lessonClasses.sort,
+        targetTrack: lessonClasses.targetTrack,
         expectedDurationMinutes: lessons.expectedDurationMinutes,
         status: lessonClasses.status,
         actualStartTime: lessonClasses.actualStartTime,
@@ -463,6 +467,7 @@ export class DrizzleLessonRepository implements LessonRepository {
         : null,
       date: r.date,
       sort: r.sort,
+      targetTrack: (r.targetTrack as 'regular' | 'intensive') ?? 'regular',
       expectedDurationMinutes: r.expectedDurationMinutes,
       status: r.status as StoredLessonStatus,
       actualStartTime: r.actualStartTime,

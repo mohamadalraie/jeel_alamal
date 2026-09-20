@@ -14,6 +14,8 @@ import {
   removeClassTeacher,
   setClassSupervisor,
   removeClassStudent,
+  addIntensiveStudent,
+  removeIntensiveStudent,
   deleteMember,
   ApiError,
 } from '@/lib/api';
@@ -171,6 +173,11 @@ export default function ClassProfilePage({
                         <span className="flex items-center gap-2 text-sm font-medium">
                           <Chevron className="text-muted-foreground size-3.5 shrink-0" />
                           {s.name}
+                          {s.isIntensive && (
+                            <span className="text-[10px] bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/30 px-1.5 py-0.5 rounded font-semibold flex items-center gap-0.5">
+                              ⚡ مسار مكثف
+                            </span>
+                          )}
                         </span>
                         <span
                           className="flex items-center gap-2"
@@ -183,6 +190,15 @@ export default function ClassProfilePage({
                             <MemberRowMenu
                               memberId={s.id}
                               onEditHref={`/dashboard/students/${s.id}`}
+                              isIntensive={s.isIntensive}
+                              onToggleIntensive={async () => {
+                                if (s.isIntensive) {
+                                  await removeIntensiveStudent(classId, s.id);
+                                } else {
+                                  await addIntensiveStudent(classId, s.id);
+                                }
+                                load();
+                              }}
                               onRemoveFromClass={async () => {
                                 await removeClassStudent(classId, s.id);
                                 load();
@@ -346,11 +362,15 @@ export default function ClassProfilePage({
 /** Per-row actions for a class member: edit, remove from class, soft-delete. */
 function MemberRowMenu({
   onEditHref,
+  isIntensive,
+  onToggleIntensive,
   onRemoveFromClass,
   onDeleteFromInstitute,
 }: {
   memberId: string;
   onEditHref: string;
+  isIntensive?: boolean;
+  onToggleIntensive?: () => Promise<void> | void;
   onRemoveFromClass: () => Promise<void> | void;
   onDeleteFromInstitute: () => void;
 }) {
@@ -369,6 +389,11 @@ function MemberRowMenu({
             {t('edit')}
           </Link>
         </DropdownMenuItem>
+        {onToggleIntensive && (
+          <DropdownMenuItem onClick={() => void onToggleIntensive()}>
+            ⚡ {isIntensive ? 'إلغاء المسار المكثف' : 'إضافة للمسار المكثف'}
+          </DropdownMenuItem>
+        )}
         <DropdownMenuItem onClick={() => void onRemoveFromClass()}>
           {t('removeFromClass')}
         </DropdownMenuItem>

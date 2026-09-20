@@ -13,7 +13,10 @@ import {
 } from 'drizzle-orm/pg-core';
 import type { InferSelectModel } from 'drizzle-orm';
 import { institutes } from '../../../institutes/infrastructure/persistence/institute.schema';
-import { classes } from '../../../classes/infrastructure/persistence/class.schema';
+import {
+  classes,
+  trackTypeEnum,
+} from '../../../classes/infrastructure/persistence/class.schema';
 import { users } from '../../../users/infrastructure/persistence/user.schema';
 
 /** A program entry is a normal lesson or a Quran-recitation marker (spec 008). */
@@ -109,6 +112,7 @@ export const lessonClasses = pgTable(
       .notNull()
       .references(() => users.id),
     sort: smallint('sort').notNull().default(0), // order within the class's day
+    targetTrack: trackTypeEnum('target_track').notNull().default('regular'),
     // Delivery lifecycle (spec 009): status lives on the binding, not the
     // shared lesson, so each teacher delivers independently.
     status: lessonBindingStatusEnum('status').notNull().default('pending'),

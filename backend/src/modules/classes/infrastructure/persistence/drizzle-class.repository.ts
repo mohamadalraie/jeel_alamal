@@ -16,6 +16,7 @@ import { DRIZZLE } from '../../../../core/database/drizzle.provider';
 import type { DrizzleDb } from '../../../../core/database/drizzle.provider';
 import {
   classes,
+  classIntensiveStudents,
   classSchedule,
   classStudents,
   classTeachers,
@@ -81,10 +82,15 @@ export class DrizzleClassRepository implements ClassRepository {
       .select({ studentId: classStudents.studentId })
       .from(classStudents)
       .where(eq(classStudents.classId, classId));
+    const intensiveStudents = await this.db
+      .select({ studentId: classIntensiveStudents.studentId })
+      .from(classIntensiveStudents)
+      .where(eq(classIntensiveStudents.classId, classId));
     return {
       teacherIds: teachers.map((t) => t.teacherId),
       supervisorId: teachers.find((t) => t.isSupervisor)?.teacherId ?? null,
       studentIds: students.map((s) => s.studentId),
+      intensiveStudentIds: intensiveStudents.map((s) => s.studentId),
     };
   }
 
@@ -149,6 +155,52 @@ export class DrizzleClassRepository implements ClassRepository {
     return !!row;
   }
 
+  async addIntensiveStudent(classId: string, studentId: string): Promise<void> {
+    await this.db
+      .insert(classIntensiveStudents)
+      .values({ classId, studentId, addedAt: new Date() })
+      .onConflictDoNothing();
+  }
+
+  async removeIntensiveStudent(
+    classId: string,
+    studentId: string,
+  ): Promise<void> {
+    await this.db
+      .delete(classIntensiveStudents)
+      .where(
+        and(
+          eq(classIntensiveStudents.classId, classId),
+          eq(classIntensiveStudents.studentId, studentId),
+        ),
+      );
+  }
+
+  async isIntensiveStudentOfClass(
+    classId: string,
+    studentId: string,
+  ): Promise<boolean> {
+    const [row] = await this.db
+      .select({ studentId: classIntensiveStudents.studentId })
+      .from(classIntensiveStudents)
+      .where(
+        and(
+          eq(classIntensiveStudents.classId, classId),
+          eq(classIntensiveStudents.studentId, studentId),
+        ),
+      )
+      .limit(1);
+    return !!row;
+  }
+
+  async getIntensiveStudentIds(classId: string): Promise<string[]> {
+    const rows = await this.db
+      .select({ studentId: classIntensiveStudents.studentId })
+      .from(classIntensiveStudents)
+      .where(eq(classIntensiveStudents.classId, classId));
+    return rows.map((r) => r.studentId);
+  }
+
   async findClassesByTeacher(teacherId: string): Promise<Class[]> {
     const rows = await this.db
       .select({ klass: classes })
@@ -178,6 +230,9 @@ export class DrizzleClassRepository implements ClassRepository {
       await tx
         .delete(classStudents)
         .where(eq(classStudents.studentId, studentId));
+      await tx
+        .delete(classIntensiveStudents)
+        .where(eq(classIntensiveStudents.studentId, studentId));
       if (toClassId) {
         await tx
           .insert(classStudents)
@@ -203,14 +258,24 @@ export class DrizzleClassRepository implements ClassRepository {
   }
 
   async removeStudent(classId: string, studentId: string): Promise<void> {
-    await this.db
-      .delete(classStudents)
-      .where(
-        and(
-          eq(classStudents.classId, classId),
-          eq(classStudents.studentId, studentId),
-        ),
-      );
+    await this.db.transaction(async (tx) => {
+      await tx
+        .delete(classStudents)
+        .where(
+          and(
+            eq(classStudents.classId, classId),
+            eq(classStudents.studentId, studentId),
+          ),
+        );
+      await tx
+        .delete(classIntensiveStudents)
+        .where(
+          and(
+            eq(classIntensiveStudents.classId, classId),
+            eq(classIntensiveStudents.studentId, studentId),
+          ),
+        );
+    });
   }
 
   async getSchedule(classId: string): Promise<StoredSlot[]> {
@@ -223,6 +288,7 @@ export class DrizzleClassRepository implements ClassRepository {
       dayOfWeek: r.dayOfWeek,
       start: { kind: r.startKind, value: r.startValue },
       end: r.endKind ? { kind: r.endKind, value: r.endValue ?? '' } : null,
+      trackType: r.trackType ?? 'regular',
     }));
   }
 
@@ -239,6 +305,7 @@ export class DrizzleClassRepository implements ClassRepository {
             startValue: s.start.value,
             endKind: s.end?.kind ?? null,
             endValue: s.end?.value ?? null,
+            trackType: s.trackType ?? 'regular',
           })),
         );
       }
@@ -249,6 +316,9 @@ export class DrizzleClassRepository implements ClassRepository {
     await this.db.transaction(async (tx) => {
       await tx.delete(classTeachers).where(eq(classTeachers.teacherId, userId));
       await tx.delete(classStudents).where(eq(classStudents.studentId, userId));
+      await tx
+        .delete(classIntensiveStudents)
+        .where(eq(classIntensiveStudents.studentId, userId));
     });
   }
 

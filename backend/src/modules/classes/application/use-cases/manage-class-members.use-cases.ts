@@ -174,3 +174,78 @@ export class EnrollStudentUseCase extends ClassMembershipBase {
     await this.classes.addStudent(classId, studentId);
   }
 }
+
+/** Add an enrolled student to the intensive track of a class. */
+@Injectable()
+export class AddIntensiveStudentUseCase extends ClassMembershipBase {
+  constructor(
+    policy: InstituteAccessPolicy,
+    @Inject(CLASS_REPOSITORY) classes: ClassRepository,
+    @Inject(USER_REPOSITORY) users: UserRepository,
+  ) {
+    super(policy, classes, users);
+  }
+
+  async execute(
+    actor: Actor,
+    classId: string,
+    studentId: string,
+  ): Promise<void> {
+    const klass = await this.getClassOrFail(classId);
+
+    const isClassTeacher =
+      actor.role === UserRole.Teacher &&
+      actor.instituteId === klass.instituteId &&
+      (await this.classes.isTeacherOfClass(classId, actor.userId));
+    if (!isClassTeacher) {
+      if (actor.role !== UserRole.InstituteManager) {
+        throw new ForbiddenError(
+          'Only the manager or a class teacher can manage intensive track students',
+        );
+      }
+      await this.policy.assertManagerOf(actor, klass.instituteId);
+    }
+
+    const isEnrolled = await this.classes.isStudentOfClass(classId, studentId);
+    if (!isEnrolled) {
+      throw new BusinessRuleError('Student must be enrolled in the class first');
+    }
+
+    await this.classes.addIntensiveStudent(classId, studentId);
+  }
+}
+
+/** Remove a student from the intensive track of a class. */
+@Injectable()
+export class RemoveIntensiveStudentUseCase extends ClassMembershipBase {
+  constructor(
+    policy: InstituteAccessPolicy,
+    @Inject(CLASS_REPOSITORY) classes: ClassRepository,
+    @Inject(USER_REPOSITORY) users: UserRepository,
+  ) {
+    super(policy, classes, users);
+  }
+
+  async execute(
+    actor: Actor,
+    classId: string,
+    studentId: string,
+  ): Promise<void> {
+    const klass = await this.getClassOrFail(classId);
+
+    const isClassTeacher =
+      actor.role === UserRole.Teacher &&
+      actor.instituteId === klass.instituteId &&
+      (await this.classes.isTeacherOfClass(classId, actor.userId));
+    if (!isClassTeacher) {
+      if (actor.role !== UserRole.InstituteManager) {
+        throw new ForbiddenError(
+          'Only the manager or a class teacher can manage intensive track students',
+        );
+      }
+      await this.policy.assertManagerOf(actor, klass.instituteId);
+    }
+
+    await this.classes.removeIntensiveStudent(classId, studentId);
+  }
+}

@@ -41,7 +41,7 @@ export function TakeAttendanceDialog({
   withTrigger = true,
 }: {
   classId: string;
-  roster: { id: string; name: string }[];
+  roster: { id: string; name: string; isIntensive?: boolean }[];
   onDone: () => void;
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
@@ -58,29 +58,38 @@ export function TakeAttendanceDialog({
   const setOpen = (v: boolean) => (isControlled ? onOpenChange?.(v) : setInternalOpen(v));
 
   const [date, setDate] = useState(initialDate ?? todayISO());
+  const [trackType, setTrackType] = useState<'regular' | 'intensive'>('regular');
   const [statuses, setStatuses] = useState<Record<string, AttendanceStatus>>({});
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Default everyone to present whenever the dialog opens.
+  const activeRoster =
+    trackType === 'intensive'
+      ? roster.filter((s) => s.isIntensive)
+      : roster;
+
+  // Default everyone in active roster to present.
   const resetAllPresent = () => {
     const next: Record<string, AttendanceStatus> = {};
-    for (const s of roster) next[s.id] = 'present';
+    for (const s of activeRoster) next[s.id] = 'present';
     setStatuses(next);
   };
 
   // On each open transition, jump to the requested date (or today).
   const prevOpen = useRef(false);
   useEffect(() => {
-    if (open && !prevOpen.current) setDate(initialDate ?? todayISO());
+    if (open && !prevOpen.current) {
+      setDate(initialDate ?? todayISO());
+      setTrackType('regular');
+    }
     prevOpen.current = open;
   }, [open, initialDate]);
 
   useEffect(() => {
     if (!open) return;
     resetAllPresent();
-    // Pre-fill from an existing session for this date, if any.
-    getSessionAttendance(classId, date)
+    // Pre-fill from an existing session for this date & trackType, if any.
+    getSessionAttendance(classId, date, trackType)
       .then((session) => {
         if (!session) return;
         setStatuses((prev) => {
@@ -91,14 +100,14 @@ export function TakeAttendanceDialog({
       })
       .catch(() => {});
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, date, classId]);
+  }, [open, date, trackType, classId]);
 
   const setStatus = (studentId: string, status: AttendanceStatus) =>
     setStatuses((prev) => ({ ...prev, [studentId]: status }));
 
   const markAll = (status: AttendanceStatus) => {
     const next: Record<string, AttendanceStatus> = {};
-    for (const s of roster) next[s.id] = status;
+    for (const s of activeRoster) next[s.id] = status;
     setStatuses(next);
   };
 
@@ -108,14 +117,15 @@ export function TakeAttendanceDialog({
     try {
       await takeAttendance(classId, {
         date,
-        entries: roster.map((s) => ({
+        trackType,
+        entries: activeRoster.map((s) => ({
           studentId: s.id,
           status: statuses[s.id] ?? 'present',
         })),
       });
       await Promise.all([
         qc.invalidateQueries({ queryKey: qk.classAttendance(classId) }),
-        ...roster.map((s) =>
+        ...activeRoster.map((s) =>
           qc.invalidateQueries({ queryKey: qk.studentAttendance(s.id) }),
         ),
       ]);
@@ -143,6 +153,40 @@ export function TakeAttendanceDialog({
         <DialogHeader>
           <DialogTitle>{t('takeTitle')}</DialogTitle>
         </DialogHeader>
+
+        {/* Track Type Selector */}
+        <div className="bg-muted/50 p-1 flex rounded-lg border gap-1">
+          <button
+            type="button"
+            onClick={() => setTrackType('regular')}
+            className={cn(
+              'flex-1 py-1.5 text-xs font-semibold rounded-md transition text-center',
+              trackType === 'regular'
+                ? 'bg-background text-foreground shadow-sm'
+                : 'text-muted-foreground hover:text-foreground',
+            )}
+          >
+            جلسة حلقة عادية ({roster.length})
+          </button>
+          <button
+            type="button"
+            onClick={() => setTrackType('intensive')}
+            className={cn(
+              'flex-1 py-1.5 text-xs font-semibold rounded-md transition text-center flex items-center justify-center gap-1',
+              trackType === 'intensive'
+                ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/30 shadow-sm'
+                : 'text-muted-foreground hover:text-foreground',
+            )}
+          >
+            ⚡ اليوم الإضافي - المسار المكثف ({roster.filter((s) => s.isIntensive).length})
+          </button>
+        </div>
+
+        {trackType === 'intensive' && (
+          <div className="bg-amber-500/10 border-amber-500/20 text-amber-700 dark:text-amber-300 rounded-md p-2.5 text-xs">
+            ⚡ <strong>حضور المسار المكثف (اليوم الإضافي):</strong> يرجى تسجيل حضور طلاب المسار فقط. باقي طلاب الحلقة معفيون تلقائياً ولا تتأثر نسبتهم.
+          </div>
+        )}
 
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="att-date">{t('date')}</Label>
@@ -172,10 +216,22 @@ export function TakeAttendanceDialog({
 
         {/* Roster */}
         <div className="flex flex-col divide-y overflow-y-auto">
-          {roster.map((s) => (
-            <div key={s.id} className="flex flex-col gap-1.5 py-2">
-              <span className="text-sm font-medium">{s.name}</span>
-              <div className="flex flex-wrap gap-1.5">
+          {activeRoster.length === 0 ? (
+            <div className="p-6 text-center text-xs text-muted-foreground">
+              لا يوجد طلاب مضافون للمسار المكثف في هذه الحلقة بعد.
+            </div>
+          ) : (
+            activeRoster.map((s) => (
+              <div key={s.id} className="flex flex-col gap-1.5 py-2">
+                <span className="text-sm font-medium flex items-center justify-between">
+                  <span>{s.name}</span>
+                  {s.isIntensive && (
+                    <span className="text-[10px] bg-amber-500/10 text-amber-600 dark:text-amber-400 px-1.5 py-0.5 rounded border border-amber-500/20 font-semibold">
+                      ⚡ مسار مكثف
+                    </span>
+                  )}
+                </span>
+                <div className="flex flex-wrap gap-1.5">
                 {STATUS_ORDER.map((status) => {
                   const active = (statuses[s.id] ?? 'present') === status;
                   return (
@@ -199,7 +255,8 @@ export function TakeAttendanceDialog({
                 })}
               </div>
             </div>
-          ))}
+          ))
+        )}
         </div>
 
         {error && <p role="alert" className="text-destructive text-sm">{error}</p>}

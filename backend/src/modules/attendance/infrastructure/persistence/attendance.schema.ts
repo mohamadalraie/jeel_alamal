@@ -8,7 +8,10 @@ import {
 } from 'drizzle-orm/pg-core';
 import type { InferSelectModel } from 'drizzle-orm';
 import { institutes } from '../../../institutes/infrastructure/persistence/institute.schema';
-import { classes } from '../../../classes/infrastructure/persistence/class.schema';
+import {
+  classes,
+  trackTypeEnum,
+} from '../../../classes/infrastructure/persistence/class.schema';
 import { users } from '../../../users/infrastructure/persistence/user.schema';
 
 export const attendanceStatusEnum = pgEnum('attendance_status', [
@@ -30,6 +33,7 @@ export const attendanceSessions = pgTable(
       .notNull()
       .references(() => classes.id, { onDelete: 'cascade' }),
     date: date('date').notNull(), // 'YYYY-MM-DD'
+    trackType: trackTypeEnum('track_type').notNull().default('regular'),
     takenBy: uuid('taken_by')
       .notNull()
       .references(() => users.id),
@@ -37,7 +41,13 @@ export const attendanceSessions = pgTable(
       .notNull()
       .defaultNow(),
   },
-  (t) => [uniqueIndex('one_session_per_class_per_day').on(t.classId, t.date)],
+  (t) => [
+    uniqueIndex('one_session_per_class_per_day_per_track').on(
+      t.classId,
+      t.date,
+      t.trackType,
+    ),
+  ],
 );
 
 /** One student's status within a session. */

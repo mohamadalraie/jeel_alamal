@@ -40,13 +40,22 @@ export class GetStudentClassLessonsUseCase {
       throw new ForbiddenError('Lessons are not available for this class');
     }
 
+    const isIntensive = await this.classes.isIntensiveStudentOfClass(
+      classId,
+      actor.userId,
+    );
     const past = await this.lessons.getClassProgramUpTo(classId, todayISO());
-    const entries: StudentLessonView[] = past.map((e) => ({
+    const filtered = isIntensive
+      ? past
+      : past.filter((e) => e.targetTrack !== 'intensive');
+
+    const entries: StudentLessonView[] = filtered.map((e) => ({
       lessonClassId: e.lessonClassId,
       kind: e.kind,
       name: e.name,
       description: e.description,
       date: e.date,
+      targetTrack: e.targetTrack ?? 'regular',
     }));
     return { entries };
   }

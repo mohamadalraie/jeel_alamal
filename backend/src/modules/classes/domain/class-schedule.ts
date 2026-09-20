@@ -24,10 +24,13 @@ export interface Anchor {
   value: string;
 }
 
+export type TrackType = 'regular' | 'intensive';
+
 export interface ScheduleSlot {
   dayOfWeek: Weekday;
   start: Anchor;
   end: Anchor | null; // optional (spec 004)
+  trackType?: TrackType;
 }
 
 const TIME = /^([01]\d|2[0-3]):[0-5]\d$/;

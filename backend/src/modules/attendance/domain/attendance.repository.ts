@@ -8,24 +8,26 @@ export const ATTENDANCE_REPOSITORY = Symbol('ATTENDANCE_REPOSITORY');
 export interface AttendanceRecordView {
   sessionId: string;
   date: string; // YYYY-MM-DD
+  trackType?: 'regular' | 'intensive';
   studentId: string;
   status: AttendanceStatus;
 }
 
 export interface AttendanceRepository {
   /**
-   * Upsert a session for (classId, date): replaces any existing session for
-   * that day and its records with the supplied set, in one transaction.
+   * Upsert a session for (classId, date, trackType): replaces any existing session for
+   * that day and track with the supplied set, in one transaction.
    */
   upsertSession(
     session: AttendanceSession,
     records: AttendanceRecord[],
   ): Promise<void>;
 
-  /** The session for a class on a date, with its records, if any. */
+  /** The session for a class on a date and track, with its records, if any. */
   findByClassAndDate(
     classId: string,
     date: string,
+    trackType?: 'regular' | 'intensive',
   ): Promise<{
     session: AttendanceSession;
     records: AttendanceRecord[];

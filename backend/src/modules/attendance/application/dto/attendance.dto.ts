@@ -2,6 +2,8 @@ import {
   ArrayMinSize,
   IsArray,
   IsEnum,
+  IsIn,
+  IsOptional,
   IsUUID,
   Matches,
   ValidateNested,
@@ -20,6 +22,10 @@ export class AttendanceEntryDto {
 export class TakeAttendanceDto {
   @Matches(/^\d{4}-\d{2}-\d{2}$/, { message: 'date must be YYYY-MM-DD' })
   date: string;
+
+  @IsOptional()
+  @IsIn(['regular', 'intensive'])
+  trackType?: 'regular' | 'intensive';
 
   @IsArray()
   @ArrayMinSize(1)
@@ -49,6 +55,7 @@ export interface StudentAttendanceStats {
 /** A single attendance session in the class overview. */
 export interface SessionSummary {
   date: string;
+  trackType?: 'regular' | 'intensive';
   counts: AttendanceStatusCounts;
   total: number;
 }
@@ -67,6 +74,7 @@ export interface ClassAttendanceResult {
 /** One row in a student's attendance log. */
 export interface StudentAttendanceItem {
   date: string;
+  trackType?: 'regular' | 'intensive';
   status: AttendanceStatus;
 }
 
@@ -80,5 +88,6 @@ export interface StudentAttendanceResult {
 /** Existing session detail, for pre-filling the take-attendance screen. */
 export interface SessionDetailResult {
   date: string;
+  trackType: 'regular' | 'intensive';
   entries: { studentId: string; status: AttendanceStatus }[];
 }

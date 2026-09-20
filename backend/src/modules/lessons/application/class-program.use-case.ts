@@ -30,6 +30,7 @@ export const toEntryView = (
   category: e.category,
   date: e.date,
   sort: e.sort,
+  targetTrack: e.targetTrack ?? 'regular',
   expectedDurationMinutes: e.expectedDurationMinutes,
   status: deriveReadStatus(e.status, e.date, today),
   actualStartTime: e.actualStartTime?.toISOString() ?? null,
