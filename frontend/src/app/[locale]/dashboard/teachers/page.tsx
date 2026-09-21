@@ -22,7 +22,7 @@ export default function TeachersPage() {
   const { selected, loading } = useInstitute();
   const router = useRouter();
   const qc = useQueryClient();
-  const { data: teachers, isLoading } = useTeachers(selected?.id);
+  const { data: teachers, isLoading, isError, error } = useTeachers(selected?.id);
   const [search, setSearch] = useState('');
 
   const filtered = useMemo(() => {
@@ -62,6 +62,11 @@ export default function TeachersPage() {
 
       {isLoading ? (
         <ListSkeleton />
+      ) : isError ? (
+        <div className="p-6 text-center border border-destructive/30 bg-destructive/10 rounded-xl text-destructive">
+          <p className="font-semibold text-sm">تعذر تحميل بيانات الأساتذة (تأكد من تشغيل قاعدة البيانات PostgreSQL / Docker)</p>
+          <p className="text-xs mt-1 text-muted-foreground">{String(error)}</p>
+        </div>
       ) : filtered.length === 0 ? (
         <EmptyState icon={GraduationCap} title={search ? t('noData') : t('noData')} />
       ) : (

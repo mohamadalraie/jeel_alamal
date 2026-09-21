@@ -17,14 +17,20 @@ import * as schema from './schema';
     {
       provide: PG_POOL,
       inject: [ConfigService],
-      useFactory: (config: ConfigService) =>
-        new Pool({
-          host: config.get<string>('DATABASE_HOST'),
+      useFactory: (config: ConfigService) => {
+        let host = config.get<string>('DATABASE_HOST') || 'localhost';
+        const isDocker = process.env.IS_DOCKER === 'true' || process.env.CONTAINER === 'true';
+        if (host === 'db' && !isDocker) {
+          host = 'localhost';
+        }
+        return new Pool({
+          host,
           port: config.get<number>('DATABASE_PORT', 5432),
           user: config.get<string>('POSTGRES_USER'),
           password: config.get<string>('POSTGRES_PASSWORD'),
           database: config.get<string>('POSTGRES_DB'),
-        }),
+        });
+      },
     },
     {
       provide: DRIZZLE,

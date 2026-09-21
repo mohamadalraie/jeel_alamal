@@ -29,7 +29,7 @@ export default function ClassesPage() {
   const { selected, loading, user } = useInstitute();
   const canManage = user.role === 'super_admin' || user.role === 'institute_manager';
   const qc = useQueryClient();
-  const { data: classes, isLoading } = useClasses(selected?.id);
+  const { data: classes, isLoading, isError, error } = useClasses(selected?.id);
 
   const [search, setSearch] = useState('');
   const [open, setOpen] = useState(false);
@@ -102,6 +102,11 @@ export default function ClassesPage() {
 
       {isLoading ? (
         <CardsSkeleton count={6} />
+      ) : isError ? (
+        <div className="p-6 text-center border border-destructive/30 bg-destructive/10 rounded-xl text-destructive">
+          <p className="font-semibold text-sm">تعذر تحميل قائمة الحلقات (تأكد من تشغيل قاعدة البيانات PostgreSQL / Docker)</p>
+          <p className="text-xs mt-1 text-muted-foreground">{String(error)}</p>
+        </div>
       ) : filtered.length === 0 ? (
         <EmptyState icon={BookOpen} title={tc('noData')} />
       ) : (
