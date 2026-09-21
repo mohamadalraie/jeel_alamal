@@ -28,6 +28,7 @@ import { RefreshTokenUseCase } from '../application/use-cases/refresh-token.use-
 import { LogoutUseCase } from '../application/use-cases/logout.use-case';
 import { ChangePasswordUseCase } from '../application/use-cases/change-password.use-case';
 import {
+  DomainError,
   UnauthorizedError,
   NotFoundError,
 } from '../../../shared/domain/domain.error';
@@ -102,13 +103,18 @@ export class AuthController {
     if (!token) {
       throw new UnauthorizedError('No refresh token');
     }
-    const result = await this.refreshUseCase.execute(token);
-    this.setAuthCookies(res, result);
-    return {
-      user: result.user,
-      accessToken: result.accessToken,
-      refreshToken: result.refreshToken,
-    };
+    try {
+      const result = await this.refreshUseCase.execute(token);
+      this.setAuthCookies(res, result);
+      return {
+        user: result.user,
+        accessToken: result.accessToken,
+        refreshToken: result.refreshToken,
+      };
+    } catch (err) {
+      if (err instanceof DomainError) throw err;
+      throw new UnauthorizedError('Refresh token is invalid or expired');
+    }
   }
 
   @Post('logout')

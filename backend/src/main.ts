@@ -18,7 +18,11 @@ import {
 
 async function runAutoMigrations(config: ConfigService) {
   try {
-    const host = config.get<string>('DATABASE_HOST', 'localhost');
+    let host = config.get<string>('DATABASE_HOST', 'localhost');
+    const isDocker = process.env.IS_DOCKER === 'true' || process.env.CONTAINER === 'true';
+    if (host === 'db' && !isDocker) {
+      host = 'localhost';
+    }
     const port = config.get<number>('DATABASE_PORT', 5432);
     const user = config.get<string>('POSTGRES_USER', 'jeel');
     const password = config.get<string>('POSTGRES_PASSWORD', 'change_me_in_local');
@@ -31,6 +35,18 @@ async function runAutoMigrations(config: ConfigService) {
       await migrate(db, { migrationsFolder });
       Logger.log('✅ Database migrations auto-applied successfully', 'Migrations');
     }
+    // Explicit safety check: ensure refresh_tokens table exists for Auth Refresh Token rotation
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS "refresh_tokens" (
+        "id" uuid PRIMARY KEY NOT NULL,
+        "user_id" uuid NOT NULL REFERENCES "public"."users"("id") ON DELETE CASCADE,
+        "token_hash" varchar(64) NOT NULL UNIQUE,
+        "expires_at" timestamp with time zone NOT NULL,
+        "created_at" timestamp with time zone DEFAULT now() NOT NULL
+      );
+    `);
+    Logger.log('✅ refresh_tokens table ensured', 'Migrations');
+
     // Explicit safety check: ensure user_institutes table exists
     await pool.query(`
       CREATE TABLE IF NOT EXISTS "user_institutes" (
