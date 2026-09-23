@@ -24,11 +24,7 @@ async function runAutoMigrations(config: ConfigService) {
     if (dbUrl) {
       pool = new Pool({ connectionString: dbUrl, ssl });
     } else {
-      let host = config.get<string>('DATABASE_HOST', 'localhost');
-      const isDocker = process.env.IS_DOCKER === 'true' || process.env.CONTAINER === 'true';
-      if (host === 'db' && !isDocker) {
-        host = 'localhost';
-      }
+      const host = config.get<string>('DATABASE_HOST', 'localhost');
       const port = config.get<number>('DATABASE_PORT', 5432);
       const user = config.get<string>('POSTGRES_USER', 'jeel');
       const password = config.get<string>('POSTGRES_PASSWORD', 'change_me_in_local');

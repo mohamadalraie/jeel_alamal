@@ -23,17 +23,17 @@ import * as schema from './schema';
         if (dbUrl) {
           return new Pool({ connectionString: dbUrl, ssl });
         }
-        let host = config.get<string>('DATABASE_HOST') || 'localhost';
-        const isDocker = process.env.IS_DOCKER === 'true' || process.env.CONTAINER === 'true';
-        if (host === 'db' && !isDocker) {
-          host = 'localhost';
-        }
+        const host = config.get<string>('DATABASE_HOST', 'localhost');
+        const port = config.get<number>('DATABASE_PORT', 5432);
+        const user = config.get<string>('POSTGRES_USER', 'jeel');
+        const password = config.get<string>('POSTGRES_PASSWORD', 'change_me_in_local');
+        const database = config.get<string>('POSTGRES_DB', 'jeel_alamal');
         return new Pool({
           host,
-          port: config.get<number>('DATABASE_PORT', 5432),
-          user: config.get<string>('POSTGRES_USER'),
-          password: config.get<string>('POSTGRES_PASSWORD'),
-          database: config.get<string>('POSTGRES_DB'),
+          port,
+          user,
+          password,
+          database,
           ssl,
         });
       },

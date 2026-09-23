@@ -17,18 +17,24 @@ export class HealthController {
   async check() {
     let db = 'down';
     let dbError: string | undefined = undefined;
+    let dbErrorCause: string | undefined = undefined;
     try {
       await this.db.execute(sql`SELECT 1`);
       db = 'up';
     } catch (err: any) {
       db = 'down';
       dbError = err?.message || String(err);
+      dbErrorCause =
+        err?.cause?.message ||
+        err?.cause?.code ||
+        (err?.cause ? String(err.cause) : undefined) ||
+        (err?.stack ? String(err.stack).split('\n')[1]?.trim() : undefined);
     }
     return {
       status: db === 'up' ? 'ok' : 'degraded',
       service: 'jeel-alamal-backend',
       db,
-      ...(dbError ? { dbError } : {}),
+      ...(dbError ? { dbError, dbErrorCause } : {}),
       timestamp: new Date().toISOString(),
     };
   }
