@@ -17,6 +17,7 @@ import {
 } from './modules/uploads/uploads.config';
 
 async function runAutoMigrations(config: ConfigService) {
+  let pool: Pool | null = null;
   try {
     let host = config.get<string>('DATABASE_HOST', 'localhost');
     const isDocker = process.env.IS_DOCKER === 'true' || process.env.CONTAINER === 'true';
@@ -28,46 +29,51 @@ async function runAutoMigrations(config: ConfigService) {
     const password = config.get<string>('POSTGRES_PASSWORD', 'change_me_in_local');
     const database = config.get<string>('POSTGRES_DB', 'jeel_alamal');
 
-    const pool = new Pool({ host, port, user, password, database });
+    pool = new Pool({ host, port, user, password, database });
     const db = drizzle(pool);
     const migrationsFolder = join(process.cwd(), 'drizzle');
     if (existsSync(migrationsFolder)) {
-      await migrate(db, { migrationsFolder });
-      Logger.log('✅ Database migrations auto-applied successfully', 'Migrations');
+      try {
+        await migrate(db, { migrationsFolder });
+        Logger.log('✅ Database migrations auto-applied successfully', 'Migrations');
+      } catch (err: any) {
+        Logger.warn(`Drizzle migrate note: ${err?.message || err}`, 'Migrations');
+      }
     }
-    // Explicit safety check: ensure enums and missing columns on users table exist
-    await pool.query(`
-      DO $$ 
-      BEGIN
-          IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'study_degree') THEN
-              CREATE TYPE study_degree AS ENUM ('secondary', 'diploma', 'bachelor', 'master', 'phd');
-          END IF;
-          IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'tajweed_level') THEN
-              CREATE TYPE tajweed_level AS ENUM ('excellent', 'very_good', 'good', 'acceptable', 'weak');
-          END IF;
-          IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'track_type') THEN
-              CREATE TYPE track_type AS ENUM ('regular', 'intensive');
-          END IF;
-      END $$;
 
-      ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "study_degree" study_degree;
-      ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "study_field" varchar(150);
-      ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "quran_parts" smallint;
-      ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "tajweed_level" tajweed_level;
-      
-      ALTER TABLE "lesson_classes" ADD COLUMN IF NOT EXISTS "target_track" track_type DEFAULT 'regular';
-      ALTER TABLE "lesson_classes" ADD COLUMN IF NOT EXISTS "expected_duration_minutes" integer;
-      ALTER TABLE "lesson_classes" ADD COLUMN IF NOT EXISTS "actual_start_time" timestamp with time zone;
-      ALTER TABLE "lesson_classes" ADD COLUMN IF NOT EXISTS "actual_end_time" timestamp with time zone;
-      
-      ALTER TABLE "lessons" ADD COLUMN IF NOT EXISTS "expected_duration_minutes" integer;
-      ALTER TABLE "attendance_sessions" ADD COLUMN IF NOT EXISTS "track_type" track_type DEFAULT 'regular';
-      ALTER TABLE "class_schedule" ADD COLUMN IF NOT EXISTS "track_type" track_type DEFAULT 'regular';
-    `);
-    Logger.log('✅ User profile columns and enum types ensured', 'Migrations');
+    const safeQuery = async (querySql: string, label: string) => {
+      try {
+        await pool!.query(querySql);
+        Logger.log(`✅ Safe Migration (${label}) succeeded`, 'Migrations');
+      } catch (err: any) {
+        Logger.warn(`Safe Migration (${label}) note: ${err?.message || err}`, 'Migrations');
+      }
+    };
 
-    // Explicit safety check: ensure refresh_tokens table exists for Auth Refresh Token rotation
-    await pool.query(`
+    // 1. Enums
+    await safeQuery(`CREATE TYPE "public"."study_degree" AS ENUM('secondary', 'diploma', 'bachelor', 'master', 'phd');`, 'Type study_degree');
+    await safeQuery(`CREATE TYPE "public"."tajweed_level" AS ENUM('excellent', 'very_good', 'good', 'acceptable', 'weak');`, 'Type tajweed_level');
+    await safeQuery(`CREATE TYPE "public"."track_type" AS ENUM('regular', 'intensive');`, 'Type track_type');
+
+    // 2. Users table missing profile columns
+    await safeQuery(`ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "study_degree" "public"."study_degree";`, 'users.study_degree');
+    await safeQuery(`ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "study_field" varchar(150);`, 'users.study_field');
+    await safeQuery(`ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "quran_parts" smallint;`, 'users.quran_parts');
+    await safeQuery(`ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "tajweed_level" "public"."tajweed_level";`, 'users.tajweed_level');
+
+    // 3. Lesson classes missing columns
+    await safeQuery(`ALTER TABLE "lesson_classes" ADD COLUMN IF NOT EXISTS "target_track" "public"."track_type" DEFAULT 'regular';`, 'lesson_classes.target_track');
+    await safeQuery(`ALTER TABLE "lesson_classes" ADD COLUMN IF NOT EXISTS "expected_duration_minutes" integer;`, 'lesson_classes.expected_duration_minutes');
+    await safeQuery(`ALTER TABLE "lesson_classes" ADD COLUMN IF NOT EXISTS "actual_start_time" timestamp with time zone;`, 'lesson_classes.actual_start_time');
+    await safeQuery(`ALTER TABLE "lesson_classes" ADD COLUMN IF NOT EXISTS "actual_end_time" timestamp with time zone;`, 'lesson_classes.actual_end_time');
+
+    // 4. Lessons, Attendance, Schedule missing columns
+    await safeQuery(`ALTER TABLE "lessons" ADD COLUMN IF NOT EXISTS "expected_duration_minutes" integer;`, 'lessons.expected_duration_minutes');
+    await safeQuery(`ALTER TABLE "attendance_sessions" ADD COLUMN IF NOT EXISTS "track_type" "public"."track_type" DEFAULT 'regular';`, 'attendance_sessions.track_type');
+    await safeQuery(`ALTER TABLE "class_schedule" ADD COLUMN IF NOT EXISTS "track_type" "public"."track_type" DEFAULT 'regular';`, 'class_schedule.track_type');
+
+    // 5. Auth refresh tokens table
+    await safeQuery(`
       CREATE TABLE IF NOT EXISTS "refresh_tokens" (
         "id" uuid PRIMARY KEY NOT NULL,
         "user_id" uuid NOT NULL REFERENCES "public"."users"("id") ON DELETE CASCADE,
@@ -75,30 +81,29 @@ async function runAutoMigrations(config: ConfigService) {
         "expires_at" timestamp with time zone NOT NULL,
         "created_at" timestamp with time zone DEFAULT now() NOT NULL
       );
-    `);
-    Logger.log('✅ refresh_tokens table ensured', 'Migrations');
+    `, 'Table refresh_tokens');
 
-    // Explicit safety check: ensure user_institutes table exists
-    await pool.query(`
+    // 6. User institutes table & backfill
+    await safeQuery(`
       CREATE TABLE IF NOT EXISTS "user_institutes" (
         "user_id" uuid NOT NULL REFERENCES "public"."users"("id") ON DELETE CASCADE,
         "institute_id" uuid NOT NULL REFERENCES "public"."institutes"("id") ON DELETE CASCADE,
         "joined_at" timestamp with time zone DEFAULT now() NOT NULL,
         PRIMARY KEY ("user_id", "institute_id")
       );
-    `);
-    // Backfill: sync existing users that have institute_id into user_institutes
-    // so multi-institute membership queries always find them.
-    await pool.query(`
+    `, 'Table user_institutes');
+
+    await safeQuery(`
       INSERT INTO "user_institutes" ("user_id", "institute_id", "joined_at")
       SELECT u.id, u.institute_id, COALESCE(u.created_at, now())
       FROM "users" u
       WHERE u.institute_id IS NOT NULL
         AND u.deleted_at IS NULL
       ON CONFLICT DO NOTHING;
-    `);
-    // Ensure push_subscriptions table exists for Web Push notifications
-    await pool.query(`
+    `, 'Backfill user_institutes');
+
+    // 7. Push subscriptions table
+    await safeQuery(`
       CREATE TABLE IF NOT EXISTS "push_subscriptions" (
         "id" uuid PRIMARY KEY NOT NULL,
         "user_id" uuid NOT NULL REFERENCES "public"."users"("id") ON DELETE CASCADE,
@@ -107,11 +112,16 @@ async function runAutoMigrations(config: ConfigService) {
         "auth" text NOT NULL,
         "created_at" timestamp with time zone DEFAULT now() NOT NULL
       );
-    `);
-    Logger.log('✅ push_subscriptions table ensured', 'Migrations');
-    await pool.end();
+    `, 'Table push_subscriptions');
+
   } catch (err: any) {
-    Logger.error(`Auto-migration note: ${err?.message || err}`, 'Migrations');
+    Logger.error(`Auto-migration top-level note: ${err?.message || err}`, 'Migrations');
+  } finally {
+    if (pool) {
+      try {
+        await pool.end();
+      } catch {}
+    }
   }
 }
 
