@@ -35,6 +35,37 @@ async function runAutoMigrations(config: ConfigService) {
       await migrate(db, { migrationsFolder });
       Logger.log('✅ Database migrations auto-applied successfully', 'Migrations');
     }
+    // Explicit safety check: ensure enums and missing columns on users table exist
+    await pool.query(`
+      DO $$ 
+      BEGIN
+          IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'study_degree') THEN
+              CREATE TYPE study_degree AS ENUM ('secondary', 'diploma', 'bachelor', 'master', 'phd');
+          END IF;
+          IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'tajweed_level') THEN
+              CREATE TYPE tajweed_level AS ENUM ('excellent', 'very_good', 'good', 'acceptable', 'weak');
+          END IF;
+          IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'track_type') THEN
+              CREATE TYPE track_type AS ENUM ('regular', 'intensive');
+          END IF;
+      END $$;
+
+      ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "study_degree" study_degree;
+      ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "study_field" varchar(150);
+      ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "quran_parts" smallint;
+      ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "tajweed_level" tajweed_level;
+      
+      ALTER TABLE "lesson_classes" ADD COLUMN IF NOT EXISTS "target_track" track_type DEFAULT 'regular';
+      ALTER TABLE "lesson_classes" ADD COLUMN IF NOT EXISTS "expected_duration_minutes" integer;
+      ALTER TABLE "lesson_classes" ADD COLUMN IF NOT EXISTS "actual_start_time" timestamp with time zone;
+      ALTER TABLE "lesson_classes" ADD COLUMN IF NOT EXISTS "actual_end_time" timestamp with time zone;
+      
+      ALTER TABLE "lessons" ADD COLUMN IF NOT EXISTS "expected_duration_minutes" integer;
+      ALTER TABLE "attendance_sessions" ADD COLUMN IF NOT EXISTS "track_type" track_type DEFAULT 'regular';
+      ALTER TABLE "class_schedule" ADD COLUMN IF NOT EXISTS "track_type" track_type DEFAULT 'regular';
+    `);
+    Logger.log('✅ User profile columns and enum types ensured', 'Migrations');
+
     // Explicit safety check: ensure refresh_tokens table exists for Auth Refresh Token rotation
     await pool.query(`
       CREATE TABLE IF NOT EXISTS "refresh_tokens" (
