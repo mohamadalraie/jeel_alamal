@@ -16,16 +16,19 @@ export class HealthController {
   @Get()
   async check() {
     let db = 'down';
+    let dbError: string | undefined = undefined;
     try {
       await this.db.execute(sql`SELECT 1`);
       db = 'up';
-    } catch {
+    } catch (err: any) {
       db = 'down';
+      dbError = err?.message || String(err);
     }
     return {
       status: db === 'up' ? 'ok' : 'degraded',
       service: 'jeel-alamal-backend',
       db,
+      ...(dbError ? { dbError } : {}),
       timestamp: new Date().toISOString(),
     };
   }

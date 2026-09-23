@@ -19,17 +19,23 @@ import {
 async function runAutoMigrations(config: ConfigService) {
   let pool: Pool | null = null;
   try {
-    let host = config.get<string>('DATABASE_HOST', 'localhost');
-    const isDocker = process.env.IS_DOCKER === 'true' || process.env.CONTAINER === 'true';
-    if (host === 'db' && !isDocker) {
-      host = 'localhost';
-    }
-    const port = config.get<number>('DATABASE_PORT', 5432);
-    const user = config.get<string>('POSTGRES_USER', 'jeel');
-    const password = config.get<string>('POSTGRES_PASSWORD', 'change_me_in_local');
-    const database = config.get<string>('POSTGRES_DB', 'jeel_alamal');
+    const dbUrl = config.get<string>('DATABASE_URL');
+    const ssl = process.env.DATABASE_SSL === 'true' ? { rejectUnauthorized: false } : undefined;
+    if (dbUrl) {
+      pool = new Pool({ connectionString: dbUrl, ssl });
+    } else {
+      let host = config.get<string>('DATABASE_HOST', 'localhost');
+      const isDocker = process.env.IS_DOCKER === 'true' || process.env.CONTAINER === 'true';
+      if (host === 'db' && !isDocker) {
+        host = 'localhost';
+      }
+      const port = config.get<number>('DATABASE_PORT', 5432);
+      const user = config.get<string>('POSTGRES_USER', 'jeel');
+      const password = config.get<string>('POSTGRES_PASSWORD', 'change_me_in_local');
+      const database = config.get<string>('POSTGRES_DB', 'jeel_alamal');
 
-    pool = new Pool({ host, port, user, password, database });
+      pool = new Pool({ host, port, user, password, database, ssl });
+    }
     const db = drizzle(pool);
     const migrationsFolder = join(process.cwd(), 'drizzle');
     if (existsSync(migrationsFolder)) {

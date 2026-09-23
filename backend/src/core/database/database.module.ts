@@ -18,6 +18,11 @@ import * as schema from './schema';
       provide: PG_POOL,
       inject: [ConfigService],
       useFactory: (config: ConfigService) => {
+        const dbUrl = config.get<string>('DATABASE_URL');
+        const ssl = process.env.DATABASE_SSL === 'true' ? { rejectUnauthorized: false } : undefined;
+        if (dbUrl) {
+          return new Pool({ connectionString: dbUrl, ssl });
+        }
         let host = config.get<string>('DATABASE_HOST') || 'localhost';
         const isDocker = process.env.IS_DOCKER === 'true' || process.env.CONTAINER === 'true';
         if (host === 'db' && !isDocker) {
@@ -29,6 +34,7 @@ import * as schema from './schema';
           user: config.get<string>('POSTGRES_USER'),
           password: config.get<string>('POSTGRES_PASSWORD'),
           database: config.get<string>('POSTGRES_DB'),
+          ssl,
         });
       },
     },
