@@ -22,7 +22,8 @@ export class InstituteAccessPolicy {
     if (actor.role === UserRole.SuperAdmin) return;
     if (
       actor.role === UserRole.InstituteManager &&
-      (await this.assignments.isAssigned(actor.userId, instituteId))
+      (actor.instituteId === instituteId ||
+        (await this.assignments.isAssigned(actor.userId, instituteId)))
     ) {
       return;
     }
@@ -35,7 +36,8 @@ export class InstituteAccessPolicy {
     if (actor.role === UserRole.Teacher) return;
     if (
       actor.role === UserRole.InstituteManager &&
-      (await this.assignments.isAssigned(actor.userId, instituteId))
+      (actor.instituteId === instituteId ||
+        (await this.assignments.isAssigned(actor.userId, instituteId)))
     ) {
       return;
     }
@@ -50,7 +52,8 @@ export class InstituteAccessPolicy {
     }
     if (
       actor.role === UserRole.InstituteManager &&
-      (await this.assignments.isAssigned(actor.userId, instituteId))
+      (actor.instituteId === instituteId ||
+        (await this.assignments.isAssigned(actor.userId, instituteId)))
     ) {
       return;
     }

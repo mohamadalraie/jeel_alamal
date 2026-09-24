@@ -20,7 +20,8 @@ export class ProfileAccessPolicy {
   private async isAssignedManager(actor: Actor, instituteId: string) {
     return (
       actor.role === UserRole.InstituteManager &&
-      (await this.assignments.isAssigned(actor.userId, instituteId))
+      (actor.instituteId === instituteId ||
+        (await this.assignments.isAssigned(actor.userId, instituteId)))
     );
   }
 

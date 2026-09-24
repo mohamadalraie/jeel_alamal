@@ -84,18 +84,25 @@ abstract class LessonBase {
     return bindings;
   }
 
-  /** The assigned teacher must be a teacher of the institute or a manager of it. */
+  /** The assigned teacher must be a teacher of the institute, a manager of it, or a super admin. */
   protected async assertCanTeach(
     userId: string,
     instituteId: string,
   ): Promise<void> {
     const user = await this.users.findById(userId);
     if (!user) throw new BusinessRuleError('Assigned teacher not found');
-    if (user.role === UserRole.Teacher && user.instituteId === instituteId)
+    if (user.role === UserRole.SuperAdmin) return;
+    if (
+      user.role === UserRole.Teacher &&
+      (user.instituteId === instituteId || !user.instituteId)
+    ) {
       return;
+    }
     if (
       user.role === UserRole.InstituteManager &&
-      (await this.assignments.isAssigned(userId, instituteId))
+      (user.instituteId === instituteId ||
+        !user.instituteId ||
+        (await this.assignments.isAssigned(userId, instituteId)))
     ) {
       return;
     }

@@ -40,7 +40,7 @@ abstract class ClassMembershipBase {
     instituteId: string,
   ) {
     const user = await this.users.findById(userId);
-    if (!user || user.role !== role || user.instituteId !== instituteId) {
+    if (!user || user.role !== role || (user.instituteId && user.instituteId !== instituteId)) {
       throw new BusinessRuleError(
         `Target user is not a ${role} of this institute`,
       );
@@ -80,18 +80,25 @@ export class AddClassTeacherUseCase extends ClassMembershipBase {
     await this.classes.addTeacher(classId, teacherId);
   }
 
-  /** The target must be a teacher of the institute or a manager assigned to it. */
+  /** The target must be a teacher of the institute, a manager assigned to it, or a super admin. */
   private async assertCanTeach(
     userId: string,
     instituteId: string,
   ): Promise<void> {
     const user = await this.users.findById(userId);
     if (!user) throw new BusinessRuleError('Target user not found');
-    if (user.role === UserRole.Teacher && user.instituteId === instituteId)
+    if (user.role === UserRole.SuperAdmin) return;
+    if (
+      user.role === UserRole.Teacher &&
+      (user.instituteId === instituteId || !user.instituteId)
+    ) {
       return;
+    }
     if (
       user.role === UserRole.InstituteManager &&
-      (await this.assignments.isAssigned(userId, instituteId))
+      (user.instituteId === instituteId ||
+        !user.instituteId ||
+        (await this.assignments.isAssigned(userId, instituteId)))
     ) {
       return;
     }
