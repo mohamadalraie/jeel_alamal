@@ -60,7 +60,7 @@ function ClassCard({ c }: { c: ClassItem }) {
           </span>
           <span className="flex items-center gap-1.5">
             <Users className="size-4" />
-            {c.studentIds.length}
+            {c.isIntensive ? c.intensiveStudentIds.length : c.studentIds.length}
           </span>
         </CardContent>
       </Card>

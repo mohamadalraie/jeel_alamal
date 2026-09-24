@@ -16,4 +16,8 @@ export class CreateAnnouncementDto {
   @IsOptional()
   @IsString()
   targetHalkaId?: string;
+
+  @IsOptional()
+  @IsString()
+  targetTrack?: 'all' | 'regular' | 'intensive';
 }

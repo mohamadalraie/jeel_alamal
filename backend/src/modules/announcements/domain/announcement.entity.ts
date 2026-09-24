@@ -9,6 +9,7 @@ interface AnnouncementProps {
   title: string;
   content: string;
   imageUrl: string | null;
+  targetTrack: 'all' | 'regular' | 'intensive';
   createdAt: Date;
 }
 
@@ -27,6 +28,7 @@ export class Announcement extends Entity<string> {
     title: string;
     content: string;
     imageUrl?: string | null;
+    targetTrack?: 'all' | 'regular' | 'intensive';
   }): Announcement {
     const title = input.title.trim();
     const content = input.content.trim();
@@ -51,6 +53,7 @@ export class Announcement extends Entity<string> {
       title,
       content,
       imageUrl: input.imageUrl?.trim() || null,
+      targetTrack: input.targetTrack || 'all',
       createdAt: new Date(),
     });
   }
@@ -76,6 +79,9 @@ export class Announcement extends Entity<string> {
   }
   get imageUrl(): string | null {
     return this.props.imageUrl;
+  }
+  get targetTrack(): 'all' | 'regular' | 'intensive' {
+    return this.props.targetTrack;
   }
   get createdAt(): Date {
     return this.props.createdAt;

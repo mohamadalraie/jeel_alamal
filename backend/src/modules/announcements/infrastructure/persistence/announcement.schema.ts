@@ -18,6 +18,7 @@ export const announcements = pgTable('announcements', {
   title: varchar('title', { length: 200 }).notNull(),
   content: text('content').notNull(),
   imageUrl: varchar('image_url', { length: 500 }),
+  targetTrack: varchar('target_track', { enum: ['all', 'regular', 'intensive'] }).default('all'),
   createdAt: timestamp('created_at', { withTimezone: true })
     .notNull()
     .defaultNow(),

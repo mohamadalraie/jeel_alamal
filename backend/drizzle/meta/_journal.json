@@ -78,6 +78,13 @@
       "when": 1790253515811,
       "tag": "0010_simple_infant_terrible",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1790276454564,
+      "tag": "0011_perfect_yellow_claw",
+      "breakpoints": true
     }
   ]
 }

@@ -8,6 +8,7 @@ export class AnnouncementResponseDto {
   title: string;
   content: string;
   imageUrl: string | null;
+  targetTrack: string;
   createdAt: string;
 
   static fromDomain(entity: Announcement): AnnouncementResponseDto {
@@ -19,6 +20,7 @@ export class AnnouncementResponseDto {
     dto.title = entity.title;
     dto.content = entity.content;
     dto.imageUrl = entity.imageUrl;
+    dto.targetTrack = entity.targetTrack;
     dto.createdAt = entity.createdAt.toISOString();
     return dto;
   }

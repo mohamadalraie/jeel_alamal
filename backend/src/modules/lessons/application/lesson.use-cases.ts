@@ -12,6 +12,7 @@ import type { ClassRepository } from '../../classes/domain/class.repository';
 import { InstituteAccessPolicy } from '../../institutes/application/institute-access.policy';
 import { MANAGER_ASSIGNMENTS } from '../../institutes/domain/manager-assignment.repository';
 import type { ManagerAssignmentRepository } from '../../institutes/domain/manager-assignment.repository';
+import { NotificationsService } from '../../notifications/application/notifications.service';
 import { Lesson, LessonSourceData } from '../domain/lesson.entity';
 import { LessonClassBinding } from '../domain/lesson-class-binding.entity';
 import { LessonKind } from '../domain/lesson-kind';
@@ -132,6 +133,7 @@ export class CreateLessonUseCase extends LessonBase {
     @Inject(CLASS_REPOSITORY) classes: ClassRepository,
     @Inject(USER_REPOSITORY) users: UserRepository,
     @Inject(MANAGER_ASSIGNMENTS) assignments: ManagerAssignmentRepository,
+    private readonly notifications: NotificationsService,
   ) {
     super(policy, lessons, classes, users, assignments);
   }
@@ -165,6 +167,31 @@ export class CreateLessonUseCase extends LessonBase {
       dto.assignments,
     );
     await this.lessons.createLesson(lesson, bindings);
+
+    // Send notifications to students in the assigned classes
+    try {
+      const recipientIds = new Set<string>();
+      for (const assignment of dto.assignments) {
+        const membership = await this.classes.getMembership(assignment.classId);
+        if (membership) {
+          membership.studentIds.forEach((id) => recipientIds.add(id));
+          membership.intensiveStudentIds.forEach((id) => recipientIds.add(id));
+        }
+      }
+      
+      const filteredRecipientIds = Array.from(recipientIds).filter((id) => id !== actor.userId);
+      if (filteredRecipientIds.length > 0) {
+        await this.notifications.sendToUsers(filteredRecipientIds, {
+          title: `درس جديد: ${lesson.name || 'درس غير معنون'}`,
+          message: `تمت إضافة درس جديد بتاريخ ${lesson.date}`,
+          type: 'lesson',
+          link: '/dashboard/my-lessons',
+        });
+      }
+    } catch (err) {
+      // Ignore notification errors
+    }
+
     return { lessonId: lesson.id };
   }
 }

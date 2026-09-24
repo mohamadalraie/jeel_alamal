@@ -34,6 +34,7 @@ export interface Announcement {
   title: string;
   content: string;
   imageUrl: string | null;
+  targetTrack: 'all' | 'regular' | 'intensive';
   createdAt: string;
 }
 
@@ -48,6 +49,7 @@ export default function AnnouncementsPage() {
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [targetHalkaId, setTargetHalkaId] = useState<string>('all');
+  const [targetTrack, setTargetTrack] = useState<'all' | 'regular' | 'intensive'>('all');
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -104,12 +106,14 @@ export default function AnnouncementsPage() {
           content: content.trim(),
           imageUrl: uploadedUrl,
           targetHalkaId: targetHalkaId === 'all' ? undefined : targetHalkaId,
+          targetTrack: targetTrack,
         }),
       });
 
       setTitle('');
       setContent('');
       setTargetHalkaId('all');
+      setTargetTrack('all');
       setImageFile(null);
       setImagePreview(null);
       setOpen(false);
@@ -189,13 +193,13 @@ export default function AnnouncementsPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="targetScope">الفئة المستهدفة للإعلان *</Label>
+                  <Label htmlFor="targetScope">الفئة المستهدفة للإعلان (الحلقة)</Label>
                   <Select value={targetHalkaId} onValueChange={setTargetHalkaId}>
                     <SelectTrigger className="w-full">
-                      <SelectValue placeholder="اختر الفئة المستهدفة" />
+                      <SelectValue placeholder="اختر الحلقة المستهدفة" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="all">جميع الحلقات (كل المعهد)</SelectItem>
+                      <SelectItem value="all">جميع الحلقات (أو حسب المسار)</SelectItem>
                       {classList.map((c) => (
                         <SelectItem key={c.id} value={c.id}>
                           {c.name}
@@ -204,6 +208,22 @@ export default function AnnouncementsPage() {
                     </SelectContent>
                   </Select>
                 </div>
+
+                {targetHalkaId === 'all' && selected?.intensiveTrackEnabled && (
+                  <div className="space-y-2">
+                    <Label htmlFor="targetTrack">تخصيص المسار (لجميع الحلقات)</Label>
+                    <Select value={targetTrack} onValueChange={(val: any) => setTargetTrack(val)}>
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="اختر المسار المستهدف" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">كل المسارات</SelectItem>
+                        <SelectItem value="regular">المسار الأساسي فقط</SelectItem>
+                        <SelectItem value="intensive">المسار المكثف فقط</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
 
                 <div className="space-y-2">
                   <Label htmlFor="content">تفاصيل الإعلان *</Label>
@@ -290,8 +310,14 @@ export default function AnnouncementsPage() {
                 <CardHeader className="pb-2">
                   <div className="flex items-start justify-between gap-4">
                     <div>
-                      <CardTitle className="text-xl font-bold text-foreground">
+                      <CardTitle className="text-xl font-bold text-foreground flex items-center gap-2">
                         {item.title}
+                        {item.targetTrack === 'intensive' && !targetHalka && (
+                          <span className="text-[10px] bg-amber-500/10 text-amber-600 border border-amber-500/20 px-1.5 py-0.5 rounded-md font-semibold">مكثف</span>
+                        )}
+                        {item.targetTrack === 'regular' && !targetHalka && (
+                          <span className="text-[10px] bg-primary/10 text-primary border border-primary/20 px-1.5 py-0.5 rounded-md font-semibold">أساسي</span>
+                        )}
                       </CardTitle>
                       {targetHalka && (
                         <span className="inline-block mt-1 text-xs px-2.5 py-0.5 rounded-full bg-primary/10 text-primary font-medium">

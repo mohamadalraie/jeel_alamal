@@ -76,7 +76,7 @@ function TeacherClassCard({
           </div>
           <Badge variant="outline" className="flex items-center gap-1 text-xs shrink-0">
             <Users className="size-3" />
-            <span>{classItem.studentIds.length}</span>
+            <span>{classItem.isIntensive ? classItem.intensiveStudentIds.length : classItem.studentIds.length}</span>
           </Badge>
         </div>
       </CardHeader>

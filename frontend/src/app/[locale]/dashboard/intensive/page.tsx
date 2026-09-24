@@ -11,7 +11,7 @@ import { notify } from '@/lib/toast';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import {
   Dialog,
@@ -45,6 +45,14 @@ export default function IntensiveClassesPage() {
     return q ? list.filter((c) => c.name.includes(q)) : list;
   }, [classes, search]);
 
+  const stats = useMemo(() => {
+    const list = classes ?? [];
+    const totalClasses = list.length;
+    const totalStudents = list.reduce((acc, c) => acc + (c.isIntensive ? c.intensiveStudentIds.length : c.studentIds.length), 0);
+    const uniqueTeachers = new Set(list.flatMap(c => c.teacherIds)).size;
+    return { totalClasses, totalStudents, uniqueTeachers };
+  }, [classes]);
+
   if (loading) return <CardsSkeleton />;
   if (!selected) return <p className="text-muted-foreground">{t('selectInstituteFirst')}</p>;
 
@@ -75,7 +83,7 @@ export default function IntensiveClassesPage() {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-2">
           <h1 className="text-2xl font-bold">{tIntensive('label')}</h1>
-          <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20 gap-1">
+          <Badge variant="outline" className="bg-amber-500/10 text-amber-600 border-amber-500/20 gap-1">
             <Sparkles className="size-3" />
             {tIntensive('badge')}
           </Badge>
@@ -119,7 +127,31 @@ export default function IntensiveClassesPage() {
         )}
       </div>
 
-      <SearchInput value={search} onChange={setSearch} />
+      {/* Dashboard Stats */}
+      {!isLoading && !isError && classes && classes.length > 0 && (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-2">
+          <Card className="bg-amber-500/5 border-amber-500/20">
+            <CardHeader className="py-4 pb-2">
+              <CardDescription className="font-medium text-amber-700 dark:text-amber-400">إجمالي الحلقات المكثفة</CardDescription>
+              <CardTitle className="text-3xl font-bold text-amber-600">{stats.totalClasses}</CardTitle>
+            </CardHeader>
+          </Card>
+          <Card className="bg-amber-500/5 border-amber-500/20">
+            <CardHeader className="py-4 pb-2">
+              <CardDescription className="font-medium text-amber-700 dark:text-amber-400">الطلاب في المسار المكثف</CardDescription>
+              <CardTitle className="text-3xl font-bold text-amber-600">{stats.totalStudents}</CardTitle>
+            </CardHeader>
+          </Card>
+          <Card className="bg-amber-500/5 border-amber-500/20">
+            <CardHeader className="py-4 pb-2">
+              <CardDescription className="font-medium text-amber-700 dark:text-amber-400">الأساتذة المشاركون</CardDescription>
+              <CardTitle className="text-3xl font-bold text-amber-600">{stats.uniqueTeachers}</CardTitle>
+            </CardHeader>
+          </Card>
+        </div>
+      )}
+
+      <SearchInput value={search} onChange={setSearch} placeholder="ابحث عن حلقة مكثفة..." />
 
       {isLoading ? (
         <CardsSkeleton count={6} />
@@ -138,10 +170,10 @@ export default function IntensiveClassesPage() {
                 <CardHeader>
                   <CardTitle className="flex items-center justify-between gap-2">
                     <span className="flex items-center gap-2">
-                      <BookOpen className="text-primary size-5" />
+                      <Sparkles className="text-amber-500 size-5" />
                       {c.name}
                     </span>
-                    <Badge variant="secondary">{tIntensive('badge')}</Badge>
+                    <Badge variant="secondary" className="bg-amber-500/10 text-amber-600 border-transparent hover:bg-amber-500/20">{tIntensive('badge')}</Badge>
                   </CardTitle>
                   {c.description && (
                     <p className="text-muted-foreground line-clamp-2 text-sm">{c.description}</p>
@@ -154,7 +186,7 @@ export default function IntensiveClassesPage() {
                   </span>
                   <span className="flex items-center gap-1.5">
                     <Users className="size-4" />
-                    {c.studentIds.length}
+                    {c.isIntensive ? c.intensiveStudentIds.length : c.studentIds.length}
                   </span>
                 </CardContent>
               </Card>

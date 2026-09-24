@@ -39,6 +39,7 @@ export class CreateAnnouncementUseCase {
       title: dto.title,
       content: dto.content,
       imageUrl: dto.imageUrl,
+      targetTrack: dto.targetTrack,
     });
 
     await this.repository.save(announcement);
@@ -52,11 +53,22 @@ export class CreateAnnouncementUseCase {
         recipientIds = [
           ...(membership?.teacherIds ?? []),
           ...(membership?.studentIds ?? []),
+          ...(membership?.intensiveStudentIds ?? []),
           ...(membership?.supervisorId ? [membership.supervisorId] : []),
         ];
       } else {
         const instituteUsers = await this.users.findByInstitute(instituteId);
-        recipientIds = (instituteUsers ?? []).map((u) => u.id);
+        if (announcement.targetTrack === 'intensive') {
+          const intensiveIds = await this.classes.getIntensiveStudentIdsForInstitute(instituteId);
+          const intensiveSet = new Set(intensiveIds);
+          recipientIds = instituteUsers.filter(u => u.role !== 'student' || intensiveSet.has(u.id)).map(u => u.id);
+        } else if (announcement.targetTrack === 'regular') {
+          const intensiveIds = await this.classes.getIntensiveStudentIdsForInstitute(instituteId);
+          const intensiveSet = new Set(intensiveIds);
+          recipientIds = instituteUsers.filter(u => u.role !== 'student' || !intensiveSet.has(u.id)).map(u => u.id);
+        } else {
+          recipientIds = (instituteUsers ?? []).map((u) => u.id);
+        }
       }
 
       const filteredRecipientIds = Array.from(new Set(recipientIds)).filter(

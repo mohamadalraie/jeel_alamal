@@ -17,8 +17,8 @@ export class DrizzleAnnouncementRepository implements AnnouncementRepository {
       authorId: announcement.authorId,
       targetHalkaId: announcement.targetHalkaId,
       title: announcement.title,
-      content: announcement.content,
       imageUrl: announcement.imageUrl,
+      targetTrack: announcement.targetTrack,
       createdAt: announcement.createdAt,
     });
   }
@@ -37,6 +37,7 @@ export class DrizzleAnnouncementRepository implements AnnouncementRepository {
           title: row.title,
           content: row.content,
           imageUrl: row.imageUrl,
+          targetTrack: row.targetTrack as 'all' | 'regular' | 'intensive',
           createdAt: row.createdAt,
         })
       : null;
@@ -71,6 +72,7 @@ export class DrizzleAnnouncementRepository implements AnnouncementRepository {
         title: row.title,
         content: row.content,
         imageUrl: row.imageUrl,
+        targetTrack: row.targetTrack as 'all' | 'regular' | 'intensive',
         createdAt: row.createdAt,
       }),
     );
