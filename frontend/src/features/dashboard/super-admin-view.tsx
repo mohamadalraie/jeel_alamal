@@ -8,6 +8,7 @@ import { createInstitute, updateInstitute, toggleIntensiveTrack, resolveAsset, A
 import { useInstitutes, useQueryClient, qk } from '@/lib/queries';
 import { notify } from '@/lib/toast';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -30,12 +31,17 @@ import { MemberFields, emptyMember, type MemberDraft } from './member-fields';
 
 import { UserSelectOrFields, type UserSearchResult } from './user-select-or-fields';
 
+import { useInstitute } from '@/features/layout/institute-context';
+
 /** Super-admin home: institutes list, create (with manager + logo), and edit. */
 export function SuperAdminView() {
   const t = useTranslations('dashboard');
+  const tIntensive = useTranslations('intensiveTrack');
   const tc = useTranslations('common');
   const locale = useLocale();
   const qc = useQueryClient();
+  const { user } = useInstitute();
+  const isSuperAdmin = user.role === 'super_admin';
   const { data: institutes, isLoading } = useInstitutes();
   const [createOpen, setCreateOpen] = useState(false);
   const [editing, setEditing] = useState<Institute | null>(null);
@@ -114,10 +120,12 @@ export function SuperAdminView() {
     <section className="flex flex-col gap-5">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">{t('institutes')}</h1>
-        <Button onClick={() => { resetCreate(); setError(null); setCreateOpen(true); }}>
-          <Plus data-icon="inline-start" />
-          {t('createInstitute')}
-        </Button>
+        {isSuperAdmin && (
+          <Button onClick={() => { resetCreate(); setError(null); setCreateOpen(true); }}>
+            <Plus data-icon="inline-start" />
+            {t('createInstitute')}
+          </Button>
+        )}
       </div>
 
       {isLoading ? (
@@ -132,6 +140,7 @@ export function SuperAdminView() {
                 <TableHead>{t('logo')}</TableHead>
                 <TableHead>{t('instituteName')}</TableHead>
                 <TableHead>{t('place')}</TableHead>
+                <TableHead>{tIntensive('label')}</TableHead>
                 <TableHead>{t('createdAt')}</TableHead>
                 <TableHead className="text-end">{t('actions')}</TableHead>
               </TableRow>
@@ -144,6 +153,33 @@ export function SuperAdminView() {
                   </TableCell>
                   <TableCell className="font-medium">{inst.name}</TableCell>
                   <TableCell>{inst.place}</TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-2">
+                      <Badge variant={inst.intensiveTrackEnabled ? 'default' : 'outline'}>
+                        {inst.intensiveTrackEnabled ? tIntensive('active', { defaultValue: 'مفعّل' }) : tIntensive('inactive', { defaultValue: 'معطّل' })}
+                      </Badge>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-xs h-7"
+                        onClick={async () => {
+                          try {
+                            await toggleIntensiveTrack(inst.id, !inst.intensiveTrackEnabled);
+                            refresh();
+                            notify.success(
+                              inst.intensiveTrackEnabled
+                                ? 'تم تعطيل المسار المكثف'
+                                : 'تم تفعيل المسار المكثف',
+                            );
+                          } catch (err) {
+                            notify.error(err, tc('error'));
+                          }
+                        }}
+                      >
+                        {inst.intensiveTrackEnabled ? tIntensive('disable') : tIntensive('enable')}
+                      </Button>
+                    </div>
+                  </TableCell>
                   <TableCell>
                     {new Date(inst.createdAt).toLocaleDateString(locale)}
                   </TableCell>

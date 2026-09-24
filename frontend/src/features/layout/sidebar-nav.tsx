@@ -28,7 +28,7 @@ const ITEMS: NavItem[] = [
   { href: '/dashboard/teacher-dashboard', labelKey: 'teacherDashboard', icon: LayoutDashboard, teacherOnly: true },
   { href: '/dashboard/my-profile', labelKey: 'myProfile', icon: UserCircle, studentOnly: true },
   { href: '/dashboard/statistics', labelKey: 'statistics', icon: BarChart3, hideForStudent: true, hideForTeacher: true },
-  { href: '/dashboard/institutes', labelKey: 'institutes', icon: Building2, superAdminOnly: true },
+  { href: '/dashboard/institutes', labelKey: 'instituteSettings', icon: Building2, managersOnly: true },
   { href: '/dashboard/managers', labelKey: 'managers', icon: ShieldCheck, managersOnly: true },
   { href: '/dashboard/my-lessons', labelKey: 'myLessons', icon: CalendarClock, hideForStudent: true },
   { href: '/dashboard/teachers', labelKey: 'teachers', icon: GraduationCap, hideForStudent: true },
