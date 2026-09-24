@@ -72,6 +72,7 @@ export interface ClassProfileResult {
     name: string;
     description: string | null;
     lessonsVisibleToStudents: boolean;
+    isIntensive: boolean;
     createdAt: string;
   };
   schedule: SlotView[];

@@ -216,13 +216,10 @@ export class AddIntensiveStudentUseCase extends ClassMembershipBase {
       );
     }
 
-    // BR-3: Student cannot be in multiple intensive classes
-    const isAlreadyIntensive = await this.classes.isIntensiveStudentOfClass(
-      classId,
-      studentId,
-    );
+    // BR-3: Student cannot be in ANY intensive class (not just this one)
+    const isAlreadyIntensive = await this.classes.isStudentInAnyIntensiveClass(studentId);
     if (isAlreadyIntensive) {
-      throw new ConflictError('Student is already enrolled in this intensive class');
+      throw new ConflictError('Student is already enrolled in an intensive class');
     }
 
     await this.classes.addIntensiveStudent(classId, studentId);

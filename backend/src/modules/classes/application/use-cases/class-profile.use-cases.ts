@@ -47,10 +47,16 @@ export class GetClassProfileUseCase {
       this.classes.getMembership(classId),
       this.classes.getSchedule(classId),
     ]);
-    const ids = [...membership.teacherIds, ...membership.studentIds];
+
+    // For intensive classes, the enrolled students live in class_intensive_students.
+    // For regular classes, they live in class_students.
+    const displayedStudentIds = klass.isIntensive
+      ? membership.intensiveStudentIds
+      : membership.studentIds;
+
+    const ids = [...membership.teacherIds, ...displayedStudentIds];
     const people = await this.users.findManyByIds(ids);
     const byId = new Map(people.map((u) => [u.id, u]));
-    const intensiveSet = new Set(membership.intensiveStudentIds);
 
     return {
       class: {
@@ -58,6 +64,7 @@ export class GetClassProfileUseCase {
         name: klass.name,
         description: klass.description,
         lessonsVisibleToStudents: klass.lessonsVisibleToStudents,
+        isIntensive: klass.isIntensive,
         createdAt: klass.createdAt.toISOString(),
       },
       schedule: schedule.map((s) => ({
@@ -72,11 +79,11 @@ export class GetClassProfileUseCase {
         name: byId.get(id)?.fullName ?? '—',
         isSupervisor: membership.supervisorId === id,
       })),
-      students: membership.studentIds.map((id) => ({
+      students: displayedStudentIds.map((id) => ({
         id,
         name: byId.get(id)?.fullName ?? '—',
         schoolGrade: byId.get(id)?.schoolGrade ?? null,
-        isIntensive: intensiveSet.has(id),
+        isIntensive: klass.isIntensive,
       })),
     };
   }

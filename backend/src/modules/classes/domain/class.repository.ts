@@ -30,6 +30,8 @@ export interface ClassRepository {
   addIntensiveStudent(classId: string, studentId: string): Promise<void>;
   removeIntensiveStudent(classId: string, studentId: string): Promise<void>;
   isIntensiveStudentOfClass(classId: string, studentId: string): Promise<boolean>;
+  /** BR-3: is this student already enrolled in ANY intensive class? */
+  isStudentInAnyIntensiveClass(studentId: string): Promise<boolean>;
   getIntensiveStudentIds(classId: string): Promise<string[]>;
   /** Classes a teacher belongs to, scoped to one institute (profile view). */
   findClassesByTeacher(teacherId: string): Promise<Class[]>;

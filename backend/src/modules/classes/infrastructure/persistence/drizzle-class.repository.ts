@@ -205,6 +205,16 @@ export class DrizzleClassRepository implements ClassRepository {
     return !!row;
   }
 
+
+  async isStudentInAnyIntensiveClass(studentId: string): Promise<boolean> {
+    const [row] = await this.db
+      .select({ studentId: classIntensiveStudents.studentId })
+      .from(classIntensiveStudents)
+      .where(eq(classIntensiveStudents.studentId, studentId))
+      .limit(1);
+    return !!row;
+  }
+
   async getIntensiveStudentIds(classId: string): Promise<string[]> {
     const rows = await this.db
       .select({ studentId: classIntensiveStudents.studentId })
