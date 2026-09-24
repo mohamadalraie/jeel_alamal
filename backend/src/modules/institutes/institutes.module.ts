@@ -1,6 +1,7 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 
 import { UsersModule } from '../users/users.module';
+import { ClassesModule } from '../classes/classes.module';
 import { InstitutesController } from './presentation/institutes.controller';
 import { CreateInstituteUseCase } from './application/use-cases/create-institute.use-case';
 import { ListInstitutesUseCase } from './application/use-cases/list-institutes.use-case';
@@ -23,7 +24,7 @@ import { DrizzleInstituteRepository } from './infrastructure/persistence/drizzle
 import { DrizzleManagerAssignmentRepository } from './infrastructure/persistence/drizzle-manager-assignment.repository';
 
 @Module({
-  imports: [UsersModule],
+  imports: [UsersModule, forwardRef(() => ClassesModule)],
   controllers: [InstitutesController],
   providers: [
     CreateInstituteUseCase,

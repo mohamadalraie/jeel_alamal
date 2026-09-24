@@ -37,6 +37,10 @@ export interface ClassRepository {
   findClassesByTeacher(teacherId: string): Promise<Class[]>;
   /** The single class a student is currently in, if any (spec 002: one at a time). */
   findCurrentClassOfStudent(studentId: string): Promise<Class | null>;
+  /** The single intensive class a student is currently in, if any. */
+  findCurrentIntensiveClassOfStudent(studentId: string): Promise<Class | null>;
+  /** Get all student IDs enrolled in any intensive class of an institute. */
+  getIntensiveStudentIdsForInstitute(instituteId: string): Promise<string[]>;
   /**
    * Transfer: drop the student's existing enrollment(s) and add the new one in
    * one transaction. Passing null target only removes (un-enroll).

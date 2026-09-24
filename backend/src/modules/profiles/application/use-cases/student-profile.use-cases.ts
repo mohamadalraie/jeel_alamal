@@ -16,8 +16,9 @@ import { PASSWORD_HASHER } from '../../../users/application/ports/password-hashe
 import type { PasswordHasher } from '../../../users/application/ports/password-hasher.port';
 
 export interface StudentProfileResult {
-  student: UserResponseDto;
+  student: UserResponseDto & { isIntensive?: boolean };
   currentClass: { id: string; name: string } | null;
+  intensiveClass: { id: string; name: string } | null;
 }
 
 /** Load a student's profile + current class. Staff or the student themselves. */
@@ -41,9 +42,14 @@ export class GetStudentProfileUseCase {
     }
     const student = await loadStudent(this.users, instituteId, studentId);
     const current = await this.classes.findCurrentClassOfStudent(studentId);
+    const intensive = await this.classes.findCurrentIntensiveClassOfStudent(studentId);
+    const dto = UserResponseDto.fromDomain(student) as UserResponseDto & { isIntensive?: boolean };
+    dto.isIntensive = !!intensive;
+
     return {
-      student: UserResponseDto.fromDomain(student),
+      student: dto,
       currentClass: current ? { id: current.id, name: current.name } : null,
+      intensiveClass: intensive ? { id: intensive.id, name: intensive.name } : null,
     };
   }
 }

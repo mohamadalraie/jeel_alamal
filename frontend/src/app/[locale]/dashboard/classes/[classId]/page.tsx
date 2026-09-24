@@ -2,7 +2,7 @@
 
 import { use, useCallback, useEffect, useState } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
-import { ArrowRight, ArrowLeft, ChevronLeft, ChevronRight, Star, Trash2, UserPlus } from 'lucide-react';
+import { ArrowRight, ArrowLeft, ChevronLeft, ChevronRight, Star, Trash2, UserPlus, Zap } from 'lucide-react';
 import type { ClassProfile, User } from '@/lib/types';
 import {
   getClassProfile,
@@ -137,7 +137,8 @@ export default function ClassProfilePage({
         <h1 className="text-2xl font-bold">{klass.name}</h1>
         {klass.isIntensive && (
           <Badge variant="outline" className="bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30 font-semibold gap-1">
-            ⚡ {tIntensive('badge')}
+            <Zap className="h-3.5 w-3.5 fill-amber-500 text-amber-500" />
+            <span>{tIntensive('badge')}</span>
           </Badge>
         )}
         <Badge variant="secondary">{t('classProfile')}</Badge>

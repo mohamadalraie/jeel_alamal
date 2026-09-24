@@ -16,6 +16,10 @@ import { StudentRecitationTab } from '@/features/recitation/student-recitation-t
 import { StudentAttendanceView } from '@/features/attendance/student-attendance-view';
 import { StudentDinarsView } from '@/features/dinars/student-dinars-view';
 
+import { Zap } from 'lucide-react';
+import { IntensiveClassCard } from '@/features/profiles/intensive-class-card';
+import { Badge } from '@/components/ui/badge';
+
 export default function StudentProfilePage({
   params,
 }: {
@@ -49,7 +53,8 @@ export default function StudentProfilePage({
   }
   if (!profile) return <p className="text-muted-foreground">{tc('loading')}</p>;
 
-  const { student, currentClass } = profile;
+  const { student, currentClass, intensiveClass } = profile;
+  const isIntensiveTrack = student.isIntensive || !!intensiveClass;
 
   return (
     <div className="flex flex-col gap-5">
@@ -57,6 +62,14 @@ export default function StudentProfilePage({
         name={`${student.firstName} ${student.lastName}`}
         username={student.username}
         badge={t('students')}
+        extraBadge={
+          isIntensiveTrack ? (
+            <Badge className="bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/30 gap-1 hover:bg-amber-500/20 font-semibold">
+              <Zap className="h-3.5 w-3.5 fill-amber-500 text-amber-500" />
+              <span>المسار المكثف</span>
+            </Badge>
+          ) : null
+        }
         backHref="/dashboard/students"
       />
 
@@ -84,6 +97,14 @@ export default function StudentProfilePage({
             currentClass={currentClass}
             onChanged={load}
           />
+          {selected.intensiveTrackEnabled && (
+            <IntensiveClassCard
+              instituteId={selected.id}
+              studentId={studentId}
+              intensiveClass={intensiveClass ?? null}
+              onChanged={load}
+            />
+          )}
           <ResetStudentPasswordDialog
             instituteId={selected.id}
             studentId={studentId}

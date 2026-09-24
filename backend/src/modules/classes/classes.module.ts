@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 
 import { UsersModule } from '../users/users.module';
 import { InstitutesModule } from '../institutes/institutes.module';
@@ -28,7 +28,7 @@ import { CLASS_REPOSITORY } from './domain/class.repository';
 import { DrizzleClassRepository } from './infrastructure/persistence/drizzle-class.repository';
 
 @Module({
-  imports: [UsersModule, InstitutesModule],
+  imports: [UsersModule, forwardRef(() => InstitutesModule)],
   controllers: [ClassesController],
   providers: [
     CreateClassUseCase,

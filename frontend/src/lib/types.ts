@@ -39,6 +39,7 @@ export interface User {
   instituteId: string | null;
   teacherDetails?: TeacherDetails;
   createdAt: string;
+  isIntensive?: boolean;
 }
 
 export interface Certification {
@@ -79,6 +80,7 @@ export interface TeacherLessonsProfile {
 export interface StudentProfile {
   student: User;
   currentClass: { id: string; name: string } | null;
+  intensiveClass?: { id: string; name: string } | null;
 }
 
 export type Weekday = 'sat' | 'sun' | 'mon' | 'tue' | 'wed' | 'thu' | 'fri';

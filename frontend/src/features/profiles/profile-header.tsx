@@ -24,11 +24,13 @@ export function ProfileHeader({
   name,
   username,
   badge,
+  extraBadge,
   backHref,
 }: {
   name: string;
   username: string;
   badge: string;
+  extraBadge?: React.ReactNode;
   backHref?: string;
 }) {
   const locale = useLocale();
@@ -47,9 +49,10 @@ export function ProfileHeader({
         {initials(name)}
       </div>
       <div className="flex flex-col">
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <h1 className="text-2xl font-bold">{name}</h1>
           <Badge variant="secondary">{badge}</Badge>
+          {extraBadge}
         </div>
         <span className="text-muted-foreground text-sm" dir="ltr">
           @{username}

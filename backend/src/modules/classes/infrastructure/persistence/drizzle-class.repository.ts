@@ -244,6 +244,26 @@ export class DrizzleClassRepository implements ClassRepository {
     return row ? toDomain(row.klass) : null;
   }
 
+  async findCurrentIntensiveClassOfStudent(studentId: string): Promise<Class | null> {
+    const [row] = await this.db
+      .select({ klass: classes })
+      .from(classIntensiveStudents)
+      .innerJoin(classes, eq(classIntensiveStudents.classId, classes.id))
+      .where(eq(classIntensiveStudents.studentId, studentId))
+      .orderBy(desc(classIntensiveStudents.addedAt))
+      .limit(1);
+    return row ? toDomain(row.klass) : null;
+  }
+
+  async getIntensiveStudentIdsForInstitute(instituteId: string): Promise<string[]> {
+    const rows = await this.db
+      .select({ studentId: classIntensiveStudents.studentId })
+      .from(classIntensiveStudents)
+      .innerJoin(classes, eq(classIntensiveStudents.classId, classes.id))
+      .where(eq(classes.instituteId, instituteId));
+    return Array.from(new Set(rows.map((r) => r.studentId)));
+  }
+
   async transferStudent(
     studentId: string,
     toClassId: string | null,
