@@ -1,6 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { randomUUID } from 'node:crypto';
-import { and, count, desc, eq, isNull, notInArray } from 'drizzle-orm';
+import { and, count, desc, eq, inArray, isNull, notInArray } from 'drizzle-orm';
 import { Class } from '../../domain/class.entity';
 import type {
   ClassMembership,
@@ -348,6 +348,30 @@ export class DrizzleClassRepository implements ClassRepository {
           eq(users.role, 'student'),
           isNull(users.deletedAt),
           notInArray(users.id, enrolled),
+        ),
+      );
+    return rows.map((r) => r.id);
+  }
+
+  async findStudentIdsEligibleForIntensive(instituteId: string): Promise<string[]> {
+    // Institute students enrolled in regular class (class_students) but NOT in class_intensive_students.
+    const regularEnrolled = this.db
+      .select({ id: classStudents.studentId })
+      .from(classStudents);
+    const intensiveEnrolled = this.db
+      .select({ id: classIntensiveStudents.studentId })
+      .from(classIntensiveStudents);
+
+    const rows = await this.db
+      .select({ id: users.id })
+      .from(users)
+      .where(
+        and(
+          eq(users.instituteId, instituteId),
+          eq(users.role, 'student'),
+          isNull(users.deletedAt),
+          inArray(users.id, regularEnrolled),
+          notInArray(users.id, intensiveEnrolled),
         ),
       );
     return rows.map((r) => r.id);

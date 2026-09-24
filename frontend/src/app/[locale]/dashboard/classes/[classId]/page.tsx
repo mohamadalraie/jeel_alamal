@@ -72,15 +72,24 @@ export default function ClassProfilePage({
   const instituteId = selected?.id ?? '';
 
   const load = useCallback(() => {
-    getClassProfile(classId).then(setProfile).catch(() => setNotFound(true));
+    getClassProfile(classId)
+      .then((p) => {
+        setProfile(p);
+        if (selected) {
+          listUnassignedStudents(
+            selected.id,
+            p.class.isIntensive ? 'intensive' : 'regular',
+          )
+            .then(setUnassignedStudents)
+            .catch(() => setUnassignedStudents([]));
+        }
+      })
+      .catch(() => setNotFound(true));
+
     if (selected) {
       listTeachers(selected.id).then(setAllTeachers).catch(() => setAllTeachers([]));
       // Managers can also teach/supervise a class (spec 007).
       listManagers(selected.id).then(setAllManagers).catch(() => setAllManagers([]));
-      // Students eligible to enroll: those not in ANY class (one-class rule).
-      listUnassignedStudents(selected.id)
-        .then(setUnassignedStudents)
-        .catch(() => setUnassignedStudents([]));
     }
   }, [classId, selected]);
   useEffect(load, [load]);
@@ -160,7 +169,12 @@ export default function ClassProfilePage({
                   instituteId={instituteId}
                   role="student"
                   options={enrollableStudents}
-                  emptyHint={t('noUnassignedStudents')}
+                  emptyHint={
+                    klass.isIntensive
+                      ? 'لا يوجد طلاب مؤهلون للمسار المكثف (يجب تسجيل الطالب في حلقة أساسية أولاً وألا يكون مسجلاً في حلقة مكثفة أخرى)'
+                      : t('noUnassignedStudents')
+                  }
+                  isIntensive={klass.isIntensive}
                   onDone={load}
                 />
               </div>

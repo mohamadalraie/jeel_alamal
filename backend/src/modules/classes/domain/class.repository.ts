@@ -54,6 +54,8 @@ export interface ClassRepository {
   removeMemberFromAllClasses(userId: string): Promise<void>;
   /** Student ids of an institute that are not enrolled in any class. */
   findStudentIdsWithoutClass(instituteId: string): Promise<string[]>;
+  /** Student ids of an institute enrolled in a regular class but not yet in an intensive class. */
+  findStudentIdsEligibleForIntensive(instituteId: string): Promise<string[]>;
   /** Counts for the institute statistics page. */
   countClasses(instituteId: string): Promise<number>;
 }

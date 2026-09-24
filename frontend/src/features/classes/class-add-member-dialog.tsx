@@ -8,6 +8,7 @@ import {
   createStudent,
   addClassTeacher,
   enrollStudent,
+  addIntensiveStudent,
   ApiError,
 } from '@/lib/api';
 import { Button } from '@/components/ui/button';
@@ -31,7 +32,7 @@ import { MemberFields, emptyMember, type MemberDraft } from '@/features/dashboar
 /**
  * Add a member to a class either by picking an eligible existing person or by
  * creating a brand-new account and adding them in one step (spec 004).
- * - students: `options` are students not in any class.
+ * - students: `options` are students not in any class (or eligible for intensive).
  * - teachers: `options` are teachers not already in this class.
  */
 export function ClassAddMemberDialog({
@@ -40,6 +41,7 @@ export function ClassAddMemberDialog({
   role,
   options,
   emptyHint,
+  isIntensive,
   onDone,
 }: {
   classId: string;
@@ -47,6 +49,7 @@ export function ClassAddMemberDialog({
   role: 'teacher' | 'student';
   options: { id: string; name: string }[];
   emptyHint: string;
+  isIntensive?: boolean;
   onDone: () => void;
 }) {
   const t = useTranslations('dashboard');
@@ -59,7 +62,11 @@ export function ClassAddMemberDialog({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const addToClass = isStudent ? enrollStudent : addClassTeacher;
+  const addToClass = isStudent
+    ? isIntensive
+      ? addIntensiveStudent
+      : enrollStudent
+    : addClassTeacher;
 
   async function addExisting() {
     if (!selected) return;

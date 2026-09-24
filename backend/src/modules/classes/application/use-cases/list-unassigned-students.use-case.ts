@@ -19,9 +19,16 @@ export class ListUnassignedStudentsUseCase {
     @Inject(USER_REPOSITORY) private readonly users: UserRepository,
   ) {}
 
-  async execute(actor: Actor, instituteId: string): Promise<UserResponseDto[]> {
+  async execute(
+    actor: Actor,
+    instituteId: string,
+    track?: 'regular' | 'intensive',
+  ): Promise<UserResponseDto[]> {
     await this.policy.assertStaffOf(actor, instituteId);
-    const ids = await this.classes.findStudentIdsWithoutClass(instituteId);
+    const ids =
+      track === 'intensive'
+        ? await this.classes.findStudentIdsEligibleForIntensive(instituteId)
+        : await this.classes.findStudentIdsWithoutClass(instituteId);
     const students = await this.users.findManyByIds(ids);
     return students.map((s) => UserResponseDto.fromDomain(s));
   }

@@ -341,8 +341,15 @@ export const addIntensiveStudent = (classId: string, userId: string) =>
   post<void>(`/api/classes/${classId}/intensive-students`, { userId });
 export const removeIntensiveStudent = (classId: string, studentId: string) =>
   del<void>(`/api/classes/${classId}/intensive-students/${studentId}`);
-export const listUnassignedStudents = (instituteId: string) =>
-  request<User[]>(`/api/institutes/${instituteId}/unassigned-students`);
+export const listUnassignedStudents = (
+  instituteId: string,
+  track?: 'regular' | 'intensive',
+) =>
+  request<User[]>(
+    `/api/institutes/${instituteId}/unassigned-students${
+      track ? `?track=${track}` : ''
+    }`,
+  );
 
 // ── Statistics (spec 004) ──
 export const getInstituteStats = (instituteId: string) =>

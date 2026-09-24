@@ -66,8 +66,9 @@ export class ClassesController {
   unassignedStudents(
     @CurrentUser() actor: Actor,
     @Param('instituteId', ParseUUIDPipe) instituteId: string,
+    @Query('track') track?: 'regular' | 'intensive',
   ) {
-    return this.listUnassignedStudents.execute(actor, instituteId);
+    return this.listUnassignedStudents.execute(actor, instituteId, track);
   }
 
   @Post('institutes/:instituteId/classes')
