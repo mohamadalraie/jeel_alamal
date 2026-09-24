@@ -16,6 +16,7 @@ import { UserRole } from '../../../shared/domain/user-role';
 import { CreateInstituteUseCase } from '../application/use-cases/create-institute.use-case';
 import { ListInstitutesUseCase } from '../application/use-cases/list-institutes.use-case';
 import { UpdateInstituteUseCase } from '../application/use-cases/update-institute.use-case';
+import { ToggleIntensiveTrackUseCase } from '../application/use-cases/toggle-intensive-track.use-case';
 import { UpdateInstituteDto } from '../application/dto/update-institute.dto';
 import {
   AddTeacherUseCase,
@@ -43,6 +44,7 @@ export class InstitutesController {
     private readonly createInstitute: CreateInstituteUseCase,
     private readonly listInstitutes: ListInstitutesUseCase,
     private readonly updateInstitute: UpdateInstituteUseCase,
+    private readonly toggleIntensiveTrack: ToggleIntensiveTrackUseCase,
     private readonly addTeacher: AddTeacherUseCase,
     private readonly addStudent: AddStudentUseCase,
     private readonly listMembers: ListMembersUseCase,
@@ -69,6 +71,15 @@ export class InstitutesController {
     @Body() dto: UpdateInstituteDto,
   ) {
     return this.updateInstitute.execute(actor, instituteId, dto);
+  }
+
+  @Patch(':instituteId/intensive-track')
+  toggleTrack(
+    @CurrentUser() actor: Actor,
+    @Param('instituteId', ParseUUIDPipe) instituteId: string,
+    @Body('enabled') enabled: boolean,
+  ) {
+    return this.toggleIntensiveTrack.execute(actor, instituteId, enabled);
   }
 
   @Post(':instituteId/teachers')

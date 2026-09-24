@@ -144,6 +144,7 @@
     "teachers": "Teachers",
     "students": "Students",
     "classes": "Classes",
+    "intensiveTrack": "Intensive Track",
     "addTeacher": "Add teacher",
     "addStudent": "Add student",
     "createClass": "Create class",
@@ -499,5 +500,19 @@
     "durationThresholdHint": "How far actual time may differ from expected before it is flagged as over or under time.",
     "settingsSaved": "Settings saved",
     "lessonSettings": "Lesson settings"
+  },
+  "intensiveTrack": {
+    "label": "Intensive Track",
+    "enable": "Enable Intensive Track",
+    "disable": "Disable Intensive Track",
+    "intensiveClass": "Intensive Class",
+    "badge": "Intensive",
+    "emptyState": "No intensive classes yet",
+    "enrollStudent": "Enroll Student in Intensive Track",
+    "errors": {
+      "trackDisabled": "Intensive track is disabled for this institute",
+      "noRegularClass": "Student must be enrolled in a regular class first",
+      "alreadyEnrolled": "Student is already enrolled in an intensive track"
+    }
   }
 }

@@ -1,4 +1,5 @@
 import {
+  IsBoolean,
   IsNotEmpty,
   IsOptional,
   IsString,
@@ -16,6 +17,10 @@ export class CreateClassDto {
   @IsOptional()
   @IsString()
   description?: string;
+
+  @IsOptional()
+  @IsBoolean()
+  isIntensive?: boolean;
 }
 
 export class MemberIdDto {
@@ -29,6 +34,7 @@ export class ClassResponseDto {
   instituteId: string;
   name: string;
   description: string | null;
+  isIntensive: boolean;
   createdAt: string;
   teacherIds: string[];
   supervisorId: string | null;
@@ -44,6 +50,7 @@ export class ClassResponseDto {
     dto.instituteId = klass.instituteId;
     dto.name = klass.name;
     dto.description = klass.description;
+    dto.isIntensive = klass.isIntensive;
     dto.createdAt = klass.createdAt.toISOString();
     dto.teacherIds = membership.teacherIds;
     dto.supervisorId = membership.supervisorId;

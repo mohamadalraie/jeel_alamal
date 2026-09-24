@@ -15,7 +15,10 @@ export type StoredSlot = ScheduleSlot & { id: string };
 export interface ClassRepository {
   save(klass: Class): Promise<void>;
   findById(id: string): Promise<Class | null>;
-  findAllByInstitute(instituteId: string): Promise<Class[]>;
+  findAllByInstitute(
+    instituteId: string,
+    track?: 'regular' | 'intensive',
+  ): Promise<Class[]>;
   getMembership(classId: string): Promise<ClassMembership>;
   addTeacher(classId: string, teacherId: string): Promise<void>;
   isTeacherOfClass(classId: string, teacherId: string): Promise<boolean>;

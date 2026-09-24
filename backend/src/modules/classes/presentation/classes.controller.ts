@@ -10,6 +10,7 @@ import {
   Patch,
   Post,
   Put,
+  Query,
 } from '@nestjs/common';
 import { CurrentUser } from '../../../core/auth/current-user.decorator';
 import type { Actor } from '../../../shared/application/actor';
@@ -83,8 +84,9 @@ export class ClassesController {
   list(
     @CurrentUser() actor: Actor,
     @Param('instituteId', ParseUUIDPipe) instituteId: string,
+    @Query('track') track?: 'regular' | 'intensive',
   ) {
-    return this.listClasses.execute(actor, instituteId);
+    return this.listClasses.execute(actor, instituteId, track);
   }
 
   // ── Single class profile + CRUD (spec 003) ──

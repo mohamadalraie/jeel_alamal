@@ -7,6 +7,7 @@ interface ClassProps {
   name: string;
   description: string | null;
   lessonsVisibleToStudents: boolean;
+  isIntensive: boolean;
   createdAt: Date;
 }
 
@@ -28,6 +29,7 @@ export class Class extends Entity<string> {
     instituteId: string;
     name: string;
     description?: string | null;
+    isIntensive?: boolean;
   }): Class {
     const name = input.name.trim();
     if (name.length < 2) {
@@ -41,6 +43,7 @@ export class Class extends Entity<string> {
       name,
       description: input.description?.trim() || null,
       lessonsVisibleToStudents: false,
+      isIntensive: input.isIntensive ?? false,
       createdAt: new Date(),
     });
   }
@@ -64,6 +67,10 @@ export class Class extends Entity<string> {
 
   get lessonsVisibleToStudents(): boolean {
     return this.props.lessonsVisibleToStudents;
+  }
+
+  get isIntensive(): boolean {
+    return this.props.isIntensive;
   }
 
   get instituteId(): string {

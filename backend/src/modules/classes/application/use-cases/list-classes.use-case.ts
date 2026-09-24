@@ -16,9 +16,10 @@ export class ListClassesUseCase {
   async execute(
     actor: Actor,
     instituteId: string,
+    track?: 'regular' | 'intensive',
   ): Promise<ClassResponseDto[]> {
     await this.policy.assertMemberOf(actor, instituteId);
-    const list = await this.classes.findAllByInstitute(instituteId);
+    const list = await this.classes.findAllByInstitute(instituteId, track);
     return Promise.all(
       list.map(async (klass) =>
         ClassResponseDto.fromDomain(

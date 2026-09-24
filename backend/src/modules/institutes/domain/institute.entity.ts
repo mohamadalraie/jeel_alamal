@@ -7,6 +7,7 @@ interface InstituteProps {
   place: string;
   description: string | null;
   logoUrl: string | null;
+  intensiveTrackEnabled: boolean;
   createdAt: Date;
 }
 
@@ -27,6 +28,7 @@ export class Institute extends Entity<string> {
     place: string;
     description?: string | null;
     logoUrl?: string | null;
+    intensiveTrackEnabled?: boolean;
   }): Institute {
     const name = input.name.trim();
     const place = input.place.trim();
@@ -45,6 +47,7 @@ export class Institute extends Entity<string> {
       place,
       description: input.description?.trim() || null,
       logoUrl: input.logoUrl?.trim() || null,
+      intensiveTrackEnabled: input.intensiveTrackEnabled ?? false,
       createdAt: new Date(),
     });
   }
@@ -77,6 +80,10 @@ export class Institute extends Entity<string> {
     this.props.logoUrl = input.logoUrl?.trim() || null;
   }
 
+  toggleIntensiveTrack(enabled: boolean): void {
+    this.props.intensiveTrackEnabled = enabled;
+  }
+
   get name(): string {
     return this.props.name;
   }
@@ -88,6 +95,9 @@ export class Institute extends Entity<string> {
   }
   get logoUrl(): string | null {
     return this.props.logoUrl;
+  }
+  get intensiveTrackEnabled(): boolean {
+    return this.props.intensiveTrackEnabled;
   }
   get createdAt(): Date {
     return this.props.createdAt;

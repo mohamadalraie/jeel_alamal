@@ -106,6 +106,7 @@ export interface ClassProfile {
     name: string;
     description: string | null;
     lessonsVisibleToStudents: boolean;
+    isIntensive: boolean;
     createdAt: string;
   };
   schedule: (ScheduleSlot & { id: string })[];
@@ -380,6 +381,7 @@ export interface Institute {
   place: string;
   description: string | null;
   logoUrl: string | null;
+  intensiveTrackEnabled: boolean;
   createdAt: string;
 }
 
@@ -388,6 +390,7 @@ export interface ClassItem {
   instituteId: string;
   name: string;
   description: string | null;
+  isIntensive: boolean;
   createdAt: string;
   teacherIds: string[];
   supervisorId: string | null;

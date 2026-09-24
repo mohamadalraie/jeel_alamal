@@ -280,6 +280,8 @@ export const createInstitute = (input: CreateInstituteInput) =>
   post<{ institute: Institute; manager: User }>('/api/institutes', input);
 export const updateInstitute = (id: string, input: UpdateInstituteInput) =>
   patch<Institute>(`/api/institutes/${id}`, input);
+export const toggleIntensiveTrack = (id: string, enabled: boolean) =>
+  patch<Institute>(`/api/institutes/${id}/intensive-track`, { enabled });
 
 // ── Institute members ──
 export const listTeachers = (instituteId: string) =>
@@ -298,11 +300,13 @@ export const removeManager = (instituteId: string, managerId: string) =>
   del<void>(`/api/institutes/${instituteId}/managers/${managerId}`);
 
 // ── Classes (حلقات) ──
-export const listClasses = (instituteId: string) =>
-  request<ClassItem[]>(`/api/institutes/${instituteId}/classes`);
+export const listClasses = (instituteId: string, track?: 'regular' | 'intensive') =>
+  request<ClassItem[]>(
+    `/api/institutes/${instituteId}/classes${track ? `?track=${track}` : ''}`,
+  );
 export const createClass = (
   instituteId: string,
-  input: { name: string; description?: string },
+  input: { name: string; description?: string; isIntensive?: boolean },
 ) => post<ClassItem>(`/api/institutes/${instituteId}/classes`, input);
 export const addClassTeacher = (classId: string, userId: string) =>
   post<void>(`/api/classes/${classId}/teachers`, { userId });

@@ -1,4 +1,4 @@
-import { pgTable, timestamp, uuid, varchar, text } from 'drizzle-orm/pg-core';
+import { boolean, pgTable, timestamp, uuid, varchar, text } from 'drizzle-orm/pg-core';
 import type { InferSelectModel } from 'drizzle-orm';
 
 /** The tenant table. Everything tenant-owned references institutes.id. */
@@ -8,6 +8,9 @@ export const institutes = pgTable('institutes', {
   place: varchar('place', { length: 200 }).notNull(),
   description: text('description'),
   logoUrl: varchar('logo_url', { length: 500 }),
+  intensiveTrackEnabled: boolean('intensive_track_enabled')
+    .notNull()
+    .default(false),
   createdAt: timestamp('created_at', { withTimezone: true })
     .notNull()
     .defaultNow(),

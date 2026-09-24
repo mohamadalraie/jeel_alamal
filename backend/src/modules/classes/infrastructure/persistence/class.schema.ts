@@ -25,6 +25,7 @@ export const classes = pgTable('classes', {
   lessonsVisibleToStudents: boolean('lessons_visible_to_students')
     .notNull()
     .default(false),
+  isIntensive: boolean('is_intensive').notNull().default(false),
   createdAt: timestamp('created_at', { withTimezone: true })
     .notNull()
     .defaultNow(),

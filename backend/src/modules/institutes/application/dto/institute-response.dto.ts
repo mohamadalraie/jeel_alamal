@@ -6,6 +6,7 @@ export class InstituteResponseDto {
   place: string;
   description: string | null;
   logoUrl: string | null;
+  intensiveTrackEnabled: boolean;
   createdAt: string;
 
   static fromDomain(institute: Institute): InstituteResponseDto {
@@ -15,6 +16,7 @@ export class InstituteResponseDto {
     dto.place = institute.place;
     dto.description = institute.description;
     dto.logoUrl = institute.logoUrl;
+    dto.intensiveTrackEnabled = institute.intensiveTrackEnabled;
     dto.createdAt = institute.createdAt.toISOString();
     return dto;
   }

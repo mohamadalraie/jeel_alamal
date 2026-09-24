@@ -144,6 +144,7 @@
     "teachers": "الأساتذة",
     "students": "الطلاب",
     "classes": "الحلقات",
+    "intensiveTrack": "المسار المكثف",
     "addTeacher": "إضافة أستاذ",
     "addStudent": "إضافة طالب",
     "createClass": "إنشاء حلقة",
@@ -499,5 +500,19 @@
     "durationThresholdHint": "مقدار الفارق المسموح بين الوقت الفعلي والمتوقع قبل اعتباره تجاوزاً أو نقصاناً.",
     "settingsSaved": "تم حفظ الإعدادات",
     "lessonSettings": "إعدادات الدروس"
+  },
+  "intensiveTrack": {
+    "label": "المسار المكثف",
+    "enable": "تفعيل المسار المكثف",
+    "disable": "تعطيل المسار المكثف",
+    "intensiveClass": "حلقة مكثفة",
+    "badge": "مكثف",
+    "emptyState": "لا توجد حلقات مكثفة بعد",
+    "enrollStudent": "إضافة طالب للمسار المكثف",
+    "errors": {
+      "trackDisabled": "المسار المكثف غير مفعّل في هذا المعهد",
+      "noRegularClass": "يجب أن يكون الطالب مسجلاً في حلقة أساسية أولاً",
+      "alreadyEnrolled": "الطالب مسجل مسبقاً في مسار مكثف"
+    }
   }
 }

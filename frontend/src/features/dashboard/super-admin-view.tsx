@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 import { Plus, Pencil, Building2 } from 'lucide-react';
 import type { Institute } from '@/lib/types';
-import { createInstitute, updateInstitute, resolveAsset, ApiError } from '@/lib/api';
+import { createInstitute, updateInstitute, toggleIntensiveTrack, resolveAsset, ApiError } from '@/lib/api';
 import { useInstitutes, useQueryClient, qk } from '@/lib/queries';
 import { notify } from '@/lib/toast';
 import { Button } from '@/components/ui/button';
@@ -99,6 +99,7 @@ export function SuperAdminView() {
         description: editing.description ?? undefined,
         logoUrl: editing.logoUrl ?? undefined,
       });
+      await toggleIntensiveTrack(editing.id, editing.intensiveTrackEnabled);
       setEditing(null);
       refresh();
       notify.success(t('editInstitute'));
@@ -250,6 +251,23 @@ export function SuperAdminView() {
                   id="edit-desc"
                   value={editing.description ?? ''}
                   onChange={(e) => setEditing({ ...editing, description: e.target.value })}
+                />
+              </div>
+              <div className="flex items-center justify-between gap-2 border border-border p-3 rounded-lg">
+                <div className="flex flex-col gap-0.5">
+                  <Label htmlFor="edit-intensive-track" className="font-semibold cursor-pointer">
+                    تفعيل المسار المكثف
+                  </Label>
+                  <span className="text-muted-foreground text-xs">إتاحة إنشاء حلقات مكثفة للمعهد</span>
+                </div>
+                <input
+                  type="checkbox"
+                  id="edit-intensive-track"
+                  className="size-5 accent-primary cursor-pointer rounded"
+                  checked={editing.intensiveTrackEnabled}
+                  onChange={(e) =>
+                    setEditing({ ...editing, intensiveTrackEnabled: e.target.checked })
+                  }
                 />
               </div>
               {error && <p role="alert" className="text-destructive text-sm">{error}</p>}

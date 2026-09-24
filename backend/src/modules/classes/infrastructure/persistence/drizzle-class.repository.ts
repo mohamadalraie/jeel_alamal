@@ -30,6 +30,7 @@ const toDomain = (row: ClassRow): Class =>
     name: row.name,
     description: row.description,
     lessonsVisibleToStudents: row.lessonsVisibleToStudents,
+    isIntensive: row.isIntensive ?? false,
     createdAt: row.createdAt,
   });
 
@@ -44,6 +45,7 @@ export class DrizzleClassRepository implements ClassRepository {
       name: klass.name,
       description: klass.description,
       lessonsVisibleToStudents: klass.lessonsVisibleToStudents,
+      isIntensive: klass.isIntensive,
       createdAt: klass.createdAt,
     };
     await this.db
@@ -61,11 +63,21 @@ export class DrizzleClassRepository implements ClassRepository {
     return row ? toDomain(row) : null;
   }
 
-  async findAllByInstitute(instituteId: string): Promise<Class[]> {
+  async findAllByInstitute(
+    instituteId: string,
+    track?: 'regular' | 'intensive',
+  ): Promise<Class[]> {
+    const conditions = [eq(classes.instituteId, instituteId)];
+    if (track === 'regular') {
+      conditions.push(eq(classes.isIntensive, false));
+    } else if (track === 'intensive') {
+      conditions.push(eq(classes.isIntensive, true));
+    }
+
     const rows = await this.db
       .select()
       .from(classes)
-      .where(eq(classes.instituteId, instituteId))
+      .where(and(...conditions))
       .orderBy(desc(classes.createdAt));
     return rows.map(toDomain);
   }

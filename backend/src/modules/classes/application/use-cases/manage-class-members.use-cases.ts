@@ -206,9 +206,23 @@ export class AddIntensiveStudentUseCase extends ClassMembershipBase {
       await this.policy.assertManagerOf(actor, klass.instituteId);
     }
 
-    const isEnrolled = await this.classes.isStudentOfClass(classId, studentId);
-    if (!isEnrolled) {
-      throw new BusinessRuleError('Student must be enrolled in the class first');
+    await this.getMemberOrFail(studentId, UserRole.Student, klass.instituteId);
+
+    // BR-2: Student must be enrolled in a regular class first
+    const regularClass = await this.classes.findCurrentClassOfStudent(studentId);
+    if (!regularClass || regularClass.instituteId !== klass.instituteId) {
+      throw new BusinessRuleError(
+        'Student must be enrolled in a regular class first',
+      );
+    }
+
+    // BR-3: Student cannot be in multiple intensive classes
+    const isAlreadyIntensive = await this.classes.isIntensiveStudentOfClass(
+      classId,
+      studentId,
+    );
+    if (isAlreadyIntensive) {
+      throw new ConflictError('Student is already enrolled in this intensive class');
     }
 
     await this.classes.addIntensiveStudent(classId, studentId);

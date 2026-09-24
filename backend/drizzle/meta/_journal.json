@@ -71,6 +71,13 @@
       "when": 1789894794992,
       "tag": "0009_calm_leader",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1790253515811,
+      "tag": "0010_simple_infant_terrible",
+      "breakpoints": true
     }
   ]
 }

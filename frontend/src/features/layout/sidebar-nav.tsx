@@ -20,6 +20,7 @@ interface NavItem {
   managersOnly?: boolean;
   /** Visible only to teachers. */
   teacherOnly?: boolean;
+  requiresIntensiveTrack?: boolean;
 }
 
 const ITEMS: NavItem[] = [
@@ -33,6 +34,7 @@ const ITEMS: NavItem[] = [
   { href: '/dashboard/teachers', labelKey: 'teachers', icon: GraduationCap, hideForStudent: true },
   { href: '/dashboard/students', labelKey: 'students', icon: Users, hideForStudent: true },
   { href: '/dashboard/classes', labelKey: 'classes', icon: BookOpen, hideForStudent: true },
+  { href: '/dashboard/intensive', labelKey: 'intensiveTrack', icon: BookOpen, requiresIntensiveTrack: true, hideForStudent: true },
   { href: '/dashboard/lessons', labelKey: 'lessons', icon: CalendarRange, managersOnly: true },
   { href: '/dashboard/dinars/leaderboard', labelKey: 'dinarsLeaderboard', icon: Trophy, hideForStudent: true },
   { href: '/dashboard/dinars/settings', labelKey: 'dinarsSettings', icon: Coins, managersOnly: true },
@@ -45,7 +47,7 @@ const ITEMS: NavItem[] = [
 export function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
   const t = useTranslations('dashboard');
   const pathname = usePathname();
-  const { user } = useInstitute();
+  const { user, selected } = useInstitute();
   const isStudent = user.role === 'student';
 
   const items = ITEMS.filter((i) => {
@@ -56,6 +58,7 @@ export function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
     if (i.managersOnly && user.role !== 'super_admin' && user.role !== 'institute_manager')
       return false;
     if (i.teacherOnly && user.role !== 'teacher') return false;
+    if (i.requiresIntensiveTrack && !selected?.intensiveTrackEnabled) return false;
     return true;
   });
 

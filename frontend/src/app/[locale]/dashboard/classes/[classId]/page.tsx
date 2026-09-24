@@ -57,6 +57,7 @@ export default function ClassProfilePage({
   const tRec = useTranslations('recitation');
   const tAtt = useTranslations('attendance');
   const tDin = useTranslations('dinars');
+  const tIntensive = useTranslations('intensiveTrack');
   const locale = useLocale();
   const router = useRouter();
   const { selected, user } = useInstitute();
@@ -126,6 +127,11 @@ export default function ClassProfilePage({
           </Link>
         </Button>
         <h1 className="text-2xl font-bold">{klass.name}</h1>
+        {klass.isIntensive && (
+          <Badge variant="outline" className="bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30 font-semibold gap-1">
+            ⚡ {tIntensive('badge')}
+          </Badge>
+        )}
         <Badge variant="secondary">{t('classProfile')}</Badge>
       </div>
 

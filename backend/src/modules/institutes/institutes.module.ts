@@ -5,6 +5,7 @@ import { InstitutesController } from './presentation/institutes.controller';
 import { CreateInstituteUseCase } from './application/use-cases/create-institute.use-case';
 import { ListInstitutesUseCase } from './application/use-cases/list-institutes.use-case';
 import { UpdateInstituteUseCase } from './application/use-cases/update-institute.use-case';
+import { ToggleIntensiveTrackUseCase } from './application/use-cases/toggle-intensive-track.use-case';
 import {
   AddTeacherUseCase,
   AddStudentUseCase,
@@ -28,6 +29,7 @@ import { DrizzleManagerAssignmentRepository } from './infrastructure/persistence
     CreateInstituteUseCase,
     ListInstitutesUseCase,
     UpdateInstituteUseCase,
+    ToggleIntensiveTrackUseCase,
     AddTeacherUseCase,
     AddStudentUseCase,
     ListMembersUseCase,
@@ -41,7 +43,7 @@ import { DrizzleManagerAssignmentRepository } from './infrastructure/persistence
       useClass: DrizzleManagerAssignmentRepository,
     },
   ],
-  // The access policy (and its assignment port) is reused by the classes module.
-  exports: [InstituteAccessPolicy, MANAGER_ASSIGNMENTS],
+  // The access policy (and its assignment & institute ports) is reused by the classes module.
+  exports: [InstituteAccessPolicy, MANAGER_ASSIGNMENTS, INSTITUTE_REPOSITORY],
 })
 export class InstitutesModule {}

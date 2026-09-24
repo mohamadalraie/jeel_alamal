@@ -16,6 +16,7 @@ const toDomain = (row: InstituteRow): Institute =>
     place: row.place,
     description: row.description,
     logoUrl: row.logoUrl,
+    intensiveTrackEnabled: row.intensiveTrackEnabled ?? false,
     createdAt: row.createdAt,
   });
 
@@ -25,6 +26,7 @@ const toRow = (institute: Institute): InstituteRow => ({
   place: institute.place,
   description: institute.description,
   logoUrl: institute.logoUrl,
+  intensiveTrackEnabled: institute.intensiveTrackEnabled,
   createdAt: institute.createdAt,
 });
 

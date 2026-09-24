@@ -74,6 +74,10 @@ async function runAutoMigrations(config: ConfigService) {
     await safeQuery(`ALTER TABLE "attendance_sessions" ADD COLUMN IF NOT EXISTS "track_type" "public"."track_type" DEFAULT 'regular';`, 'attendance_sessions.track_type');
     await safeQuery(`ALTER TABLE "class_schedule" ADD COLUMN IF NOT EXISTS "track_type" "public"."track_type" DEFAULT 'regular';`, 'class_schedule.track_type');
 
+    // 4b. Spec 011 Intensive Track columns
+    await safeQuery(`ALTER TABLE "institutes" ADD COLUMN IF NOT EXISTS "intensive_track_enabled" boolean NOT NULL DEFAULT false;`, 'institutes.intensive_track_enabled');
+    await safeQuery(`ALTER TABLE "classes" ADD COLUMN IF NOT EXISTS "is_intensive" boolean NOT NULL DEFAULT false;`, 'classes.is_intensive');
+
     // 5. Auth refresh tokens table
     await safeQuery(`
       CREATE TABLE IF NOT EXISTS "refresh_tokens" (
