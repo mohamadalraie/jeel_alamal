@@ -116,6 +116,74 @@ async function runAutoMigrations(config: ConfigService) {
       );
     `, 'Table push_subscriptions');
 
+    // 8. Class intensive students table (حلقات المسار المكثف)
+    await safeQuery(`
+      CREATE TABLE IF NOT EXISTS "class_intensive_students" (
+        "class_id" uuid NOT NULL REFERENCES "public"."classes"("id") ON DELETE CASCADE,
+        "student_id" uuid NOT NULL REFERENCES "public"."users"("id") ON DELETE CASCADE,
+        "added_at" timestamp with time zone DEFAULT now() NOT NULL,
+        PRIMARY KEY ("class_id", "student_id")
+      );
+    `, 'Table class_intensive_students');
+
+    // 9. Manager institutes table
+    await safeQuery(`
+      CREATE TABLE IF NOT EXISTS "manager_institutes" (
+        "manager_id" uuid NOT NULL REFERENCES "public"."users"("id") ON DELETE CASCADE,
+        "institute_id" uuid NOT NULL REFERENCES "public"."institutes"("id") ON DELETE CASCADE,
+        "assigned_at" timestamp with time zone DEFAULT now() NOT NULL,
+        PRIMARY KEY ("manager_id", "institute_id")
+      );
+    `, 'Table manager_institutes');
+
+    await safeQuery(`
+      INSERT INTO "manager_institutes" ("manager_id", "institute_id", "assigned_at")
+      SELECT u.id, u.institute_id, COALESCE(u.created_at, now())
+      FROM "users" u
+      WHERE u.role = 'institute_manager'
+        AND u.institute_id IS NOT NULL
+        AND u.deleted_at IS NULL
+      ON CONFLICT DO NOTHING;
+    `, 'Backfill manager_institutes');
+
+    // 10. Dinars enums and tables
+    await safeQuery(`CREATE TYPE "public"."dinar_context" AS ENUM('lesson', 'recitation', 'attendance', 'general');`, 'Type dinar_context');
+    await safeQuery(`CREATE TYPE "public"."dinar_source_type" AS ENUM('manual_rule', 'exceptional', 'attendance', 'recitation');`, 'Type dinar_source_type');
+
+    await safeQuery(`
+      CREATE TABLE IF NOT EXISTS "dinar_rules" (
+        "id" uuid PRIMARY KEY NOT NULL,
+        "institute_id" uuid NOT NULL REFERENCES "public"."institutes"("id") ON DELETE CASCADE,
+        "name" text NOT NULL,
+        "amount" integer NOT NULL,
+        "context" "public"."dinar_context" NOT NULL,
+        "trigger" text NOT NULL,
+        "system_key" text,
+        "is_active" boolean DEFAULT true NOT NULL,
+        "is_protected" boolean DEFAULT false NOT NULL,
+        "created_at" timestamp with time zone DEFAULT now() NOT NULL
+      );
+    `, 'Table dinar_rules');
+
+    await safeQuery(`
+      CREATE TABLE IF NOT EXISTS "dinar_transactions" (
+        "id" uuid PRIMARY KEY NOT NULL,
+        "institute_id" uuid NOT NULL REFERENCES "public"."institutes"("id") ON DELETE CASCADE,
+        "student_id" uuid NOT NULL REFERENCES "public"."users"("id") ON DELETE CASCADE,
+        "amount" integer NOT NULL,
+        "context" "public"."dinar_context" NOT NULL,
+        "source_type" "public"."dinar_source_type" NOT NULL,
+        "rule_id" uuid REFERENCES "public"."dinar_rules"("id") ON DELETE RESTRICT,
+        "rule_name" text,
+        "reason" text,
+        "source_ref" text,
+        "awarded_by" uuid REFERENCES "public"."users"("id"),
+        "reverses_id" uuid REFERENCES "public"."dinar_transactions"("id") ON DELETE SET NULL,
+        "reversed_at" timestamp with time zone,
+        "created_at" timestamp with time zone DEFAULT now() NOT NULL
+      );
+    `, 'Table dinar_transactions');
+
   } catch (err: any) {
     Logger.error(`Auto-migration top-level note: ${err?.message || err}`, 'Migrations');
   } finally {
