@@ -175,10 +175,29 @@ export class EnrollStudentUseCase extends ClassMembershipBase {
     }
 
     await this.getMemberOrFail(studentId, UserRole.Student, klass.instituteId);
-    if (await this.classes.isStudentOfClass(classId, studentId)) {
-      throw new ConflictError('Student is already enrolled in this class');
+
+    if (klass.isIntensive) {
+      // BR-2: Student must be enrolled in a regular class first
+      const regularClass = await this.classes.findCurrentClassOfStudent(studentId);
+      if (!regularClass || regularClass.instituteId !== klass.instituteId) {
+        throw new BusinessRuleError(
+          'الطالب غير منضم لأي حلقة أساسية في المعهد. يجب إضافته لحلقة أساسية أولاً.',
+        );
+      }
+
+      // BR-3: Student cannot be in ANY intensive class
+      const isAlreadyIntensive = await this.classes.isStudentInAnyIntensiveClass(studentId);
+      if (isAlreadyIntensive) {
+        throw new ConflictError('الطالب موجود بالفعل في حلقة مكثفة أخرى.');
+      }
+
+      await this.classes.addIntensiveStudent(classId, studentId);
+    } else {
+      if (await this.classes.isStudentOfClass(classId, studentId)) {
+        throw new ConflictError('الطالب موجود بالفعل في هذه الحلقة.');
+      }
+      await this.classes.addStudent(classId, studentId);
     }
-    await this.classes.addStudent(classId, studentId);
   }
 }
 

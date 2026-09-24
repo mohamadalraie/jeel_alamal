@@ -58,15 +58,11 @@ export function TakeAttendanceDialog({
   const setOpen = (v: boolean) => (isControlled ? onOpenChange?.(v) : setInternalOpen(v));
 
   const [date, setDate] = useState(initialDate ?? todayISO());
-  const [trackType, setTrackType] = useState<'regular' | 'intensive'>('regular');
   const [statuses, setStatuses] = useState<Record<string, AttendanceStatus>>({});
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const activeRoster =
-    trackType === 'intensive'
-      ? roster.filter((s) => s.isIntensive)
-      : roster;
+  const activeRoster = roster;
 
   // Default everyone in active roster to present.
   const resetAllPresent = () => {
@@ -80,7 +76,6 @@ export function TakeAttendanceDialog({
   useEffect(() => {
     if (open && !prevOpen.current) {
       setDate(initialDate ?? todayISO());
-      setTrackType('regular');
     }
     prevOpen.current = open;
   }, [open, initialDate]);
@@ -88,8 +83,7 @@ export function TakeAttendanceDialog({
   useEffect(() => {
     if (!open) return;
     resetAllPresent();
-    // Pre-fill from an existing session for this date & trackType, if any.
-    getSessionAttendance(classId, date, trackType)
+    getSessionAttendance(classId, date, undefined)
       .then((session) => {
         if (!session) return;
         setStatuses((prev) => {
@@ -100,7 +94,7 @@ export function TakeAttendanceDialog({
       })
       .catch(() => {});
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, date, trackType, classId]);
+  }, [open, date, classId]);
 
   const setStatus = (studentId: string, status: AttendanceStatus) =>
     setStatuses((prev) => ({ ...prev, [studentId]: status }));
@@ -117,7 +111,6 @@ export function TakeAttendanceDialog({
     try {
       await takeAttendance(classId, {
         date,
-        trackType,
         entries: activeRoster.map((s) => ({
           studentId: s.id,
           status: statuses[s.id] ?? 'present',
@@ -154,39 +147,7 @@ export function TakeAttendanceDialog({
           <DialogTitle>{t('takeTitle')}</DialogTitle>
         </DialogHeader>
 
-        {/* Track Type Selector */}
-        <div className="bg-muted/50 p-1 flex rounded-lg border gap-1">
-          <button
-            type="button"
-            onClick={() => setTrackType('regular')}
-            className={cn(
-              'flex-1 py-1.5 text-xs font-semibold rounded-md transition text-center',
-              trackType === 'regular'
-                ? 'bg-background text-foreground shadow-sm'
-                : 'text-muted-foreground hover:text-foreground',
-            )}
-          >
-            جلسة حلقة عادية ({roster.length})
-          </button>
-          <button
-            type="button"
-            onClick={() => setTrackType('intensive')}
-            className={cn(
-              'flex-1 py-1.5 text-xs font-semibold rounded-md transition text-center flex items-center justify-center gap-1',
-              trackType === 'intensive'
-                ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/30 shadow-sm'
-                : 'text-muted-foreground hover:text-foreground',
-            )}
-          >
-            ⚡ اليوم الإضافي - المسار المكثف ({roster.filter((s) => s.isIntensive).length})
-          </button>
-        </div>
-
-        {trackType === 'intensive' && (
-          <div className="bg-amber-500/10 border-amber-500/20 text-amber-700 dark:text-amber-300 rounded-md p-2.5 text-xs">
-            ⚡ <strong>حضور المسار المكثف (اليوم الإضافي):</strong> يرجى تسجيل حضور طلاب المسار فقط. باقي طلاب الحلقة معفيون تلقائياً ولا تتأثر نسبتهم.
-          </div>
-        )}
+        </DialogHeader>
 
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="att-date">{t('date')}</Label>

@@ -183,21 +183,6 @@ export function WeeklySchedule({
                           <ValueEditor anchor={s.end} onChange={(a) => patch(i, { end: a })} />
                         )}
                       </div>
-                      {/* Track Type selection */}
-                      <div className="flex items-center gap-1.5 border-t border-border/50 pt-1.5">
-                        <span className="text-muted-foreground w-9 shrink-0 text-xs">المسار</span>
-                        <Select
-                          value={s.trackType ?? 'regular'}
-                          onValueChange={(v) => patch(i, { trackType: v as 'regular' | 'intensive' })}
-                        >
-                          <SelectTrigger className="h-7 shrink-0 px-2 text-xs">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="regular">🔘 حلقة عادية (جميع الطلاب)</SelectItem>
-                            <SelectItem value="intensive">⚡ يوم إضافي - مسار مكثف</SelectItem>
-                          </SelectContent>
-                        </Select>
                       </div>
                     </div>
                   ) : (
@@ -211,11 +196,6 @@ export function WeeklySchedule({
                           </>
                         )}
                       </div>
-                      {s.trackType === 'intensive' && (
-                        <span className="text-[10px] bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/30 px-1.5 py-0.5 rounded font-semibold">
-                          ⚡ مسار مكثف
-                        </span>
-                      )}
                     </div>
                   ),
                 )

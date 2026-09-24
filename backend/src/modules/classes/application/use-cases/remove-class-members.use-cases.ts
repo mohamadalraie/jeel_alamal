@@ -62,6 +62,11 @@ export class RemoveClassStudentUseCase {
       }
       await this.policy.assertManagerOf(actor, klass.instituteId);
     }
-    await this.classes.removeStudent(classId, studentId);
+    
+    if (klass.isIntensive) {
+      await this.classes.removeIntensiveStudent(classId, studentId);
+    } else {
+      await this.classes.removeStudent(classId, studentId);
+    }
   }
 }
