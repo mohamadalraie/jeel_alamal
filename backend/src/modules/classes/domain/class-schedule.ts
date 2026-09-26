@@ -31,6 +31,8 @@ export interface ScheduleSlot {
   start: Anchor;
   end: Anchor | null; // optional (spec 004)
   trackType?: TrackType;
+  categoryId?: string | null;
+  teacherId?: string | null;
 }
 
 const TIME = /^([01]\d|2[0-3]):[0-5]\d$/;

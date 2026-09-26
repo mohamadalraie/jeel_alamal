@@ -331,6 +331,8 @@ export class DrizzleClassRepository implements ClassRepository {
       start: { kind: r.startKind, value: r.startValue },
       end: r.endKind ? { kind: r.endKind, value: r.endValue ?? '' } : null,
       trackType: r.trackType ?? 'regular',
+      categoryId: r.categoryId ?? null,
+      teacherId: r.teacherId ?? null,
     }));
   }
 
@@ -348,6 +350,8 @@ export class DrizzleClassRepository implements ClassRepository {
             endKind: s.end?.kind ?? null,
             endValue: s.end?.value ?? null,
             trackType: s.trackType ?? 'regular',
+            categoryId: s.categoryId ?? null,
+            teacherId: s.teacherId ?? null,
           })),
         );
       }

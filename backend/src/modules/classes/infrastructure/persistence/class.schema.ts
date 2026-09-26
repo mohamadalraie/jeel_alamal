@@ -120,6 +120,8 @@ export const classSchedule = pgTable('class_schedule', {
   endKind: anchorKindEnum('end_kind'), // optional end (spec 004)
   endValue: varchar('end_value', { length: 16 }),
   trackType: trackTypeEnum('track_type').notNull().default('regular'),
+  categoryId: uuid('category_id'),
+  teacherId: uuid('teacher_id').references(() => users.id, { onDelete: 'set null' }),
 });
 
 export type ClassRow = InferSelectModel<typeof classes>;

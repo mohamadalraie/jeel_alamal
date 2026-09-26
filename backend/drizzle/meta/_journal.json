@@ -85,6 +85,13 @@
       "when": 1790276454564,
       "tag": "0011_perfect_yellow_claw",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1790432441415,
+      "tag": "0012_strange_shinobi_shaw",
+      "breakpoints": true
     }
   ]
 }

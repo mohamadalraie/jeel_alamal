@@ -73,6 +73,8 @@ export class GetClassProfileUseCase {
         start: { kind: s.start.kind, value: s.start.value },
         end: s.end ? { kind: s.end.kind, value: s.end.value } : null,
         trackType: s.trackType ?? 'regular',
+        categoryId: s.categoryId ?? null,
+        teacherId: s.teacherId ?? null,
       })),
       teachers: membership.teacherIds.map((id) => ({
         id,
@@ -163,6 +165,8 @@ export class SetClassScheduleUseCase {
       start: { kind: string; value: string };
       end?: { kind: string; value: string } | null;
       trackType?: 'regular' | 'intensive';
+      categoryId?: string | null;
+      teacherId?: string | null;
     }[],
   ): Promise<void> {
     const klass = await this.classes.findById(classId);
@@ -176,6 +180,8 @@ export class SetClassScheduleUseCase {
         ? { kind: s.end.kind as AnchorKind, value: s.end.value }
         : null,
       trackType: s.trackType ?? 'regular',
+      categoryId: s.categoryId ?? null,
+      teacherId: s.teacherId ?? null,
     }));
     typed.forEach(assertValidSlot);
     await this.classes.setSchedule(classId, typed);
