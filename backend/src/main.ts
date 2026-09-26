@@ -69,6 +69,10 @@ async function runAutoMigrations(config: ConfigService) {
     await safeQuery(`ALTER TABLE "lesson_classes" ADD COLUMN IF NOT EXISTS "actual_start_time" timestamp with time zone;`, 'lesson_classes.actual_start_time');
     await safeQuery(`ALTER TABLE "lesson_classes" ADD COLUMN IF NOT EXISTS "actual_end_time" timestamp with time zone;`, 'lesson_classes.actual_end_time');
 
+    // 4. Class Schedule new columns (spec 008 expansion)
+    await safeQuery(`ALTER TABLE "class_schedule" ADD COLUMN IF NOT EXISTS "category_id" uuid;`, 'class_schedule.category_id');
+    await safeQuery(`ALTER TABLE "class_schedule" ADD COLUMN IF NOT EXISTS "teacher_id" uuid REFERENCES users(id) ON DELETE SET NULL;`, 'class_schedule.teacher_id');
+
     // 4. Lessons, Attendance, Schedule missing columns
     await safeQuery(`ALTER TABLE "lessons" ADD COLUMN IF NOT EXISTS "expected_duration_minutes" integer;`, 'lessons.expected_duration_minutes');
     await safeQuery(`ALTER TABLE "attendance_sessions" ADD COLUMN IF NOT EXISTS "track_type" "public"."track_type" DEFAULT 'regular';`, 'attendance_sessions.track_type');
