@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { UsersModule } from '../users/users.module';
 import { ClassesModule } from '../classes/classes.module';
 import { InstitutesModule } from '../institutes/institutes.module';
+import { NotificationsModule } from '../notifications/notifications.module';
 import { LessonsController } from './presentation/lessons.controller';
 import {
   AddCategoryUseCase,
@@ -42,7 +43,7 @@ import { DrizzleLessonSettingsRepository } from './infrastructure/persistence/dr
  * modules it imports.
  */
 @Module({
-  imports: [UsersModule, ClassesModule, InstitutesModule],
+  imports: [UsersModule, ClassesModule, InstitutesModule, NotificationsModule],
   controllers: [LessonsController],
   providers: [
     AddCategoryUseCase,

@@ -48,10 +48,9 @@ export class TakeAttendanceUseCase {
     if (!klass) throw new NotFoundError('Class not found');
     await this.policy.assertStaffOf(actor, klass.instituteId);
 
-    const trackType = dto.trackType ?? 'regular';
+    const trackType = klass.isIntensive ? 'intensive' : 'regular';
     const membership = await this.classes.getMembership(classId);
-    const validStudentIds =
-      trackType === 'intensive'
+    const validStudentIds = klass.isIntensive
         ? membership.intensiveStudentIds
         : membership.studentIds;
     const enrolled = new Set(validStudentIds);
@@ -123,12 +122,17 @@ export class GetClassAttendanceUseCase {
       this.classes.getMembership(classId),
       this.attendance.findRecordsByClass(classId),
     ]);
-    const people = await this.users.findManyByIds(membership.studentIds);
+    const displayedStudentIds = klass.isIntensive 
+      ? membership.intensiveStudentIds 
+      : membership.studentIds;
+      
+    const people = await this.users.findManyByIds(displayedStudentIds);
     const nameMap = new Map(people.map((u) => [u.id, u.fullName]));
     const nameOf = (id: string) => nameMap.get(id) ?? '—';
-    const roster = membership.studentIds.map((id) => ({
+    const roster = displayedStudentIds.map((id) => ({
       id,
       name: nameOf(id),
+      isIntensive: klass.isIntensive,
     }));
 
     const totals = buildTotals(records);
@@ -158,11 +162,12 @@ export class GetSessionUseCase {
     actor: Actor,
     classId: string,
     date: string,
-    trackType: 'regular' | 'intensive' = 'regular',
   ): Promise<SessionDetailResult | null> {
     const klass = await this.classes.findById(classId);
     if (!klass) throw new NotFoundError('Class not found');
     await this.policy.assertStaffOf(actor, klass.instituteId);
+    
+    const trackType = klass.isIntensive ? 'intensive' : 'regular';
 
     const found = await this.attendance.findByClassAndDate(
       classId,

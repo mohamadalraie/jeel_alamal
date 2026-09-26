@@ -51,9 +51,8 @@ export class AttendanceController {
     @CurrentUser() actor: Actor,
     @Param('classId', ParseUUIDPipe) classId: string,
     @Param('date') date: string,
-    @Query('trackType') trackType?: 'regular' | 'intensive',
   ) {
-    return this.getSession.execute(actor, classId, date, trackType ?? 'regular');
+    return this.getSession.execute(actor, classId, date);
   }
 
   @Get('students/:studentId/attendance')

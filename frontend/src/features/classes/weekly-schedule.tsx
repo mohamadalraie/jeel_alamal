@@ -183,7 +183,6 @@ export function WeeklySchedule({
                           <ValueEditor anchor={s.end} onChange={(a) => patch(i, { end: a })} />
                         )}
                       </div>
-                      </div>
                     </div>
                   ) : (
                     <div key={i} className="text-sm flex items-center justify-between gap-2">

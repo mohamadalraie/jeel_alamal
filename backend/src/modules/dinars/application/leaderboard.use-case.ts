@@ -93,7 +93,7 @@ export class GetDinarLeaderboardUseCase {
       await this.policy.assertManagerOf(actor, instituteId);
     }
     const membership = await this.classes.getMembership(classId);
-    return membership.studentIds;
+    return klass.isIntensive ? membership.intensiveStudentIds : membership.studentIds;
   }
 
   private async resolveInstituteStudents(

@@ -188,7 +188,7 @@ export class GetClassRecitationUseCase {
     await this.policy.assertStaffOf(actor, klass.instituteId);
 
     const membership = await this.classes.getMembership(classId);
-    const studentIds = membership.studentIds;
+    const studentIds = klass.isIntensive ? membership.intensiveStudentIds : membership.studentIds;
     const recs = await this.recitations.findByStudents(studentIds);
 
     const ids = [...new Set([...studentIds, ...recs.map((r) => r.recitedBy)])];

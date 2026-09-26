@@ -397,6 +397,7 @@ export interface ClassItem {
   teacherIds: string[];
   supervisorId: string | null;
   studentIds: string[];
+  intensiveStudentIds: string[];
 }
 
 export interface MemberInput {

@@ -147,8 +147,6 @@ export function TakeAttendanceDialog({
           <DialogTitle>{t('takeTitle')}</DialogTitle>
         </DialogHeader>
 
-        </DialogHeader>
-
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="att-date">{t('date')}</Label>
           <Input

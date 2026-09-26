@@ -17,6 +17,7 @@ export class DrizzleAnnouncementRepository implements AnnouncementRepository {
       authorId: announcement.authorId,
       targetHalkaId: announcement.targetHalkaId,
       title: announcement.title,
+      content: announcement.content,
       imageUrl: announcement.imageUrl,
       targetTrack: announcement.targetTrack,
       createdAt: announcement.createdAt,
