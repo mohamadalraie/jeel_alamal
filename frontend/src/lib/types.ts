@@ -100,6 +100,21 @@ export interface ScheduleSlot {
   start: Anchor;
   end: Anchor | null;
   trackType?: TrackType;
+  categoryId?: string | null;
+  teacherId?: string | null;
+}
+
+export interface WeeklyPlanSlot {
+  type: 'completed' | 'pending';
+  date: string;
+  dayOfWeek: Weekday;
+  categoryId: string | null;
+  teacherId: string | null;
+  trackType: string;
+  lessonId?: string;
+  lessonName?: string | null;
+  startTime?: Anchor;
+  endTime?: Anchor | null;
 }
 
 export interface ClassProfile {

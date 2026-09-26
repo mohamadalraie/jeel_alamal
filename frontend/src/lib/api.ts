@@ -500,6 +500,11 @@ export const getInstituteLessons = (instituteId: string, from?: string, to?: str
   );
 };
 
+export const getWeeklyPlan = (classId: string, weekStart: string) =>
+  request<import('./types').WeeklyPlanSlot[]>(
+    `/api/classes/${classId}/weekly-plan?weekStart=${encodeURIComponent(weekStart)}`
+  );
+
 export const setClassLessonsVisibility = (classId: string, visible: boolean) =>
   put<void>(`/api/classes/${classId}/lessons-visibility`, { visible });
 

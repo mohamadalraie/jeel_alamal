@@ -1,10 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import { Plus, Trash2, Clock } from 'lucide-react';
-import type { Anchor, Prayer, ScheduleSlot, Weekday } from '@/lib/types';
-import { setClassSchedule, ApiError } from '@/lib/api';
+import type { Anchor, Prayer, ScheduleSlot, Weekday, LessonCategory } from '@/lib/types';
+import { setClassSchedule, listLessonCategories, ApiError } from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -75,11 +75,15 @@ function ValueEditor({
  */
 export function WeeklySchedule({
   classId,
+  instituteId,
+  teachers,
   initial,
   canEdit,
   onSaved,
 }: {
   classId: string;
+  instituteId?: string; // Passed when available to load categories
+  teachers?: { id: string; name: string }[];
   initial: ScheduleSlot[];
   canEdit: boolean;
   onSaved: () => void;
@@ -88,9 +92,17 @@ export function WeeklySchedule({
   const tc = useTranslations('common');
   const tw = useTranslations('weekdays');
   const [slots, setSlots] = useState<ScheduleSlot[]>(initial.map((s) => ({ ...s })));
+  const [categories, setCategories] = useState<LessonCategory[]>([]);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [dirty, setDirty] = useState(false);
+
+  // Load categories if instituteId is provided
+  useEffect(() => {
+    if (instituteId) {
+      listLessonCategories(instituteId).then(setCategories).catch(console.error);
+    }
+  }, [instituteId]);
 
   function mutate(next: ScheduleSlot[]) {
     setSlots(next);
@@ -161,8 +173,46 @@ export function WeeklySchedule({
                           <Trash2 className="text-destructive size-3.5" />
                         </Button>
                       </div>
+
+                      {/* Category and Teacher Selectors */}
+                      <div className="flex items-center gap-1.5 mt-1">
+                        <Select
+                          value={s.categoryId ?? 'none'}
+                          onValueChange={(v) => patch(i, { categoryId: v === 'none' ? null : v })}
+                        >
+                          <SelectTrigger className="h-8 flex-1 px-2 text-xs">
+                            <SelectValue placeholder={t('selectCategory')} />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="none">{t('noCategory')}</SelectItem>
+                            {categories.map((c) => (
+                              <SelectItem key={c.id} value={c.id}>
+                                {c.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+
+                        <Select
+                          value={s.teacherId ?? 'none'}
+                          onValueChange={(v) => patch(i, { teacherId: v === 'none' ? null : v })}
+                        >
+                          <SelectTrigger className="h-8 flex-1 px-2 text-xs">
+                            <SelectValue placeholder={t('selectTeacher')} />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="none">{t('noTeacher')}</SelectItem>
+                            {teachers?.map((th) => (
+                              <SelectItem key={th.id} value={th.id}>
+                                {th.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+
                       {/* End: kind (incl. none) + value */}
-                      <div className="flex items-center gap-1.5">
+                      <div className="flex items-center gap-1.5 mt-1">
                         <span className="text-muted-foreground w-9 shrink-0 text-xs">{t('endsAt')}</span>
                         <Select
                           value={s.end ? s.end.kind : 'none'}
@@ -193,6 +243,18 @@ export function WeeklySchedule({
                             {' — '}
                             <AnchorText anchor={s.end} />
                           </>
+                        )}
+                      </div>
+                      <div className="text-muted-foreground flex items-center gap-1 text-xs">
+                        {s.categoryId && (
+                          <span className="bg-muted px-1.5 py-0.5 rounded text-xs">
+                            {categories.find((c) => c.id === s.categoryId)?.name || t('category')}
+                          </span>
+                        )}
+                        {s.teacherId && (
+                          <span className="bg-muted px-1.5 py-0.5 rounded text-xs">
+                            {teachers?.find((t) => t.id === s.teacherId)?.name || t('teacher')}
+                          </span>
                         )}
                       </div>
                     </div>

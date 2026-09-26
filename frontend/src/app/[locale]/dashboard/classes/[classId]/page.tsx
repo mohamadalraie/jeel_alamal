@@ -42,6 +42,7 @@ import { ClassRecitationTab } from '@/features/recitation/class-recitation-tab';
 import { ClassAttendanceTab } from '@/features/attendance/class-attendance-tab';
 import { ClassLessonsCalendar } from '@/features/attendance/class-lessons-calendar';
 import { LessonProgram } from '@/features/lessons/lesson-program';
+import { WeeklyPlanView } from '@/features/classes/weekly-plan';
 import { AwardDinarDialog } from '@/features/dinars/award-dinar-dialog';
 import { DinarLeaderboard } from '@/features/dinars/dinar-leaderboard';
 
@@ -150,6 +151,7 @@ export default function ClassProfilePage({
           <TabsTrigger value="teachers">{t('tabTeachers')}</TabsTrigger>
           <TabsTrigger value="recitation">{tRec('classTab')}</TabsTrigger>
           <TabsTrigger value="attendance">{tAtt('tab')}</TabsTrigger>
+          <TabsTrigger value="weekly-plan">{t('weeklyPlan') || 'الخطة الأسبوعية'}</TabsTrigger>
           <TabsTrigger value="dinars">{tDin('tab')}</TabsTrigger>
           <TabsTrigger value="details">{t('tabDetails')}</TabsTrigger>
           <TabsTrigger value="lessons">{t('tabLessons')}</TabsTrigger>
@@ -347,12 +349,23 @@ export default function ClassProfilePage({
             <CardContent>
               <WeeklySchedule
                 classId={classId}
+                instituteId={instituteId}
+                teachers={teachers}
                 initial={schedule}
                 canEdit={canManage}
                 onSaved={load}
               />
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="weekly-plan" className="pt-4">
+          <WeeklyPlanView
+            classId={classId}
+            instituteId={instituteId}
+            teachers={teachers}
+            canManage={canManage}
+          />
         </TabsContent>
 
         {/* 4 — Lessons program (الدروس) */}
