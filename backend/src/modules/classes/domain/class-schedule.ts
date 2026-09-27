@@ -31,6 +31,7 @@ export interface ScheduleSlot {
   start: Anchor;
   end: Anchor | null; // optional (spec 004)
   trackType?: TrackType;
+  subjectName?: string | null;
   categoryId?: string | null;
   teacherId?: string | null;
 }

@@ -23,6 +23,7 @@ export interface ProgramEntryRead {
   lessonId: string;
   kind: LessonKind;
   name: string | null;
+  subjectName?: string | null;
   description: string | null;
   category: { id: string; name: string; color: string } | null;
   date: string; // YYYY-MM-DD

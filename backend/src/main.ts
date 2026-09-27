@@ -192,6 +192,9 @@ async function runAutoMigrations(config: ConfigService) {
       );
     `, 'Table dinar_transactions');
 
+    await safeQuery(`ALTER TABLE "class_schedule" ADD COLUMN IF NOT EXISTS "subject_name" varchar(200);`, 'class_schedule.subject_name');
+    await safeQuery(`ALTER TABLE "lessons" ADD COLUMN IF NOT EXISTS "subject_name" varchar(200);`, 'lessons.subject_name');
+
   } catch (err: any) {
     Logger.error(`Auto-migration top-level note: ${err?.message || err}`, 'Migrations');
   } finally {

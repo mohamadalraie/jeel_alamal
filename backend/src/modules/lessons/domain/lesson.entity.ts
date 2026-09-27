@@ -18,6 +18,7 @@ interface LessonProps {
   instituteId: string;
   kind: LessonKind;
   name: string | null;
+  subjectName: string | null;
   description: string | null;
   categoryId: string | null;
   date: string; // YYYY-MM-DD
@@ -56,6 +57,7 @@ export class Lesson extends Entity<string> {
     instituteId: string;
     kind: LessonKind;
     name?: string | null;
+    subjectName?: string | null;
     description?: string | null;
     categoryId?: string | null;
     date: string;
@@ -70,6 +72,7 @@ export class Lesson extends Entity<string> {
       instituteId: input.instituteId,
       kind: input.kind,
       name: input.name ?? null,
+      subjectName: input.subjectName ?? null,
       description: input.description ?? null,
       categoryId: input.categoryId ?? null,
       date: input.date,
@@ -88,6 +91,7 @@ export class Lesson extends Entity<string> {
   /** Update the shared content (kind is immutable after creation). */
   edit(input: {
     name?: string | null;
+    subjectName?: string | null;
     description?: string | null;
     categoryId?: string | null;
     date?: string;
@@ -106,6 +110,7 @@ export class Lesson extends Entity<string> {
       );
     }
     if (input.name !== undefined) this.props.name = input.name;
+    if (input.subjectName !== undefined) this.props.subjectName = input.subjectName;
     if (input.description !== undefined)
       this.props.description = input.description;
     if (input.categoryId !== undefined)
@@ -113,6 +118,7 @@ export class Lesson extends Entity<string> {
     if (input.sources !== undefined) this.props.sources = input.sources;
     const n = normalize(this.props);
     this.props.name = n.name;
+    this.props.subjectName = n.subjectName;
     this.props.description = n.description;
     this.props.categoryId = n.categoryId;
     this.props.sources = n.sources;
@@ -126,6 +132,9 @@ export class Lesson extends Entity<string> {
   }
   get name() {
     return this.props.name;
+  }
+  get subjectName() {
+    return this.props.subjectName;
   }
   get description() {
     return this.props.description;
@@ -156,6 +165,7 @@ function normalize(props: LessonProps): LessonProps {
     return {
       ...props,
       name: null,
+      subjectName: null,
       description: null,
       categoryId: null,
       sources: [],
@@ -168,6 +178,7 @@ function normalize(props: LessonProps): LessonProps {
   return {
     ...props,
     name,
+    subjectName: props.subjectName?.trim() || null,
     description: props.description?.trim() || null,
     sources: props.sources.map((s, i) => ({
       kind: s.kind,

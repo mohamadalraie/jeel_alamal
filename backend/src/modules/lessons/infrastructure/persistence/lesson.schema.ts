@@ -67,6 +67,7 @@ export const lessons = pgTable('lessons', {
     .references(() => institutes.id, { onDelete: 'cascade' }),
   kind: lessonKindEnum('kind').notNull().default('lesson'),
   name: varchar('name', { length: 200 }), // null for recitation entries
+  subjectName: varchar('subject_name', { length: 200 }),
   description: text('description'),
   categoryId: uuid('category_id').references(() => lessonCategories.id, {
     onDelete: 'set null',

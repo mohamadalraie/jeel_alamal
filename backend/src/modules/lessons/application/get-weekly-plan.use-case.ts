@@ -12,12 +12,14 @@ export interface WeeklyPlanSlot {
   date: string; // YYYY-MM-DD
   dayOfWeek: string;
   categoryId: string | null;
+  subjectName?: string | null;
   teacherId: string | null;
+  teacherName?: string | null;
   trackType: string;
   // If completed:
   lessonId?: string;
   lessonName?: string | null;
-  // If pending:
+  // Time anchor details
   startTime?: { kind: string; value: string };
   endTime?: { kind: string; value: string } | null;
 }
@@ -71,47 +73,85 @@ export class GetWeeklyPlanUseCase {
       d.setUTCDate(startDate.getUTCDate() + i);
       const dateStr = d.toISOString().split('T')[0];
       const jsDay = d.getUTCDay(); // 0 = Sunday, 1 = Monday... 6 = Saturday
-      // Convert to our WEEKDAYS
       const dayMapping = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'] as const;
       const dayOfWeek = dayMapping[jsDay];
 
       const dayLessons = actualLessons.filter(l => l.date === dateStr);
-      
-      // 1. Add all actual lessons for this day
-      for (const lesson of dayLessons) {
-        result.push({
-          type: 'completed',
-          date: dateStr,
-          dayOfWeek,
-          lessonId: lesson.lessonId,
-          lessonName: lesson.name,
-          categoryId: lesson.category?.id ?? null,
-          teacherId: lesson.teacher.id, 
-          trackType: lesson.targetTrack ?? 'regular', 
-        });
+      const daySchedule = schedule.filter(s => s.dayOfWeek === dayOfWeek);
+
+      const usedLessonIds = new Set<string>();
+
+      // Pair scheduled slots with actual lessons given on this day
+      for (const slot of daySchedule) {
+        // Priority 1: Match by categoryId if set in schedule slot
+        let matchedIndex = dayLessons.findIndex(l => 
+          !usedLessonIds.has(l.lessonId) &&
+          slot.categoryId &&
+          l.category?.id === slot.categoryId
+        );
+
+        // Priority 2: If no category match, match any unused lesson for this track
+        if (matchedIndex === -1) {
+          matchedIndex = dayLessons.findIndex(l => 
+            !usedLessonIds.has(l.lessonId) &&
+            (l.targetTrack ?? 'regular') === (slot.trackType ?? 'regular')
+          );
+        }
+
+        // Priority 3: Fallback to any unused lesson on this day
+        if (matchedIndex === -1) {
+          matchedIndex = dayLessons.findIndex(l => !usedLessonIds.has(l.lessonId));
+        }
+
+        if (matchedIndex !== -1) {
+          const lesson = dayLessons[matchedIndex];
+          usedLessonIds.add(lesson.lessonId);
+
+          result.push({
+            type: 'completed',
+            date: dateStr,
+            dayOfWeek,
+            lessonId: lesson.lessonId,
+            lessonName: lesson.name,
+            subjectName: lesson.subjectName || slot.subjectName || null,
+            categoryId: lesson.category?.id ?? slot.categoryId ?? null,
+            teacherId: lesson.teacher.id,
+            teacherName: lesson.teacher.name,
+            trackType: slot.trackType ?? 'regular',
+            startTime: { kind: slot.start.kind, value: slot.start.value },
+            endTime: slot.end ? { kind: slot.end.kind, value: slot.end.value } : null,
+          });
+        } else if (dateStr >= todayStr) {
+          // Unfulfilled pending slot
+          result.push({
+            type: 'pending',
+            date: dateStr,
+            dayOfWeek,
+            subjectName: slot.subjectName ?? null,
+            categoryId: slot.categoryId ?? null,
+            teacherId: slot.teacherId ?? null,
+            trackType: slot.trackType ?? 'regular',
+            startTime: { kind: slot.start.kind, value: slot.start.value },
+            endTime: slot.end ? { kind: slot.end.kind, value: slot.end.value } : null,
+          });
+        }
       }
 
-      // 2. Add pending slots if date >= today
-      if (dateStr >= todayStr) {
-        const daySchedule = schedule.filter(s => s.dayOfWeek === dayOfWeek);
-        for (const slot of daySchedule) {
-          const isFulfilled = dayLessons.some(l => 
-            l.category?.id === slot.categoryId && 
-            l.targetTrack === (slot.trackType ?? 'regular')
-          );
-
-          if (!isFulfilled) {
-            result.push({
-              type: 'pending',
-              date: dateStr,
-              dayOfWeek,
-              categoryId: slot.categoryId ?? null,
-              teacherId: slot.teacherId ?? null,
-              trackType: slot.trackType ?? 'regular',
-              startTime: { kind: slot.start.kind, value: slot.start.value },
-              endTime: slot.end ? { kind: slot.end.kind, value: slot.end.value } : null,
-            });
-          }
+      // Any remaining lessons given on this day that were NOT paired to a schedule slot (extra/unscheduled lessons)
+      for (const lesson of dayLessons) {
+        if (!usedLessonIds.has(lesson.lessonId)) {
+          result.push({
+            type: 'completed',
+            date: dateStr,
+            dayOfWeek,
+            lessonId: lesson.lessonId,
+            lessonName: lesson.name,
+            subjectName: lesson.subjectName ?? null,
+            categoryId: lesson.category?.id ?? null,
+            teacherId: lesson.teacher.id,
+            teacherName: lesson.teacher.name,
+            trackType: lesson.targetTrack ?? 'regular',
+          });
         }
       }
     }

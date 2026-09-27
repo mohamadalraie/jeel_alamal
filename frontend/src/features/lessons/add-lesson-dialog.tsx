@@ -35,6 +35,7 @@ export interface LessonEditing {
   lessonId: string;
   kind: LessonKind;
   name: string | null;
+  subjectName?: string | null;
   description: string | null;
   categoryId: string | null;
   date: string;
@@ -57,6 +58,7 @@ export function AddLessonDialog({
   onDone,
   preselectClassId,
   preselectDate,
+  preselectSubjectName,
   preselectCategoryId,
   preselectTeacherId,
   editing,
@@ -68,6 +70,7 @@ export function AddLessonDialog({
   onDone: () => void;
   preselectClassId?: string;
   preselectDate?: string;
+  preselectSubjectName?: string;
   preselectCategoryId?: string;
   preselectTeacherId?: string;
   editing?: LessonEditing | null;
@@ -103,6 +106,7 @@ export function AddLessonDialog({
 
   const [kind, setKind] = useState<LessonKind>('lesson');
   const [name, setName] = useState('');
+  const [subjectName, setSubjectName] = useState('');
   const [description, setDescription] = useState('');
   const [categoryId, setCategoryId] = useState<string>('');
   const [date, setDate] = useState(todayISO());
@@ -144,6 +148,7 @@ export function AddLessonDialog({
     if (editing) {
       setKind(editing.kind);
       setName(editing.name ?? '');
+      setSubjectName(editing.subjectName ?? '');
       setDescription(editing.description ?? '');
       setCategoryId(editing.categoryId ?? '');
       setDate(editing.date);
@@ -153,6 +158,7 @@ export function AddLessonDialog({
     } else {
       setKind('lesson');
       setName('');
+      setSubjectName(preselectSubjectName ?? '');
       setDescription('');
       setCategoryId(preselectCategoryId ?? '');
       setDate(preselectDate ?? todayISO());
@@ -197,6 +203,7 @@ export function AddLessonDialog({
       if (isEdit) {
         await updateLesson(editing!.lessonId, {
           name: isLesson ? name.trim() : undefined,
+          subjectName: isLesson ? subjectName.trim() || undefined : undefined,
           description: isLesson ? description || undefined : undefined,
           categoryId: isLesson ? categoryId || undefined : undefined,
           date,
@@ -207,6 +214,7 @@ export function AddLessonDialog({
         await createLesson(instituteId, {
           kind,
           name: isLesson ? name.trim() : undefined,
+          subjectName: isLesson ? subjectName.trim() || undefined : undefined,
           description: isLesson ? description || undefined : undefined,
           categoryId: isLesson && categoryId ? categoryId : undefined,
           date,
@@ -245,7 +253,11 @@ export function AddLessonDialog({
             <>
               <div className="flex flex-col gap-1.5">
                 <Label htmlFor="lsn-name">{t('name')}</Label>
-                <Input id="lsn-name" value={name} onChange={(e) => setName(e.target.value)} required />
+                <Input id="lsn-name" value={name} onChange={(e) => setName(e.target.value)} placeholder="مثال: سقوط الخلافة" required />
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="lsn-subject">المادة (اسم المادة)</Label>
+                <Input id="lsn-subject" value={subjectName} onChange={(e) => setSubjectName(e.target.value)} placeholder="مثال: الأحداث آخر 100 سنة" />
               </div>
               <div className="flex flex-col gap-1.5">
                 <Label htmlFor="lsn-desc">{t('description')}</Label>

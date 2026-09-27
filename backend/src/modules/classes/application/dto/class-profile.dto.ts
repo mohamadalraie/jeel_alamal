@@ -6,6 +6,7 @@ import {
   IsOptional,
   IsString,
   IsUUID,
+  MaxLength,
   MinLength,
   ValidateNested,
 } from 'class-validator';
@@ -45,6 +46,11 @@ export class ScheduleSlotDto {
   @IsOptional()
   @IsIn(['regular', 'intensive'])
   trackType?: 'regular' | 'intensive';
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(200)
+  subjectName?: string | null;
 
   @IsOptional()
   @IsUUID()

@@ -174,8 +174,14 @@ export function WeeklySchedule({
                         </Button>
                       </div>
 
-                      {/* Category and Teacher Selectors */}
-                      <div className="flex items-center gap-1.5 mt-1">
+                      {/* Subject, Category, and Teacher Selectors */}
+                      <div className="flex flex-col sm:flex-row items-center gap-1.5 mt-1">
+                        <Input
+                          value={s.subjectName ?? ''}
+                          onChange={(e) => patch(i, { subjectName: e.target.value || null })}
+                          placeholder="المادة (اسم المادة)"
+                          className="h-8 flex-1 text-xs"
+                        />
                         <Select
                           value={s.categoryId ?? 'none'}
                           onValueChange={(v) => patch(i, { categoryId: v === 'none' ? null : v })}

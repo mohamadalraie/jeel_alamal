@@ -43,6 +43,7 @@ const toLesson = (r: LessonRow, sources: LessonSourceRow[]): Lesson =>
     instituteId: r.instituteId,
     kind: r.kind as LessonKind,
     name: r.name,
+    subjectName: r.subjectName,
     description: r.description,
     categoryId: r.categoryId,
     date: r.date,
@@ -154,6 +155,7 @@ export class DrizzleLessonRepository implements LessonRepository {
         instituteId: lesson.instituteId,
         kind: lesson.kind,
         name: lesson.name,
+        subjectName: lesson.subjectName,
         description: lesson.description,
         categoryId: lesson.categoryId,
         date: lesson.date,
@@ -196,6 +198,7 @@ export class DrizzleLessonRepository implements LessonRepository {
         .update(lessons)
         .set({
           name: lesson.name,
+          subjectName: lesson.subjectName,
           description: lesson.description,
           categoryId: lesson.categoryId,
           date: lesson.date,
@@ -412,6 +415,7 @@ export class DrizzleLessonRepository implements LessonRepository {
         lessonId: lessons.id,
         kind: lessons.kind,
         name: lessons.name,
+        subjectName: lessons.subjectName,
         description: lessons.description,
         date: lessons.date,
         sort: lessonClasses.sort,
@@ -461,6 +465,7 @@ export class DrizzleLessonRepository implements LessonRepository {
       lessonId: r.lessonId,
       kind: r.kind as LessonKind,
       name: r.name,
+      subjectName: r.subjectName ?? null,
       description: r.description,
       category: r.categoryId
         ? { id: r.categoryId, name: r.categoryName!, color: r.categoryColor! }

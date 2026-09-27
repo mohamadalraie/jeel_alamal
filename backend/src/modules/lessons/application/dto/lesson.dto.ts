@@ -81,6 +81,11 @@ export class CreateLessonDto {
 
   @IsOptional()
   @IsString()
+  @MaxLength(200)
+  subjectName?: string;
+
+  @IsOptional()
+  @IsString()
   description?: string;
 
   @IsOptional()
@@ -113,6 +118,11 @@ export class UpdateLessonDto {
   @IsString()
   @MaxLength(200)
   name?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(200)
+  subjectName?: string | null;
 
   @IsOptional()
   @IsString()

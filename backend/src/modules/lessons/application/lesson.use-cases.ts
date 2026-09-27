@@ -154,6 +154,7 @@ export class CreateLessonUseCase extends LessonBase {
       instituteId,
       kind: dto.kind,
       name: isLesson ? (dto.name ?? null) : null,
+      subjectName: isLesson ? (dto.subjectName ?? null) : null,
       description: isLesson ? (dto.description ?? null) : null,
       categoryId: isLesson ? (dto.categoryId ?? null) : null,
       date: dto.date,
@@ -235,6 +236,7 @@ export class UpdateLessonUseCase extends LessonBase {
 
     lesson.edit({
       name: dto.name,
+      subjectName: dto.subjectName,
       description: dto.description,
       categoryId: dto.categoryId,
       date: dto.date,

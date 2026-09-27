@@ -46,6 +46,7 @@ export function WeeklyPlanView({
   const [addDialogOpen, setAddDialogOpen] = useState(false);
   const [selectedSlot, setSelectedSlot] = useState<{
     date: string;
+    subjectName?: string | null;
     categoryId?: string | null;
     teacherId?: string | null;
   } | null>(null);
@@ -86,6 +87,7 @@ export function WeeklyPlanView({
   const handlePlanLesson = (slot: WeeklyPlanSlot) => {
     setSelectedSlot({
       date: slot.date,
+      subjectName: slot.subjectName,
       categoryId: slot.categoryId,
       teacherId: slot.teacherId,
     });
@@ -140,21 +142,40 @@ export function WeeklyPlanView({
                     </div>
                   )}
                   {daySlots.map((slot, i) => {
-                    const catName = categories.find((c) => c.id === slot.categoryId)?.name || t('noCategory');
-                    const teacherName = teachers.find((t) => t.id === slot.teacherId)?.name || t('noTeacher');
+                    const categoryObj = categories.find((c) => c.id === slot.categoryId);
+                    const catName = categoryObj?.name || (slot.categoryId ? t('category') : null);
+                    const teacherName = slot.teacherName || teachers.find((t) => t.id === slot.teacherId)?.name || t('noTeacher');
 
                     if (slot.type === 'completed') {
                       return (
-                        <div key={i} className="bg-primary/5 border border-primary/20 rounded-md p-2 flex flex-col gap-1.5 hover:bg-primary/10 transition-colors">
-                          <div className="flex items-center gap-1 text-xs font-semibold text-primary">
-                            <CheckCircle2 className="h-3.5 w-3.5" />
+                        <div key={i} className="bg-primary/5 border border-primary/20 rounded-md p-2.5 flex flex-col gap-1.5 hover:bg-primary/10 transition-colors">
+                          {slot.startTime && (
+                            <div className="flex items-center gap-1 text-[11px] text-muted-foreground" dir="ltr">
+                              <Clock className="h-3 w-3" />
+                              <span>
+                                {slot.startTime.value} {slot.endTime ? `- ${slot.endTime.value}` : ''}
+                              </span>
+                            </div>
+                          )}
+
+                          <div className="flex items-center gap-1 text-xs font-bold text-primary">
+                            <CheckCircle2 className="h-3.5 w-3.5 shrink-0" />
                             <span className="line-clamp-1">{slot.lessonName || tc('lesson')}</span>
                           </div>
                           
-                          <div className="flex items-center gap-1 text-xs text-muted-foreground mt-1">
-                            <BookOpen className="h-3 w-3" />
-                            <span className="truncate">{catName}</span>
-                          </div>
+                          {slot.subjectName && (
+                            <div className="text-xs font-medium text-foreground/90 truncate">
+                              <span className="text-muted-foreground font-normal">المادة: </span>
+                              {slot.subjectName}
+                            </div>
+                          )}
+
+                          {catName && (
+                            <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                              <BookOpen className="h-3 w-3" />
+                              <span className="truncate">{catName}</span>
+                            </div>
+                          )}
                           <div className="flex items-center gap-1 text-xs text-muted-foreground">
                             <UserIcon className="h-3 w-3" />
                             <span className="truncate">{teacherName}</span>
@@ -174,11 +195,20 @@ export function WeeklyPlanView({
                             </span>
                           </div>
                         </div>
+
+                        {slot.subjectName && (
+                          <div className="text-xs font-medium text-foreground/90 truncate mt-0.5">
+                            <span className="text-muted-foreground font-normal">المادة: </span>
+                            {slot.subjectName}
+                          </div>
+                        )}
                         
-                        <div className="flex items-center gap-1 text-xs text-muted-foreground mt-1">
-                          <BookOpen className="h-3 w-3" />
-                          <span className="truncate">{catName}</span>
-                        </div>
+                        {catName && (
+                          <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                            <BookOpen className="h-3 w-3" />
+                            <span className="truncate">{catName}</span>
+                          </div>
+                        )}
                         <div className="flex items-center gap-1 text-xs text-muted-foreground">
                           <UserIcon className="h-3 w-3" />
                           <span className="truncate">{teacherName}</span>
@@ -213,6 +243,7 @@ export function WeeklyPlanView({
         onDone={fetchPlan}
         preselectClassId={classId}
         preselectDate={selectedSlot?.date}
+        preselectSubjectName={selectedSlot?.subjectName ?? undefined}
         preselectCategoryId={selectedSlot?.categoryId ?? undefined}
         preselectTeacherId={selectedSlot?.teacherId ?? undefined}
       />

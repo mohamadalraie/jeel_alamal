@@ -100,6 +100,7 @@ export interface ScheduleSlot {
   start: Anchor;
   end: Anchor | null;
   trackType?: TrackType;
+  subjectName?: string | null;
   categoryId?: string | null;
   teacherId?: string | null;
 }
@@ -109,7 +110,9 @@ export interface WeeklyPlanSlot {
   date: string;
   dayOfWeek: Weekday;
   categoryId: string | null;
+  subjectName?: string | null;
   teacherId: string | null;
+  teacherName?: string | null;
   trackType: string;
   lessonId?: string;
   lessonName?: string | null;
@@ -503,6 +506,7 @@ export interface LessonAssignmentInput {
 export interface CreateLessonInput {
   kind: LessonKind;
   name?: string;
+  subjectName?: string;
   description?: string;
   categoryId?: string;
   date: string; // YYYY-MM-DD
@@ -518,6 +522,7 @@ export interface ProgramEntry {
   lessonId: string;
   kind: LessonKind;
   name: string | null;
+  subjectName?: string | null;
   description: string | null;
   category: LessonCategory | null;
   date: string;
