@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
-import { Plus, Trash2, Clock } from 'lucide-react';
+import { Plus, Trash2, Clock, BookMarked } from 'lucide-react';
 import type { Anchor, Prayer, ScheduleSlot, Weekday, LessonCategory, LessonSubject } from '@/lib/types';
 import { setClassSchedule, listLessonCategories, listLessonSubjects, ApiError } from '@/lib/api';
 import { Button } from '@/components/ui/button';
@@ -154,22 +154,31 @@ export function WeeklySchedule({
               ) : (
                 daySlots.map(({ s, i }) =>
                   canEdit ? (
-                    <div key={i} className="bg-muted/40 flex flex-col gap-2 rounded-md p-2">
-                      {/* Start: kind + value */}
-                      <div className="flex items-center gap-1.5">
-                        <span className="text-muted-foreground w-9 shrink-0 text-xs">{t('startsAt')}</span>
+                    <div key={i} className="bg-muted/40 flex flex-col gap-2 rounded-md p-2 relative">
+                      <div className="absolute top-2 left-2 z-10">
+                        <Button variant="ghost" size="icon" className="size-6 shrink-0" aria-label={tc('cancel')} onClick={() => removeSlot(i)}>
+                          <Trash2 className="text-destructive size-3.5" />
+                        </Button>
+                      </div>
+                      
+                      <div className="flex items-center">
                         <Select
                           value={s.kind ?? 'lesson'}
                           onValueChange={(k) => patch(i, { kind: k as any })}
                         >
-                          <SelectTrigger className="h-8 w-24 shrink-0 px-2 text-xs font-semibold">
+                          <SelectTrigger className="h-7 w-[130px] px-2 text-xs font-bold bg-background border-primary/20 hover:border-primary/50 transition-colors">
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="lesson">درس</SelectItem>
-                            <SelectItem value="recitation">تسميع</SelectItem>
+                            <SelectItem value="lesson">درس نظامي</SelectItem>
+                            <SelectItem value="recitation">جلسة تسميع قرآن</SelectItem>
                           </SelectContent>
                         </Select>
+                      </div>
+
+                      {/* Start: kind + value */}
+                      <div className="flex items-center gap-1.5 mt-1">
+                        <span className="text-muted-foreground w-9 shrink-0 text-xs">{t('startsAt')}</span>
                         <Select
                           value={s.start.kind}
                           onValueChange={(k) => patch(i, { start: anchorFor(k as 'time' | 'prayer') })}
@@ -183,14 +192,16 @@ export function WeeklySchedule({
                           </SelectContent>
                         </Select>
                         <ValueEditor anchor={s.start} onChange={(a) => patch(i, { start: a })} />
-                        <Button variant="ghost" size="icon" className="size-8 shrink-0" aria-label={tc('cancel')} onClick={() => removeSlot(i)}>
-                          <Trash2 className="text-destructive size-3.5" />
-                        </Button>
                       </div>
 
                       {/* Subject, Category, Teacher, and Duration */}
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 mt-1">
-                        {subjects.length > 0 ? (
+                        {s.kind === 'recitation' ? (
+                          <div className="h-8 flex items-center px-2 text-xs font-bold text-primary bg-primary/10 rounded-md">
+                            <BookMarked className="h-3.5 w-3.5 ml-1.5" />
+                            جلسة تسميع
+                          </div>
+                        ) : subjects.length > 0 ? (
                           <Select
                             value={s.subjectId ?? 'none'}
                             onValueChange={(v) => patch(i, { subjectId: v === 'none' ? null : v })}
@@ -298,6 +309,18 @@ export function WeeklySchedule({
                         )}
                       </div>
                       <div className="text-muted-foreground flex items-center gap-1 text-xs">
+                        {s.kind === 'recitation' ? (
+                          <span className="bg-primary/10 text-primary font-bold px-1.5 py-0.5 rounded text-xs flex items-center gap-1">
+                            <BookMarked className="h-3 w-3" />
+                            تسميع
+                          </span>
+                        ) : s.subjectName ? (
+                          <span className="font-semibold text-foreground">{s.subjectName}</span>
+                        ) : s.subjectId ? (
+                          <span className="font-semibold text-foreground">
+                            {subjects.find((sub) => sub.id === s.subjectId)?.name ?? 'مادة'}
+                          </span>
+                        ) : null}
                         {s.categoryId && (
                           <span className="bg-muted px-1.5 py-0.5 rounded text-xs">
                             {categories.find((c) => c.id === s.categoryId)?.name || t('category')}

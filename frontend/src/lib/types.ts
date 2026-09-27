@@ -133,6 +133,7 @@ export interface WeeklyPlanSlot {
   expectedDurationMinutes?: number | null;
   lessonId?: string;
   lessonName?: string | null;
+  fullLesson?: ProgramEntry;
   startTime?: Anchor;
   endTime?: Anchor | null;
   isExceptional?: boolean;

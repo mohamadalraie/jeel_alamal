@@ -24,6 +24,7 @@ export interface WeeklyPlanSlot {
   // If completed:
   lessonId?: string;
   lessonName?: string | null;
+  fullLesson?: any;
   // Time anchor details
   startTime?: { kind: string; value: string };
   endTime?: { kind: string; value: string } | null;
@@ -169,6 +170,7 @@ export class GetWeeklyPlanUseCase {
             startTime: { kind: slot.start.kind, value: slot.start.value },
             endTime: slot.end ? { kind: slot.end.kind, value: slot.end.value } : null,
             isExceptional: false,
+            fullLesson: lesson,
           });
         } else {
           // Unfulfilled template slot for this week (pending confirmation/setup by manager)
@@ -210,6 +212,7 @@ export class GetWeeklyPlanUseCase {
             kind: lesson.kind,
             expectedDurationMinutes: lesson.expectedDurationMinutes ?? null,
             isExceptional: true,
+            fullLesson: lesson,
           });
         }
       }

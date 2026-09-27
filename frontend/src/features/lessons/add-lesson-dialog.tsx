@@ -8,7 +8,7 @@ import type {
   LessonKind,
   LessonSourceInput,
 } from '@/lib/types';
-import { createLesson, updateLesson, createLessonCategory, getClassProfile, ApiError } from '@/lib/api';
+import { createLesson, updateLesson, createLessonCategory, createLessonSubject, getClassProfile, ApiError } from '@/lib/api';
 import { useClasses, useLessonSubjects, useQueries, useQueryClient, qk } from '@/lib/queries';
 import { notify } from '@/lib/toast';
 import { CATEGORY_PALETTE } from './lesson-colors';
@@ -133,6 +133,11 @@ export function AddLessonDialog({
   const [catColor, setCatColor] = useState(CATEGORY_PALETTE[0]);
   const [catBusy, setCatBusy] = useState(false);
 
+  const [newSub, setNewSub] = useState(false);
+  const [subName, setSubName] = useState('');
+  const [subColor, setSubColor] = useState(CATEGORY_PALETTE[1]);
+  const [subBusy, setSubBusy] = useState(false);
+
   async function addCategoryInline() {
     if (!catName.trim()) return;
     setCatBusy(true);
@@ -149,6 +154,22 @@ export function AddLessonDialog({
       notify.error(err, tc('error'));
     } finally {
       setCatBusy(false);
+    }
+  }
+
+  async function addSubject() {
+    if (!subName.trim()) return;
+    setSubBusy(true);
+    try {
+      const created = await createLessonSubject(instituteId, { name: subName.trim(), color: subColor });
+      queryClient.invalidateQueries({ queryKey: qk.lessonSubjects(instituteId) });
+      setSubjectId(created.id);
+      setNewSub(false);
+      setSubName('');
+    } catch (err) {
+      notify.error(err instanceof ApiError ? err.message : tc('error'));
+    } finally {
+      setSubBusy(false);
     }
   }
 
@@ -270,8 +291,55 @@ export function AddLessonDialog({
                 <Input id="lsn-name" value={name} onChange={(e) => setName(e.target.value)} placeholder="مثال: سقوط الخلافة" required />
               </div>
               <div className="flex flex-col gap-1.5">
-                <Label htmlFor="lsn-subject">المادة الدراسية</Label>
-                {subjects.length > 0 ? (
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="lsn-subject">المادة الدراسية</Label>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 gap-1 text-xs"
+                    onClick={() => setNewSub((v) => !v)}
+                  >
+                    {newSub ? <X className="size-3.5" /> : <Plus className="size-3.5" />}
+                    إضافة مادة
+                  </Button>
+                </div>
+                
+                {newSub ? (
+                  <div className="border-border flex flex-col gap-2 rounded-md border p-2 mb-2">
+                    <Input
+                      value={subName}
+                      onChange={(e) => setSubName(e.target.value)}
+                      placeholder="اسم المادة"
+                      className="h-8 text-sm"
+                    />
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex gap-1">
+                        {CATEGORY_PALETTE.map((c) => (
+                          <button
+                            type="button"
+                            key={c}
+                            onClick={() => setSubColor(c)}
+                            className={cn(
+                              'size-4 rounded-full border border-black/10 transition-transform hover:scale-110',
+                              subColor === c && 'ring-offset-background ring-2 ring-primary ring-offset-1',
+                            )}
+                            style={{ backgroundColor: c }}
+                          />
+                        ))}
+                      </div>
+                      <Button
+                        type="button"
+                        size="sm"
+                        disabled={!subName.trim() || subBusy}
+                        onClick={addSubject}
+                        className="h-7 px-3 text-xs"
+                      >
+                        {t('add')}
+                      </Button>
+                    </div>
+                  </div>
+                ) : subjects.length > 0 ? (
                   <Select value={subjectId || 'none'} onValueChange={(v) => setSubjectId(v === 'none' ? '' : v)}>
                     <SelectTrigger id="lsn-subject">
                       <SelectValue placeholder="اختر المادة" />

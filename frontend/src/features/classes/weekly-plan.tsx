@@ -5,8 +5,10 @@ import { useTranslations } from 'next-intl';
 import { ChevronRight, ChevronLeft, Plus, Calendar, Clock, BookOpen, CheckCircle2, User as UserIcon, BookMarked } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { getWeeklyPlan, listLessonCategories } from '@/lib/api';
-import type { WeeklyPlanSlot, LessonCategory, Weekday } from '@/lib/types';
-import { AddLessonDialog } from '@/features/lessons/add-lesson-dialog';
+import type { WeeklyPlanSlot, LessonCategory, Weekday, ProgramEntry } from '@/lib/types';
+import { AddLessonDialog, type LessonEditing } from '@/features/lessons/add-lesson-dialog';
+import { LessonDetailsDialog } from '@/features/lessons/lesson-details-dialog';
+import { Edit2 } from 'lucide-react';
 
 // Compute the start of the week (Saturday) for a given date
 function getStartOfWeek(d: Date): Date {
@@ -43,6 +45,8 @@ export function WeeklyPlanView({
   const [categories, setCategories] = useState<LessonCategory[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const [viewLesson, setViewLesson] = useState<ProgramEntry | null>(null);
+  const [editingLesson, setEditingLesson] = useState<LessonEditing | null>(null);
   const [addDialogOpen, setAddDialogOpen] = useState(false);
   const [selectedSlot, setSelectedSlot] = useState<{
     date: string;
@@ -97,6 +101,25 @@ export function WeeklyPlanView({
       expectedDurationMinutes: slot.expectedDurationMinutes,
       kind: slot.kind,
     });
+    setEditingLesson(null);
+    setAddDialogOpen(true);
+  };
+
+  const handleEditLesson = (lesson: ProgramEntry) => {
+    setViewLesson(null);
+    setSelectedSlot(null);
+    setEditingLesson({
+      lessonId: lesson.lessonId,
+      kind: lesson.kind,
+      name: lesson.name,
+      subjectId: lesson.subjectId ?? null,
+      subjectName: lesson.subjectName ?? null,
+      description: lesson.description,
+      categoryId: lesson.category?.id ?? null,
+      date: lesson.date,
+      expectedDurationMinutes: lesson.expectedDurationMinutes,
+      sources: lesson.sources.map((s) => ({ kind: s.kind, url: s.url, description: s.description ?? '' })),
+    });
     setAddDialogOpen(true);
   };
 
@@ -104,7 +127,13 @@ export function WeeklyPlanView({
     setSelectedSlot({
       date: dateStr,
     });
+    setEditingLesson(null);
     setAddDialogOpen(true);
+  };
+
+  const tp = useTranslations('prayers');
+  const formatAnchor = (a: { kind: string; value: string }) => {
+    return a.kind === 'prayer' ? tp(a.value) : a.value;
   };
 
   const DAYS: Weekday[] = ['sat', 'sun', 'mon', 'tue', 'wed', 'thu', 'fri'];
@@ -173,14 +202,26 @@ export function WeeklyPlanView({
 
                     if (slot.type === 'completed') {
                       return (
-                        <div key={i} className="bg-primary/5 border border-primary/20 rounded-md p-2.5 flex flex-col gap-1.5 hover:bg-primary/10 transition-colors">
+                        <button
+                          type="button"
+                          key={i}
+                          onClick={() => slot.fullLesson && setViewLesson(slot.fullLesson)}
+                          className="relative bg-primary/5 border border-primary/20 rounded-md p-2.5 flex flex-col gap-1.5 hover:bg-primary/10 transition-colors text-start focus:outline-none focus:ring-2 focus:ring-primary/40"
+                        >
+                          <div className="absolute -top-2 -right-2 bg-primary text-primary-foreground text-[10px] w-5 h-5 rounded-full flex items-center justify-center font-bold shadow-sm">
+                            {i + 1}
+                          </div>
                           <div className="flex items-center justify-between text-[11px] text-muted-foreground">
                             {slot.startTime ? (
-                              <div className="flex items-center gap-1" dir="ltr">
+                              <div className="flex items-center gap-1 font-semibold text-foreground/80">
                                 <Clock className="h-3 w-3" />
-                                <span>
-                                  {slot.startTime.value} {slot.endTime ? `- ${slot.endTime.value}` : ''}
-                                </span>
+                                <span>{formatAnchor(slot.startTime)}</span>
+                                {slot.endTime && (
+                                  <>
+                                    <span>-</span>
+                                    <span>{formatAnchor(slot.endTime)}</span>
+                                  </>
+                                )}
                               </div>
                             ) : <span />}
                             {slot.isExceptional && (
@@ -191,8 +232,8 @@ export function WeeklyPlanView({
                           </div>
 
                           <div className="flex items-center gap-1 text-xs font-bold text-primary">
-                            <CheckCircle2 className="h-3.5 w-3.5 shrink-0" />
-                            <span className="line-clamp-1">{slot.lessonName || tc('lesson')}</span>
+                            {slot.kind === 'recitation' && <BookMarked className="h-3.5 w-3.5 shrink-0" />}
+                            <span className="line-clamp-1">{slot.kind === 'recitation' ? 'جلسة تسميع' : (slot.lessonName || tc('lesson'))}</span>
                           </div>
                           
                           {slot.subjectName && (
@@ -214,19 +255,30 @@ export function WeeklyPlanView({
                             <UserIcon className="h-3 w-3" />
                             <span className="truncate">{teacherName}</span>
                           </div>
-                        </div>
+                        </button>
                       );
                     }
 
                     // Pending slot
                     return (
-                      <div key={i} className="border-2 border-dashed border-muted-foreground/30 bg-muted/10 rounded-md p-2 flex flex-col gap-1.5 hover:border-primary/50 transition-colors group">
+                      <div key={i} className="relative border-2 border-dashed border-muted-foreground/30 bg-muted/10 rounded-md p-2 flex flex-col gap-1.5 hover:border-primary/50 transition-colors group">
+                        <div className="absolute -top-2 -right-2 bg-muted-foreground/20 text-muted-foreground text-[10px] w-5 h-5 rounded-full flex items-center justify-center font-bold">
+                          {i + 1}
+                        </div>
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-1 text-xs font-semibold text-muted-foreground group-hover:text-primary">
                             <Clock className="h-3.5 w-3.5" />
-                            <span dir="ltr">
-                              {slot.startTime?.value} {slot.endTime ? `- ${slot.endTime.value}` : ''}
-                            </span>
+                            {slot.startTime ? (
+                              <>
+                                <span>{formatAnchor(slot.startTime)}</span>
+                                {slot.endTime && (
+                                  <>
+                                    <span>-</span>
+                                    <span>{formatAnchor(slot.endTime)}</span>
+                                  </>
+                                )}
+                              </>
+                            ) : null}
                           </div>
                         </div>
 
@@ -290,6 +342,21 @@ export function WeeklyPlanView({
         preselectTeacherId={selectedSlot?.teacherId ?? undefined}
         preselectDuration={selectedSlot?.expectedDurationMinutes ?? undefined}
         preselectKind={selectedSlot?.kind ?? undefined}
+        editing={editingLesson}
+      />
+
+      <LessonDetailsDialog
+        entry={viewLesson}
+        open={!!viewLesson}
+        onOpenChange={(op) => !op && setViewLesson(null)}
+        actions={
+          canManage ? (
+            <Button variant="outline" size="sm" onClick={() => viewLesson && handleEditLesson(viewLesson)}>
+              <Edit2 className="size-4 ml-2" />
+              تعديل معلومات الدرس
+            </Button>
+          ) : undefined
+        }
       />
     </div>
   );
