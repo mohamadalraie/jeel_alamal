@@ -18,6 +18,9 @@ import {
   trackTypeEnum,
 } from '../../../classes/infrastructure/persistence/class.schema';
 import { users } from '../../../users/infrastructure/persistence/user.schema';
+// Re-export from separate schema to avoid circular imports
+export { lessonSubjects, type LessonSubjectRow } from './lesson-subject.schema';
+import { lessonSubjects } from './lesson-subject.schema';
 
 /** A program entry is a normal lesson or a Quran-recitation marker (spec 008). */
 export const lessonKindEnum = pgEnum('lesson_kind', ['lesson', 'recitation']);
@@ -67,7 +70,9 @@ export const lessons = pgTable('lessons', {
     .references(() => institutes.id, { onDelete: 'cascade' }),
   kind: lessonKindEnum('kind').notNull().default('lesson'),
   name: varchar('name', { length: 200 }), // null for recitation entries
-  subjectName: varchar('subject_name', { length: 200 }),
+  subjectId: uuid('subject_id').references(() => lessonSubjects.id, {
+    onDelete: 'set null',
+  }),
   description: text('description'),
   categoryId: uuid('category_id').references(() => lessonCategories.id, {
     onDelete: 'set null',

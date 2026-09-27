@@ -11,6 +11,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ListSkeleton } from '@/features/shared/skeletons';
 import { CategoryManager } from '../category-manager';
+import { SubjectManager } from '../subject-manager';
 
 /**
  * Lesson settings for an institute (spec 009): the duration threshold and the
@@ -107,13 +108,14 @@ export function LessonSettingsForm({ instituteId }: { instituteId: string }) {
         </CardContent>
       </Card>
 
-      {/* Category management (composed, moved from the hub toolbar) */}
+      {/* Category and Subject management */}
       <Card>
         <CardHeader>
-          <CardTitle>{t('categories')}</CardTitle>
+          <CardTitle>التصنيفات والمواد الدراسية</CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="flex flex-wrap gap-3">
           <CategoryManager instituteId={instituteId} />
+          <SubjectManager instituteId={instituteId} />
         </CardContent>
       </Card>
     </div>

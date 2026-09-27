@@ -21,6 +21,13 @@ import {
   DeleteCategoryUseCase,
 } from '../application/lesson-category.use-cases';
 import {
+  AddSubjectUseCase,
+  ListSubjectsUseCase,
+  UpdateSubjectUseCase,
+  ArchiveSubjectUseCase,
+  UnarchiveSubjectUseCase,
+} from '../application/lesson-subject.use-cases';
+import {
   CreateLessonUseCase,
   UpdateLessonUseCase,
   DeleteLessonUseCase,
@@ -59,6 +66,11 @@ export class LessonsController {
     private readonly listCategories: ListCategoriesUseCase,
     private readonly updateCategory: UpdateCategoryUseCase,
     private readonly deleteCategory: DeleteCategoryUseCase,
+    private readonly addSubjectUC: AddSubjectUseCase,
+    private readonly listSubjectsUC: ListSubjectsUseCase,
+    private readonly updateSubjectUC: UpdateSubjectUseCase,
+    private readonly archiveSubjectUC: ArchiveSubjectUseCase,
+    private readonly unarchiveSubjectUC: UnarchiveSubjectUseCase,
     private readonly createLesson: CreateLessonUseCase,
     private readonly updateLesson: UpdateLessonUseCase,
     private readonly deleteLesson: DeleteLessonUseCase,
@@ -235,6 +247,54 @@ export class LessonsController {
     @Param('lessonClassId', ParseUUIDPipe) lessonClassId: string,
   ) {
     return this.getLessonTimer.execute(actor, lessonClassId);
+  }
+
+  // ── Subjects ──
+  @Post('institutes/:instituteId/lesson-subjects')
+  @HttpCode(HttpStatus.CREATED)
+  createSubject(
+    @CurrentUser() actor: Actor,
+    @Param('instituteId', ParseUUIDPipe) instituteId: string,
+    @Body() dto: { name: string; color?: string },
+  ) {
+    return this.addSubjectUC.execute(actor, instituteId, dto);
+  }
+
+  @Get('institutes/:instituteId/lesson-subjects')
+  listSubjects(
+    @CurrentUser() actor: Actor,
+    @Param('instituteId', ParseUUIDPipe) instituteId: string,
+    @Query('includeArchived') includeArchived?: string,
+  ) {
+    return this.listSubjectsUC.execute(actor, instituteId, includeArchived === 'true');
+  }
+
+  @Patch('lesson-subjects/:subjectId')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async editSubject(
+    @CurrentUser() actor: Actor,
+    @Param('subjectId', ParseUUIDPipe) subjectId: string,
+    @Body() dto: { name: string; color?: string | null },
+  ) {
+    await this.updateSubjectUC.execute(actor, subjectId, dto);
+  }
+
+  @Post('lesson-subjects/:subjectId/archive')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async archiveSubject(
+    @CurrentUser() actor: Actor,
+    @Param('subjectId', ParseUUIDPipe) subjectId: string,
+  ) {
+    await this.archiveSubjectUC.execute(actor, subjectId);
+  }
+
+  @Post('lesson-subjects/:subjectId/unarchive')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async unarchiveSubject(
+    @CurrentUser() actor: Actor,
+    @Param('subjectId', ParseUUIDPipe) subjectId: string,
+  ) {
+    await this.unarchiveSubjectUC.execute(actor, subjectId);
   }
 
   // ── Lesson settings (spec 009) ──

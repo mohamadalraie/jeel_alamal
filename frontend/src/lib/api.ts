@@ -467,6 +467,22 @@ export const updateLessonCategory = (
 export const deleteLessonCategory = (categoryId: string) =>
   del<void>(`/api/lesson-categories/${categoryId}`);
 
+// ── Lesson Subjects (المواد) ──
+export const listLessonSubjects = (instituteId: string, includeArchived = false) =>
+  request<import('./types').LessonSubject[]>(
+    `/api/institutes/${instituteId}/lesson-subjects${includeArchived ? '?includeArchived=true' : ''}`
+  );
+export const createLessonSubject = (
+  instituteId: string,
+  input: { name: string; color?: string },
+) => post<import('./types').LessonSubject>(`/api/institutes/${instituteId}/lesson-subjects`, input);
+export const updateLessonSubject = (
+  subjectId: string,
+  input: { name?: string; color?: string },
+) => patch<void>(`/api/lesson-subjects/${subjectId}`, input);
+export const archiveLessonSubject = (subjectId: string) =>
+  del<void>(`/api/lesson-subjects/${subjectId}`);
+
 export const createLesson = (instituteId: string, input: CreateLessonInput) =>
   post<{ lessonId: string }>(`/api/institutes/${instituteId}/lessons`, input);
 export const updateLesson = (lessonId: string, input: UpdateLessonInput) =>

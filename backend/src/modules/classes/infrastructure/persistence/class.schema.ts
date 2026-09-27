@@ -1,8 +1,10 @@
 import {
   boolean,
+  integer,
   pgEnum,
   pgTable,
   primaryKey,
+  smallint,
   text,
   timestamp,
   uniqueIndex,
@@ -12,6 +14,7 @@ import {
 import { sql, type InferSelectModel } from 'drizzle-orm';
 import { institutes } from '../../../institutes/infrastructure/persistence/institute.schema';
 import { users } from '../../../users/infrastructure/persistence/user.schema';
+import { lessonSubjects } from '../../../lessons/infrastructure/persistence/lesson-subject.schema';
 
 /** Classes (حلقات) — tenant-owned (constitution II). */
 export const classes = pgTable('classes', {
@@ -120,9 +123,11 @@ export const classSchedule = pgTable('class_schedule', {
   endKind: anchorKindEnum('end_kind'), // optional end (spec 004)
   endValue: varchar('end_value', { length: 16 }),
   trackType: trackTypeEnum('track_type').notNull().default('regular'),
-  subjectName: varchar('subject_name', { length: 200 }),
+  subjectId: uuid('subject_id').references(() => lessonSubjects.id, { onDelete: 'set null' }),
   categoryId: uuid('category_id'),
   teacherId: uuid('teacher_id').references(() => users.id, { onDelete: 'set null' }),
+  expectedDurationMinutes: integer('expected_duration_minutes'),
+  sort: smallint('sort').notNull().default(0), // order within the day
 });
 
 export type ClassRow = InferSelectModel<typeof classes>;

@@ -122,6 +122,17 @@ abstract class LessonBase {
       throw new BusinessRuleError('Category is not in this institute');
     }
   }
+
+  protected async assertSubjectInInstitute(
+    subjectId: string | null | undefined,
+    instituteId: string,
+  ): Promise<void> {
+    if (!subjectId) return;
+    const subject = await this.lessons.findSubjectById(subjectId);
+    if (!subject || subject.instituteId !== instituteId) {
+      throw new BusinessRuleError('Subject is not in this institute');
+    }
+  }
 }
 
 /** Create a lesson (or recitation) and schedule it to one or more classes. Manager. */
@@ -149,12 +160,16 @@ export class CreateLessonUseCase extends LessonBase {
       isLesson ? dto.categoryId : null,
       instituteId,
     );
+    await this.assertSubjectInInstitute(
+      isLesson ? dto.subjectId : null,
+      instituteId,
+    );
 
     const lesson = Lesson.create({
       instituteId,
       kind: dto.kind,
       name: isLesson ? (dto.name ?? null) : null,
-      subjectName: isLesson ? (dto.subjectName ?? null) : null,
+      subjectId: isLesson ? (dto.subjectId ?? null) : null,
       description: isLesson ? (dto.description ?? null) : null,
       categoryId: isLesson ? (dto.categoryId ?? null) : null,
       date: dto.date,
@@ -222,6 +237,9 @@ export class UpdateLessonUseCase extends LessonBase {
     if (lesson.kind === LessonKind.Lesson && dto.categoryId !== undefined) {
       await this.assertCategoryInInstitute(dto.categoryId, lesson.instituteId);
     }
+    if (lesson.kind === LessonKind.Lesson && dto.subjectId !== undefined) {
+      await this.assertSubjectInInstitute(dto.subjectId, lesson.instituteId);
+    }
 
     // Expected duration is locked once any binding has advanced past pending —
     // the evaluation basis must stay deterministic mid-delivery (FR-002).
@@ -236,7 +254,7 @@ export class UpdateLessonUseCase extends LessonBase {
 
     lesson.edit({
       name: dto.name,
-      subjectName: dto.subjectName,
+      subjectId: dto.subjectId,
       description: dto.description,
       categoryId: dto.categoryId,
       date: dto.date,

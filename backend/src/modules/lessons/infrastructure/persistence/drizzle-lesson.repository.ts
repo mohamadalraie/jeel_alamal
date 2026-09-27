@@ -1,9 +1,10 @@
 import { randomUUID } from 'node:crypto';
 import { Inject, Injectable } from '@nestjs/common';
-import { and, asc, eq, gte, inArray, lte, ne, type SQL } from 'drizzle-orm';
+import { and, asc, eq, gte, inArray, isNull, lte, ne, type SQL } from 'drizzle-orm';
 import { DRIZZLE } from '../../../../core/database/drizzle.provider';
 import type { DrizzleDb } from '../../../../core/database/drizzle.provider';
 import { LessonCategory } from '../../domain/lesson-category.entity';
+import { LessonSubject } from '../../domain/lesson-subject.entity';
 import { Lesson } from '../../domain/lesson.entity';
 import { LessonClassBinding } from '../../domain/lesson-class-binding.entity';
 import { LessonKind } from '../../domain/lesson-kind';
@@ -25,6 +26,7 @@ import {
   type LessonRow,
   type LessonSourceRow,
 } from './lesson.schema';
+import { lessonSubjects, type LessonSubjectRow } from './lesson-subject.schema';
 import { classes } from '../../../classes/infrastructure/persistence/class.schema';
 import { users } from '../../../users/infrastructure/persistence/user.schema';
 
@@ -38,12 +40,21 @@ const toCategory = (r: LessonCategoryRow): LessonCategory =>
     createdAt: r.createdAt,
   });
 
+const toSubject = (r: LessonSubjectRow): LessonSubject =>
+  LessonSubject.reconstitute(r.id, {
+    instituteId: r.instituteId,
+    name: r.name,
+    color: r.color ?? null,
+    archivedAt: r.archivedAt ?? null,
+    createdAt: r.createdAt,
+  });
+
 const toLesson = (r: LessonRow, sources: LessonSourceRow[]): Lesson =>
   Lesson.reconstitute(r.id, {
     instituteId: r.instituteId,
     kind: r.kind as LessonKind,
     name: r.name,
-    subjectName: r.subjectName,
+    subjectId: r.subjectId ?? null,
     description: r.description,
     categoryId: r.categoryId,
     date: r.date,
@@ -155,7 +166,7 @@ export class DrizzleLessonRepository implements LessonRepository {
         instituteId: lesson.instituteId,
         kind: lesson.kind,
         name: lesson.name,
-        subjectName: lesson.subjectName,
+        subjectId: lesson.subjectId,
         description: lesson.description,
         categoryId: lesson.categoryId,
         date: lesson.date,
@@ -198,7 +209,7 @@ export class DrizzleLessonRepository implements LessonRepository {
         .update(lessons)
         .set({
           name: lesson.name,
-          subjectName: lesson.subjectName,
+          subjectId: lesson.subjectId,
           description: lesson.description,
           categoryId: lesson.categoryId,
           date: lesson.date,
@@ -371,6 +382,53 @@ export class DrizzleLessonRepository implements LessonRepository {
     });
   }
 
+  // ── Subjects ──
+  async addSubject(subject: LessonSubject): Promise<void> {
+    await this.db.insert(lessonSubjects).values({
+      id: subject.id,
+      instituteId: subject.instituteId,
+      name: subject.name,
+      color: subject.color,
+      archivedAt: subject.archivedAt,
+      createdAt: subject.createdAt,
+    });
+  }
+
+  async listSubjects(
+    instituteId: string,
+    includeArchived = false,
+  ): Promise<LessonSubject[]> {
+    const conds = includeArchived
+      ? [eq(lessonSubjects.instituteId, instituteId)]
+      : [eq(lessonSubjects.instituteId, instituteId), isNull(lessonSubjects.archivedAt)];
+    const rows = await this.db
+      .select()
+      .from(lessonSubjects)
+      .where(and(...conds))
+      .orderBy(asc(lessonSubjects.createdAt));
+    return rows.map(toSubject);
+  }
+
+  async findSubjectById(id: string): Promise<LessonSubject | null> {
+    const [row] = await this.db
+      .select()
+      .from(lessonSubjects)
+      .where(eq(lessonSubjects.id, id))
+      .limit(1);
+    return row ? toSubject(row) : null;
+  }
+
+  async saveSubject(subject: LessonSubject): Promise<void> {
+    await this.db
+      .update(lessonSubjects)
+      .set({
+        name: subject.name,
+        color: subject.color,
+        archivedAt: subject.archivedAt,
+      })
+      .where(eq(lessonSubjects.id, subject.id));
+  }
+
   // ── Reads ──
   async getClassProgram(
     classId: string,
@@ -409,13 +467,16 @@ export class DrizzleLessonRepository implements LessonRepository {
 
   /** Shared join + source assembly for the program read models. */
   private async queryEntries(where: SQL): Promise<ProgramEntryRead[]> {
+    // Alias lesson_subjects to avoid naming collision
+    const ls = lessonSubjects;
     const rows = await this.db
       .select({
         lessonClassId: lessonClasses.id,
         lessonId: lessons.id,
         kind: lessons.kind,
         name: lessons.name,
-        subjectName: lessons.subjectName,
+        subjectId: lessons.subjectId,
+        subjectName: ls.name,
         description: lessons.description,
         date: lessons.date,
         sort: lessonClasses.sort,
@@ -438,6 +499,7 @@ export class DrizzleLessonRepository implements LessonRepository {
       .innerJoin(classes, eq(lessonClasses.classId, classes.id))
       .innerJoin(users, eq(lessonClasses.teacherId, users.id))
       .leftJoin(lessonCategories, eq(lessons.categoryId, lessonCategories.id))
+      .leftJoin(ls, eq(lessons.subjectId, ls.id))
       .where(where)
       .orderBy(asc(lessons.date), asc(lessonClasses.sort));
 
@@ -465,6 +527,7 @@ export class DrizzleLessonRepository implements LessonRepository {
       lessonId: r.lessonId,
       kind: r.kind as LessonKind,
       name: r.name,
+      subjectId: r.subjectId ?? null,
       subjectName: r.subjectName ?? null,
       description: r.description,
       category: r.categoryId

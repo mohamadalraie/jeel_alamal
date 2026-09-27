@@ -3,10 +3,12 @@ import {
   IsArray,
   IsBoolean,
   IsIn,
+  IsInt,
   IsOptional,
   IsString,
   IsUUID,
   MaxLength,
+  Min,
   MinLength,
   ValidateNested,
 } from 'class-validator';
@@ -48,9 +50,8 @@ export class ScheduleSlotDto {
   trackType?: 'regular' | 'intensive';
 
   @IsOptional()
-  @IsString()
-  @MaxLength(200)
-  subjectName?: string | null;
+  @IsUUID()
+  subjectId?: string | null;
 
   @IsOptional()
   @IsUUID()
@@ -59,6 +60,11 @@ export class ScheduleSlotDto {
   @IsOptional()
   @IsUUID()
   teacherId?: string | null;
+
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  expectedDurationMinutes?: number | null;
 }
 
 export class SetScheduleDto {
@@ -74,8 +80,11 @@ interface SlotView {
   start: { kind: string; value: string };
   end: { kind: string; value: string } | null;
   trackType: string;
+  subjectId?: string | null;
   categoryId?: string | null;
   teacherId?: string | null;
+  expectedDurationMinutes?: number | null;
+  sort?: number;
 }
 
 export class SetLessonsVisibilityDto {

@@ -1,4 +1,5 @@
 import { LessonCategory } from './lesson-category.entity';
+import { LessonSubject } from './lesson-subject.entity';
 import { Lesson } from './lesson.entity';
 import { LessonClassBinding } from './lesson-class-binding.entity';
 import { LessonKind } from './lesson-kind';
@@ -23,6 +24,7 @@ export interface ProgramEntryRead {
   lessonId: string;
   kind: LessonKind;
   name: string | null;
+  subjectId?: string | null;
   subjectName?: string | null;
   description: string | null;
   category: { id: string; name: string; color: string } | null;
@@ -66,6 +68,12 @@ export interface LessonRepository {
   findCategoryById(id: string): Promise<LessonCategory | null>;
   saveCategory(category: LessonCategory): Promise<void>;
   deleteCategory(id: string): Promise<void>;
+
+  // ── Subjects ──
+  addSubject(subject: LessonSubject): Promise<void>;
+  listSubjects(instituteId: string, includeArchived?: boolean): Promise<LessonSubject[]>;
+  findSubjectById(id: string): Promise<LessonSubject | null>;
+  saveSubject(subject: LessonSubject): Promise<void>;
 
   // ── Lessons (writes) ──
   /** Create the definition + sources + class bindings in one transaction. */

@@ -11,6 +11,13 @@ import {
   DeleteCategoryUseCase,
 } from './application/lesson-category.use-cases';
 import {
+  AddSubjectUseCase,
+  ListSubjectsUseCase,
+  UpdateSubjectUseCase,
+  ArchiveSubjectUseCase,
+  UnarchiveSubjectUseCase,
+} from './application/lesson-subject.use-cases';
+import {
   CreateLessonUseCase,
   UpdateLessonUseCase,
   DeleteLessonUseCase,
@@ -51,6 +58,11 @@ import { DrizzleLessonSettingsRepository } from './infrastructure/persistence/dr
     ListCategoriesUseCase,
     UpdateCategoryUseCase,
     DeleteCategoryUseCase,
+    AddSubjectUseCase,
+    ListSubjectsUseCase,
+    UpdateSubjectUseCase,
+    ArchiveSubjectUseCase,
+    UnarchiveSubjectUseCase,
     CreateLessonUseCase,
     UpdateLessonUseCase,
     DeleteLessonUseCase,
@@ -75,4 +87,3 @@ import { DrizzleLessonSettingsRepository } from './infrastructure/persistence/dr
   exports: [LESSON_REPOSITORY],
 })
 export class LessonsModule {}
-

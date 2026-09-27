@@ -46,9 +46,11 @@ export function WeeklyPlanView({
   const [addDialogOpen, setAddDialogOpen] = useState(false);
   const [selectedSlot, setSelectedSlot] = useState<{
     date: string;
+    subjectId?: string | null;
     subjectName?: string | null;
     categoryId?: string | null;
     teacherId?: string | null;
+    expectedDurationMinutes?: number | null;
   } | null>(null);
 
   const fetchPlan = async () => {
@@ -87,9 +89,18 @@ export function WeeklyPlanView({
   const handlePlanLesson = (slot: WeeklyPlanSlot) => {
     setSelectedSlot({
       date: slot.date,
+      subjectId: slot.subjectId,
       subjectName: slot.subjectName,
       categoryId: slot.categoryId,
       teacherId: slot.teacherId,
+      expectedDurationMinutes: slot.expectedDurationMinutes,
+    });
+    setAddDialogOpen(true);
+  };
+
+  const handleAddExceptional = (dateStr: string) => {
+    setSelectedSlot({
+      date: dateStr,
     });
     setAddDialogOpen(true);
   };
@@ -130,15 +141,27 @@ export function WeeklyPlanView({
 
             return (
               <div key={day} className="flex flex-col gap-2">
-                <div className="bg-muted text-center py-2 rounded-md font-semibold text-sm border">
-                  <div>{tw(day)}</div>
+                <div className="bg-muted text-center py-2 px-1 rounded-md font-semibold text-sm border flex flex-col items-center justify-between gap-1">
+                  <div className="flex items-center justify-between w-full px-1">
+                    <span>{tw(day)}</span>
+                    {canManage && (
+                      <button
+                        type="button"
+                        onClick={() => handleAddExceptional(dateStr)}
+                        title="إضافة درس استثنائي خارج الجدول"
+                        className="text-primary hover:bg-primary/10 p-1 rounded transition"
+                      >
+                        <Plus className="h-3.5 w-3.5" />
+                      </button>
+                    )}
+                  </div>
                   <div className="text-xs text-muted-foreground font-normal" dir="ltr">{dateStr}</div>
                 </div>
                 
                 <div className="flex flex-col gap-2 min-h-[100px]">
                   {daySlots.length === 0 && (
                     <div className="text-xs text-center text-muted-foreground mt-4 opacity-50">
-                      -
+                      لا يوجد دروس
                     </div>
                   )}
                   {daySlots.map((slot, i) => {
@@ -149,14 +172,21 @@ export function WeeklyPlanView({
                     if (slot.type === 'completed') {
                       return (
                         <div key={i} className="bg-primary/5 border border-primary/20 rounded-md p-2.5 flex flex-col gap-1.5 hover:bg-primary/10 transition-colors">
-                          {slot.startTime && (
-                            <div className="flex items-center gap-1 text-[11px] text-muted-foreground" dir="ltr">
-                              <Clock className="h-3 w-3" />
-                              <span>
-                                {slot.startTime.value} {slot.endTime ? `- ${slot.endTime.value}` : ''}
+                          <div className="flex items-center justify-between text-[11px] text-muted-foreground">
+                            {slot.startTime ? (
+                              <div className="flex items-center gap-1" dir="ltr">
+                                <Clock className="h-3 w-3" />
+                                <span>
+                                  {slot.startTime.value} {slot.endTime ? `- ${slot.endTime.value}` : ''}
+                                </span>
+                              </div>
+                            ) : <span />}
+                            {slot.isExceptional && (
+                              <span className="bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20 px-1 rounded text-[10px]">
+                                استثنائي
                               </span>
-                            </div>
-                          )}
+                            )}
+                          </div>
 
                           <div className="flex items-center gap-1 text-xs font-bold text-primary">
                             <CheckCircle2 className="h-3.5 w-3.5 shrink-0" />
@@ -172,7 +202,9 @@ export function WeeklyPlanView({
 
                           {catName && (
                             <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                              <BookOpen className="h-3 w-3" />
+                              {categoryObj?.color && (
+                                <span className="size-2 rounded-full shrink-0" style={{ backgroundColor: categoryObj.color }} />
+                              )}
                               <span className="truncate">{catName}</span>
                             </div>
                           )}
@@ -205,7 +237,9 @@ export function WeeklyPlanView({
                         
                         {catName && (
                           <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                            <BookOpen className="h-3 w-3" />
+                            {categoryObj?.color && (
+                              <span className="size-2 rounded-full shrink-0" style={{ backgroundColor: categoryObj.color }} />
+                            )}
                             <span className="truncate">{catName}</span>
                           </div>
                         )}
@@ -218,7 +252,7 @@ export function WeeklyPlanView({
                           <Button
                             variant="secondary"
                             size="sm"
-                            className="h-6 mt-1 w-full text-[10px] opacity-0 group-hover:opacity-100 transition-opacity"
+                            className="h-6 mt-1 w-full text-[10px] opacity-90 group-hover:opacity-100 transition-opacity"
                             onClick={() => handlePlanLesson(slot)}
                           >
                             <Plus className="h-3 w-3 mr-1" />
@@ -243,9 +277,11 @@ export function WeeklyPlanView({
         onDone={fetchPlan}
         preselectClassId={classId}
         preselectDate={selectedSlot?.date}
+        preselectSubjectId={selectedSlot?.subjectId ?? undefined}
         preselectSubjectName={selectedSlot?.subjectName ?? undefined}
         preselectCategoryId={selectedSlot?.categoryId ?? undefined}
         preselectTeacherId={selectedSlot?.teacherId ?? undefined}
+        preselectDuration={selectedSlot?.expectedDurationMinutes ?? undefined}
       />
     </div>
   );

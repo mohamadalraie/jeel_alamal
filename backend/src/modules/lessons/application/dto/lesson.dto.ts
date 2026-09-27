@@ -80,9 +80,8 @@ export class CreateLessonDto {
   name?: string;
 
   @IsOptional()
-  @IsString()
-  @MaxLength(200)
-  subjectName?: string;
+  @IsUUID()
+  subjectId?: string;
 
   @IsOptional()
   @IsString()
@@ -120,9 +119,8 @@ export class UpdateLessonDto {
   name?: string;
 
   @IsOptional()
-  @IsString()
-  @MaxLength(200)
-  subjectName?: string | null;
+  @IsUUID()
+  subjectId?: string | null;
 
   @IsOptional()
   @IsString()
@@ -185,6 +183,13 @@ export interface CategoryView {
   id: string;
   name: string;
   color: string;
+}
+
+export interface SubjectView {
+  id: string;
+  name: string;
+  color: string | null;
+  isArchived: boolean;
 }
 
 export interface ProgramEntryView {

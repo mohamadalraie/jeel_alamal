@@ -22,6 +22,8 @@ export const qk = {
   classAttendance: (id: string) => ['class-attendance', id] as const,
   studentAttendance: (id: string) => ['student-attendance', id] as const,
   lessonCategories: (id: string) => ['lesson-categories', id] as const,
+  lessonSubjects: (id: string, includeArchived = false) =>
+    ['lesson-subjects', id, includeArchived] as const,
   classLessons: (id: string) => ['class-lessons', id] as const,
   instituteLessons: (id: string) => ['institute-lessons', id] as const,
   studentClassLessons: (id: string) => ['student-class-lessons', id] as const,
@@ -146,6 +148,13 @@ export const useLessonCategories = (instituteId?: string) =>
   useQuery({
     queryKey: qk.lessonCategories(instituteId ?? ''),
     queryFn: () => api.listLessonCategories(instituteId!),
+    enabled: !!instituteId,
+  });
+
+export const useLessonSubjects = (instituteId?: string, includeArchived = false) =>
+  useQuery({
+    queryKey: qk.lessonSubjects(instituteId ?? '', includeArchived),
+    queryFn: () => api.listLessonSubjects(instituteId!, includeArchived),
     enabled: !!instituteId,
   });
 

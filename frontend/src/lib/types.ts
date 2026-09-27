@@ -94,30 +94,46 @@ export interface Anchor {
 
 export type TrackType = 'regular' | 'intensive';
 
+export interface LessonSubject {
+  id: string;
+  instituteId: string;
+  name: string;
+  color: string | null;
+  archivedAt: string | null;
+  createdAt: string;
+}
+
 export interface ScheduleSlot {
   id?: string;
   dayOfWeek: Weekday;
   start: Anchor;
   end: Anchor | null;
   trackType?: TrackType;
+  subjectId?: string | null;
   subjectName?: string | null;
   categoryId?: string | null;
   teacherId?: string | null;
+  expectedDurationMinutes?: number | null;
+  sort?: number;
 }
 
 export interface WeeklyPlanSlot {
   type: 'completed' | 'pending';
   date: string;
   dayOfWeek: Weekday;
-  categoryId: string | null;
+  scheduleSlotId?: string | null;
+  subjectId?: string | null;
   subjectName?: string | null;
+  categoryId: string | null;
   teacherId: string | null;
   teacherName?: string | null;
   trackType: string;
+  expectedDurationMinutes?: number | null;
   lessonId?: string;
   lessonName?: string | null;
   startTime?: Anchor;
   endTime?: Anchor | null;
+  isExceptional?: boolean;
 }
 
 export interface ClassProfile {
@@ -506,6 +522,7 @@ export interface LessonAssignmentInput {
 export interface CreateLessonInput {
   kind: LessonKind;
   name?: string;
+  subjectId?: string;
   subjectName?: string;
   description?: string;
   categoryId?: string;

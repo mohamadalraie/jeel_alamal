@@ -19,6 +19,7 @@ import { ConfirmDialog } from '@/features/shared/confirm-dialog';
 import { LessonProgramList } from './lesson-program-list';
 import { AddLessonDialog, type LessonEditing } from './add-lesson-dialog';
 import { CategoryManager } from './category-manager';
+import { SubjectManager } from './subject-manager';
 
 /**
  * Flatten institute lessons into one ProgramEntry per class binding so that
@@ -109,6 +110,7 @@ export function InstituteLessonsHub({ instituteId }: { instituteId: string }) {
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <CategoryManager instituteId={instituteId} />
+          <SubjectManager instituteId={instituteId} />
           <Button variant="outline" size="sm" asChild>
             <Link href="/dashboard/lessons/settings">
               <Settings data-icon="inline-start" className="size-4" />

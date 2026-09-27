@@ -25,6 +25,7 @@ import { LessonProgramList } from './lesson-program-list';
 import { LessonTimerActions } from './lesson-timer-actions';
 import { AddLessonDialog, type LessonEditing } from './add-lesson-dialog';
 import { CategoryManager } from './category-manager';
+import { SubjectManager } from './subject-manager';
 
 /**
  * Class Lessons tab (spec 008/009): the class program grouped by month/day —
@@ -99,6 +100,7 @@ export function LessonProgram({
       {canManage && (
         <div className="flex flex-wrap items-center justify-end gap-2">
           <CategoryManager instituteId={instituteId} />
+          <SubjectManager instituteId={instituteId} />
           <Button size="sm" onClick={() => openCreate()}>
             <Plus data-icon="inline-start" />
             {t('addLesson')}

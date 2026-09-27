@@ -3,8 +3,8 @@
 import { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import { Plus, Trash2, Clock } from 'lucide-react';
-import type { Anchor, Prayer, ScheduleSlot, Weekday, LessonCategory } from '@/lib/types';
-import { setClassSchedule, listLessonCategories, ApiError } from '@/lib/api';
+import type { Anchor, Prayer, ScheduleSlot, Weekday, LessonCategory, LessonSubject } from '@/lib/types';
+import { setClassSchedule, listLessonCategories, listLessonSubjects, ApiError } from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -93,14 +93,16 @@ export function WeeklySchedule({
   const tw = useTranslations('weekdays');
   const [slots, setSlots] = useState<ScheduleSlot[]>(initial.map((s) => ({ ...s })));
   const [categories, setCategories] = useState<LessonCategory[]>([]);
+  const [subjects, setSubjects] = useState<LessonSubject[]>([]);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [dirty, setDirty] = useState(false);
 
-  // Load categories if instituteId is provided
+  // Load categories and subjects if instituteId is provided
   useEffect(() => {
     if (instituteId) {
       listLessonCategories(instituteId).then(setCategories).catch(console.error);
+      listLessonSubjects(instituteId).then(setSubjects).catch(console.error);
     }
   }, [instituteId]);
 
@@ -174,19 +176,38 @@ export function WeeklySchedule({
                         </Button>
                       </div>
 
-                      {/* Subject, Category, and Teacher Selectors */}
-                      <div className="flex flex-col sm:flex-row items-center gap-1.5 mt-1">
-                        <Input
-                          value={s.subjectName ?? ''}
-                          onChange={(e) => patch(i, { subjectName: e.target.value || null })}
-                          placeholder="المادة (اسم المادة)"
-                          className="h-8 flex-1 text-xs"
-                        />
+                      {/* Subject, Category, Teacher, and Duration */}
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 mt-1">
+                        {subjects.length > 0 ? (
+                          <Select
+                            value={s.subjectId ?? 'none'}
+                            onValueChange={(v) => patch(i, { subjectId: v === 'none' ? null : v })}
+                          >
+                            <SelectTrigger className="h-8 px-2 text-xs">
+                              <SelectValue placeholder="المادة الدراسية" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="none">بدون مادة مخصصة</SelectItem>
+                              {subjects.map((sub) => (
+                                <SelectItem key={sub.id} value={sub.id}>
+                                  {sub.name}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        ) : (
+                          <Input
+                            value={s.subjectName ?? ''}
+                            onChange={(e) => patch(i, { subjectName: e.target.value || null })}
+                            placeholder="المادة (اسم المادة)"
+                            className="h-8 text-xs"
+                          />
+                        )}
                         <Select
                           value={s.categoryId ?? 'none'}
                           onValueChange={(v) => patch(i, { categoryId: v === 'none' ? null : v })}
                         >
-                          <SelectTrigger className="h-8 flex-1 px-2 text-xs">
+                          <SelectTrigger className="h-8 px-2 text-xs">
                             <SelectValue placeholder={t('selectCategory')} />
                           </SelectTrigger>
                           <SelectContent>
@@ -203,7 +224,7 @@ export function WeeklySchedule({
                           value={s.teacherId ?? 'none'}
                           onValueChange={(v) => patch(i, { teacherId: v === 'none' ? null : v })}
                         >
-                          <SelectTrigger className="h-8 flex-1 px-2 text-xs">
+                          <SelectTrigger className="h-8 px-2 text-xs">
                             <SelectValue placeholder={t('selectTeacher')} />
                           </SelectTrigger>
                           <SelectContent>
@@ -215,6 +236,19 @@ export function WeeklySchedule({
                             ))}
                           </SelectContent>
                         </Select>
+
+                        <Input
+                          type="number"
+                          min={1}
+                          value={s.expectedDurationMinutes ?? ''}
+                          onChange={(e) =>
+                            patch(i, {
+                              expectedDurationMinutes: e.target.value ? Number(e.target.value) : null,
+                            })
+                          }
+                          placeholder="المدة (دقائق)"
+                          className="h-8 text-xs font-mono"
+                        />
                       </div>
 
                       {/* End: kind (incl. none) + value */}

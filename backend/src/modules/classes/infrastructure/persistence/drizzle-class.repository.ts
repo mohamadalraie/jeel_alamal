@@ -324,15 +324,19 @@ export class DrizzleClassRepository implements ClassRepository {
     const rows = await this.db
       .select()
       .from(classSchedule)
-      .where(eq(classSchedule.classId, classId));
+      .where(eq(classSchedule.classId, classId))
+      .orderBy(classSchedule.sort);
     return rows.map((r) => ({
       id: r.id,
       dayOfWeek: r.dayOfWeek,
       start: { kind: r.startKind, value: r.startValue },
       end: r.endKind ? { kind: r.endKind, value: r.endValue ?? '' } : null,
       trackType: r.trackType ?? 'regular',
+      subjectId: r.subjectId ?? null,
       categoryId: r.categoryId ?? null,
       teacherId: r.teacherId ?? null,
+      expectedDurationMinutes: r.expectedDurationMinutes ?? null,
+      sort: r.sort ?? 0,
     }));
   }
 
@@ -341,7 +345,7 @@ export class DrizzleClassRepository implements ClassRepository {
       await tx.delete(classSchedule).where(eq(classSchedule.classId, classId));
       if (slots.length > 0) {
         await tx.insert(classSchedule).values(
-          slots.map((s) => ({
+          slots.map((s, i) => ({
             id: randomUUID(),
             classId,
             dayOfWeek: s.dayOfWeek,
@@ -350,8 +354,11 @@ export class DrizzleClassRepository implements ClassRepository {
             endKind: s.end?.kind ?? null,
             endValue: s.end?.value ?? null,
             trackType: s.trackType ?? 'regular',
+            subjectId: s.subjectId ?? null,
             categoryId: s.categoryId ?? null,
             teacherId: s.teacherId ?? null,
+            expectedDurationMinutes: s.expectedDurationMinutes ?? null,
+            sort: s.sort ?? i,
           })),
         );
       }

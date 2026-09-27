@@ -73,8 +73,11 @@ export class GetClassProfileUseCase {
         start: { kind: s.start.kind, value: s.start.value },
         end: s.end ? { kind: s.end.kind, value: s.end.value } : null,
         trackType: s.trackType ?? 'regular',
+        subjectId: s.subjectId ?? null,
         categoryId: s.categoryId ?? null,
         teacherId: s.teacherId ?? null,
+        expectedDurationMinutes: s.expectedDurationMinutes ?? null,
+        sort: s.sort ?? 0,
       })),
       teachers: membership.teacherIds.map((id) => ({
         id,
@@ -165,23 +168,29 @@ export class SetClassScheduleUseCase {
       start: { kind: string; value: string };
       end?: { kind: string; value: string } | null;
       trackType?: 'regular' | 'intensive';
+      subjectId?: string | null;
       categoryId?: string | null;
       teacherId?: string | null;
+      expectedDurationMinutes?: number | null;
+      sort?: number;
     }[],
   ): Promise<void> {
     const klass = await this.classes.findById(classId);
     if (!klass) throw new NotFoundError('Class not found');
     await this.policy.assertManagerOf(actor, klass.instituteId);
 
-    const typed: ScheduleSlot[] = slots.map((s) => ({
+    const typed: ScheduleSlot[] = slots.map((s, i) => ({
       dayOfWeek: s.dayOfWeek as Weekday,
       start: { kind: s.start.kind as AnchorKind, value: s.start.value },
       end: s.end
         ? { kind: s.end.kind as AnchorKind, value: s.end.value }
         : null,
       trackType: s.trackType ?? 'regular',
+      subjectId: s.subjectId ?? null,
       categoryId: s.categoryId ?? null,
       teacherId: s.teacherId ?? null,
+      expectedDurationMinutes: s.expectedDurationMinutes ?? null,
+      sort: s.sort ?? i,
     }));
     typed.forEach(assertValidSlot);
     await this.classes.setSchedule(classId, typed);

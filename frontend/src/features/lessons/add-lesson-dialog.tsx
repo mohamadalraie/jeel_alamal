@@ -9,7 +9,7 @@ import type {
   LessonSourceInput,
 } from '@/lib/types';
 import { createLesson, updateLesson, createLessonCategory, getClassProfile, ApiError } from '@/lib/api';
-import { useClasses, useQueries, useQueryClient, qk } from '@/lib/queries';
+import { useClasses, useLessonSubjects, useQueries, useQueryClient, qk } from '@/lib/queries';
 import { notify } from '@/lib/toast';
 import { CATEGORY_PALETTE } from './lesson-colors';
 import { Button } from '@/components/ui/button';
@@ -35,6 +35,7 @@ export interface LessonEditing {
   lessonId: string;
   kind: LessonKind;
   name: string | null;
+  subjectId?: string | null;
   subjectName?: string | null;
   description: string | null;
   categoryId: string | null;
@@ -58,9 +59,11 @@ export function AddLessonDialog({
   onDone,
   preselectClassId,
   preselectDate,
+  preselectSubjectId,
   preselectSubjectName,
   preselectCategoryId,
   preselectTeacherId,
+  preselectDuration,
   editing,
 }: {
   instituteId: string;
@@ -70,9 +73,11 @@ export function AddLessonDialog({
   onDone: () => void;
   preselectClassId?: string;
   preselectDate?: string;
+  preselectSubjectId?: string;
   preselectSubjectName?: string;
   preselectCategoryId?: string;
   preselectTeacherId?: string;
+  preselectDuration?: number | null;
   editing?: LessonEditing | null;
 }) {
   const t = useTranslations('lessons');
@@ -104,8 +109,11 @@ export function AddLessonDialog({
     return map;
   }, [classProfileResults, classes]);
 
+  const { data: subjects = [] } = useLessonSubjects(instituteId);
+
   const [kind, setKind] = useState<LessonKind>('lesson');
   const [name, setName] = useState('');
+  const [subjectId, setSubjectId] = useState('');
   const [subjectName, setSubjectName] = useState('');
   const [description, setDescription] = useState('');
   const [categoryId, setCategoryId] = useState<string>('');
@@ -148,6 +156,7 @@ export function AddLessonDialog({
     if (editing) {
       setKind(editing.kind);
       setName(editing.name ?? '');
+      setSubjectId(editing.subjectId ?? '');
       setSubjectName(editing.subjectName ?? '');
       setDescription(editing.description ?? '');
       setCategoryId(editing.categoryId ?? '');
@@ -158,11 +167,12 @@ export function AddLessonDialog({
     } else {
       setKind('lesson');
       setName('');
+      setSubjectId(preselectSubjectId ?? '');
       setSubjectName(preselectSubjectName ?? '');
       setDescription('');
       setCategoryId(preselectCategoryId ?? '');
       setDate(preselectDate ?? todayISO());
-      setDuration('');
+      setDuration(preselectDuration ? String(preselectDuration) : '');
       setSources([]);
       setAssign(preselectClassId ? { [preselectClassId]: preselectTeacherId ?? '' } : {});
     }
@@ -203,6 +213,7 @@ export function AddLessonDialog({
       if (isEdit) {
         await updateLesson(editing!.lessonId, {
           name: isLesson ? name.trim() : undefined,
+          subjectId: isLesson ? subjectId || undefined : undefined,
           subjectName: isLesson ? subjectName.trim() || undefined : undefined,
           description: isLesson ? description || undefined : undefined,
           categoryId: isLesson ? categoryId || undefined : undefined,
@@ -214,6 +225,7 @@ export function AddLessonDialog({
         await createLesson(instituteId, {
           kind,
           name: isLesson ? name.trim() : undefined,
+          subjectId: isLesson && subjectId ? subjectId : undefined,
           subjectName: isLesson ? subjectName.trim() || undefined : undefined,
           description: isLesson ? description || undefined : undefined,
           categoryId: isLesson && categoryId ? categoryId : undefined,
@@ -256,8 +268,27 @@ export function AddLessonDialog({
                 <Input id="lsn-name" value={name} onChange={(e) => setName(e.target.value)} placeholder="مثال: سقوط الخلافة" required />
               </div>
               <div className="flex flex-col gap-1.5">
-                <Label htmlFor="lsn-subject">المادة (اسم المادة)</Label>
-                <Input id="lsn-subject" value={subjectName} onChange={(e) => setSubjectName(e.target.value)} placeholder="مثال: الأحداث آخر 100 سنة" />
+                <Label htmlFor="lsn-subject">المادة الدراسية</Label>
+                {subjects.length > 0 ? (
+                  <Select value={subjectId || 'none'} onValueChange={(v) => setSubjectId(v === 'none' ? '' : v)}>
+                    <SelectTrigger id="lsn-subject">
+                      <SelectValue placeholder="اختر المادة" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">بدون مادة مخصصة</SelectItem>
+                      {subjects.map((s) => (
+                        <SelectItem key={s.id} value={s.id}>
+                          <span className="flex items-center gap-2">
+                            {s.color && <span className="size-3 rounded-full" style={{ backgroundColor: s.color }} />}
+                            {s.name}
+                          </span>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                ) : (
+                  <Input id="lsn-subject" value={subjectName} onChange={(e) => setSubjectName(e.target.value)} placeholder="مثال: الأحداث آخر 100 سنة" />
+                )}
               </div>
               <div className="flex flex-col gap-1.5">
                 <Label htmlFor="lsn-desc">{t('description')}</Label>
@@ -387,7 +418,8 @@ export function AddLessonDialog({
                       {selected && (() => {
                         const cm = classTeachersMap.get(c.id);
                         return (
-                          <Select
+                          <>
+                            <Select
                             value={assign[c.id] || ''}
                             onValueChange={(v) => setAssign((p) => ({ ...p, [c.id]: v }))}
                             disabled={cm?.isLoading}
@@ -411,8 +443,14 @@ export function AddLessonDialog({
                               )}
                             </SelectContent>
                           </Select>
-                        );
-                      })()}
+                          {preselectTeacherId && assign[c.id] && assign[c.id] !== preselectTeacherId && (
+                            <p className="rounded-md bg-amber-500/10 border border-amber-500/20 p-2 text-xs text-amber-700 dark:text-amber-400 mt-1">
+                              تنبيه: هذا التغيير سيُطبق على هذا الدرس فقط ولن يؤثر على الأستاذ في الجدول الأسبوعي الدائم.
+                            </p>
+                          )}
+                        </>
+                      );
+                    })()}
                     </div>
                   );
                 })}
