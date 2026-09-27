@@ -4,6 +4,7 @@ import { ForbiddenError, NotFoundError } from '../../../shared/domain/domain.err
 import { InstituteAccessPolicy } from '../../institutes/application/institute-access.policy';
 import { CLASS_REPOSITORY, type ClassRepository } from '../../classes/domain/class.repository';
 import { LESSON_REPOSITORY, type LessonRepository } from '../domain/lesson.repository';
+import { USER_REPOSITORY, type UserRepository } from '../../users/domain/user.repository';
 import { UserRole } from '../../../shared/domain/user-role';
 
 export interface WeeklyPlanSlot {
@@ -35,6 +36,7 @@ export class GetWeeklyPlanUseCase {
     private readonly policy: InstituteAccessPolicy,
     @Inject(CLASS_REPOSITORY) private readonly classes: ClassRepository,
     @Inject(LESSON_REPOSITORY) private readonly lessons: LessonRepository,
+    @Inject(USER_REPOSITORY) private readonly users: UserRepository,
   ) {}
 
   async execute(
@@ -65,14 +67,26 @@ export class GetWeeklyPlanUseCase {
     const weekStartStr = weekStart;
     const weekEndStr = endDate.toISOString().split('T')[0];
     
-    // Fetch the actual lessons for the given class and date range
-    const actualLessons = await this.lessons.getClassProgram(classId, weekStartStr, weekEndStr);
-    const schedule = await this.classes.getSchedule(classId);
+    // Fetch actual lessons, recurring schedule, institute subjects, and assigned teachers in parallel
+    const [actualLessons, schedule, subjects] = await Promise.all([
+      this.lessons.getClassProgram(classId, weekStartStr, weekEndStr),
+      this.classes.getSchedule(classId),
+      this.lessons.listSubjects(klass.instituteId, true),
+    ]);
 
-    const todayStr = new Date().toISOString().split('T')[0];
+    const subjectMap = new Map(subjects.map((s) => [s.id, s.name]));
+
+    const teacherIds = Array.from(
+      new Set(schedule.map((s) => s.teacherId).filter(Boolean) as string[]),
+    );
+    const teacherUsers = teacherIds.length
+      ? await this.users.findManyByIds(teacherIds)
+      : [];
+    const teacherMap = new Map(teacherUsers.map((u) => [u.id, u.fullName]));
+
     const result: WeeklyPlanSlot[] = [];
 
-    // Iterate through the 7 days
+    // Iterate through the 7 days of the requested week
     for (let i = 0; i < 7; i++) {
       const d = new Date(startDate);
       d.setUTCDate(startDate.getUTCDate() + i);
@@ -81,44 +95,55 @@ export class GetWeeklyPlanUseCase {
       const dayMapping = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'] as const;
       const dayOfWeek = dayMapping[jsDay];
 
-      const dayLessons = actualLessons.filter(l => l.date === dateStr);
+      const dayLessons = actualLessons.filter((l) => l.date === dateStr);
       // Sort schedule slots by their sort order for this day
       const daySchedule = schedule
-        .filter(s => s.dayOfWeek === dayOfWeek)
+        .filter((s) => s.dayOfWeek === dayOfWeek)
         .sort((a, b) => (a.sort ?? 0) - (b.sort ?? 0));
 
       const usedLessonIds = new Set<string>();
 
-      // Pair scheduled slots with actual lessons given on this day
+      // Pair recurring schedule template slots with actual lessons given on this date
       for (const slot of daySchedule) {
         // Priority 1: Match by subjectId if set in schedule slot
-        let matchedIndex = dayLessons.findIndex(l =>
-          !usedLessonIds.has(l.lessonId) &&
-          slot.subjectId &&
-          l.subjectId === slot.subjectId
+        let matchedIndex = dayLessons.findIndex(
+          (l) =>
+            !usedLessonIds.has(l.lessonId) &&
+            slot.subjectId &&
+            l.subjectId === slot.subjectId,
         );
 
         // Priority 2: Match by categoryId if set and no subject match
         if (matchedIndex === -1) {
-          matchedIndex = dayLessons.findIndex(l => 
-            !usedLessonIds.has(l.lessonId) &&
-            slot.categoryId &&
-            l.category?.id === slot.categoryId
+          matchedIndex = dayLessons.findIndex(
+            (l) =>
+              !usedLessonIds.has(l.lessonId) &&
+              slot.categoryId &&
+              l.category?.id === slot.categoryId,
           );
         }
 
         // Priority 3: Any unused lesson for this track type
         if (matchedIndex === -1) {
-          matchedIndex = dayLessons.findIndex(l => 
-            !usedLessonIds.has(l.lessonId) &&
-            (l.targetTrack ?? 'regular') === (slot.trackType ?? 'regular')
+          matchedIndex = dayLessons.findIndex(
+            (l) =>
+              !usedLessonIds.has(l.lessonId) &&
+              (l.targetTrack ?? 'regular') === (slot.trackType ?? 'regular'),
           );
         }
 
         // Priority 4: Fallback to any unused lesson on this day
         if (matchedIndex === -1) {
-          matchedIndex = dayLessons.findIndex(l => !usedLessonIds.has(l.lessonId));
+          matchedIndex = dayLessons.findIndex((l) => !usedLessonIds.has(l.lessonId));
         }
+
+        const resolvedSubjectName = slot.subjectId
+          ? (subjectMap.get(slot.subjectId) ?? null)
+          : ((slot as any).subjectName ?? null);
+
+        const resolvedTeacherName = slot.teacherId
+          ? (teacherMap.get(slot.teacherId) ?? null)
+          : null;
 
         if (matchedIndex !== -1) {
           const lesson = dayLessons[matchedIndex];
@@ -132,26 +157,29 @@ export class GetWeeklyPlanUseCase {
             lessonId: lesson.lessonId,
             lessonName: lesson.name,
             subjectId: lesson.subjectId ?? slot.subjectId ?? null,
-            subjectName: lesson.subjectName ?? null,
+            subjectName: lesson.subjectName ?? resolvedSubjectName,
             categoryId: lesson.category?.id ?? slot.categoryId ?? null,
             teacherId: lesson.teacher.id,
-            teacherName: lesson.teacher.name,
+            teacherName: lesson.teacher.name ?? resolvedTeacherName,
             trackType: slot.trackType ?? 'regular',
-            expectedDurationMinutes: slot.expectedDurationMinutes ?? null,
+            expectedDurationMinutes:
+              lesson.expectedDurationMinutes ?? slot.expectedDurationMinutes ?? null,
             startTime: { kind: slot.start.kind, value: slot.start.value },
             endTime: slot.end ? { kind: slot.end.kind, value: slot.end.value } : null,
             isExceptional: false,
           });
-        } else if (dateStr >= todayStr) {
-          // Unfulfilled pending slot
+        } else {
+          // Unfulfilled template slot for this week (pending confirmation/setup by manager)
           result.push({
             type: 'pending',
             date: dateStr,
             dayOfWeek,
             scheduleSlotId: (slot as any).id ?? null,
             subjectId: slot.subjectId ?? null,
+            subjectName: resolvedSubjectName,
             categoryId: slot.categoryId ?? null,
             teacherId: slot.teacherId ?? null,
+            teacherName: resolvedTeacherName,
             trackType: slot.trackType ?? 'regular',
             expectedDurationMinutes: slot.expectedDurationMinutes ?? null,
             startTime: { kind: slot.start.kind, value: slot.start.value },
