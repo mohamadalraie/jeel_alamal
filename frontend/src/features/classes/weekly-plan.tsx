@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
-import { ChevronRight, ChevronLeft, Plus, Calendar, Clock, BookOpen, CheckCircle2, User as UserIcon } from 'lucide-react';
+import { ChevronRight, ChevronLeft, Plus, Calendar, Clock, BookOpen, CheckCircle2, User as UserIcon, BookMarked } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { getWeeklyPlan, listLessonCategories } from '@/lib/api';
 import type { WeeklyPlanSlot, LessonCategory, Weekday } from '@/lib/types';
@@ -51,6 +51,7 @@ export function WeeklyPlanView({
     categoryId?: string | null;
     teacherId?: string | null;
     expectedDurationMinutes?: number | null;
+    kind?: 'lesson' | 'recitation';
   } | null>(null);
 
   const fetchPlan = async () => {
@@ -94,6 +95,7 @@ export function WeeklyPlanView({
       categoryId: slot.categoryId,
       teacherId: slot.teacherId,
       expectedDurationMinutes: slot.expectedDurationMinutes,
+      kind: slot.kind,
     });
     setAddDialogOpen(true);
   };
@@ -228,12 +230,17 @@ export function WeeklyPlanView({
                           </div>
                         </div>
 
-                        {slot.subjectName && (
+                        {slot.kind === 'recitation' ? (
+                          <div className="text-xs font-semibold text-primary truncate mt-0.5 flex items-center gap-1">
+                            <BookMarked className="h-3.5 w-3.5" />
+                            جلسة تسميع
+                          </div>
+                        ) : slot.subjectName ? (
                           <div className="text-xs font-medium text-foreground/90 truncate mt-0.5">
                             <span className="text-muted-foreground font-normal">المادة: </span>
                             {slot.subjectName}
                           </div>
-                        )}
+                        ) : null}
                         
                         {catName && (
                           <div className="flex items-center gap-1 text-xs text-muted-foreground">
@@ -282,6 +289,7 @@ export function WeeklyPlanView({
         preselectCategoryId={selectedSlot?.categoryId ?? undefined}
         preselectTeacherId={selectedSlot?.teacherId ?? undefined}
         preselectDuration={selectedSlot?.expectedDurationMinutes ?? undefined}
+        preselectKind={selectedSlot?.kind ?? undefined}
       />
     </div>
   );

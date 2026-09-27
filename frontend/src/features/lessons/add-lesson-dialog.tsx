@@ -64,6 +64,7 @@ export function AddLessonDialog({
   preselectCategoryId,
   preselectTeacherId,
   preselectDuration,
+  preselectKind,
   editing,
 }: {
   instituteId: string;
@@ -78,6 +79,7 @@ export function AddLessonDialog({
   preselectCategoryId?: string;
   preselectTeacherId?: string;
   preselectDuration?: number | null;
+  preselectKind?: LessonKind;
   editing?: LessonEditing | null;
 }) {
   const t = useTranslations('lessons');
@@ -165,7 +167,7 @@ export function AddLessonDialog({
       setSources(editing.sources);
       setAssign({});
     } else {
-      setKind('lesson');
+      setKind(preselectKind ?? 'lesson');
       setName('');
       setSubjectId(preselectSubjectId ?? '');
       setSubjectName(preselectSubjectName ?? '');

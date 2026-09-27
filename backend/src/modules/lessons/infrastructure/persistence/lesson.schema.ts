@@ -13,10 +13,8 @@ import {
 } from 'drizzle-orm/pg-core';
 import type { InferSelectModel } from 'drizzle-orm';
 import { institutes } from '../../../institutes/infrastructure/persistence/institute.schema';
-import {
-  classes,
-  trackTypeEnum,
-} from '../../../classes/infrastructure/persistence/class.schema';
+import { classes } from '../../../classes/infrastructure/persistence/class.schema';
+import { trackTypeEnum } from '../../../classes/infrastructure/persistence/enums.schema';
 import { users } from '../../../users/infrastructure/persistence/user.schema';
 // Re-export from separate schema to avoid circular imports
 export { lessonSubjects, type LessonSubjectRow } from './lesson-subject.schema';

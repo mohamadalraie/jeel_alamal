@@ -1,0 +1,1 @@
+ALTER TABLE "class_schedule" ADD COLUMN "kind" "lesson_kind" DEFAULT 'lesson' NOT NULL;

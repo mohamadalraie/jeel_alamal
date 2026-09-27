@@ -15,6 +15,8 @@ import { sql, type InferSelectModel } from 'drizzle-orm';
 import { institutes } from '../../../institutes/infrastructure/persistence/institute.schema';
 import { users } from '../../../users/infrastructure/persistence/user.schema';
 import { lessonSubjects } from '../../../lessons/infrastructure/persistence/lesson-subject.schema';
+import { lessonKindEnum } from '../../../lessons/infrastructure/persistence/lesson.schema';
+import { trackTypeEnum, weekdayEnum, anchorKindEnum } from './enums.schema';
 
 /** Classes (حلقات) — tenant-owned (constitution II). */
 export const classes = pgTable('classes', {
@@ -95,23 +97,6 @@ export const classIntensiveStudents = pgTable(
   (t) => [primaryKey({ columns: [t.classId, t.studentId] })],
 );
 
-/** Track type: regular class vs intensive track. */
-export const trackTypeEnum = pgEnum('track_type', ['regular', 'intensive']);
-
-/** Weekly lesson times (أوقات الدروس) — spec 004 (prayer-aware). */
-export const weekdayEnum = pgEnum('weekday', [
-  'sat',
-  'sun',
-  'mon',
-  'tue',
-  'wed',
-  'thu',
-  'fri',
-]);
-
-/** A schedule anchor is either a clock time or a prayer. */
-export const anchorKindEnum = pgEnum('anchor_kind', ['time', 'prayer']);
-
 export const classSchedule = pgTable('class_schedule', {
   id: uuid('id').primaryKey(),
   classId: uuid('class_id')
@@ -122,6 +107,7 @@ export const classSchedule = pgTable('class_schedule', {
   startValue: varchar('start_value', { length: 16 }).notNull(), // 'HH:MM' or prayer key
   endKind: anchorKindEnum('end_kind'), // optional end (spec 004)
   endValue: varchar('end_value', { length: 16 }),
+  kind: lessonKindEnum('kind').notNull().default('lesson'),
   trackType: trackTypeEnum('track_type').notNull().default('regular'),
   subjectId: uuid('subject_id').references(() => lessonSubjects.id, { onDelete: 'set null' }),
   categoryId: uuid('category_id'),

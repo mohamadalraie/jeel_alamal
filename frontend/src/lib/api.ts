@@ -326,11 +326,12 @@ export const deleteClass = (classId: string) =>
   del<void>(`/api/classes/${classId}`);
 export const setClassSchedule = (classId: string, slots: ScheduleSlot[]) =>
   put<void>(`/api/classes/${classId}/schedule`, {
-    slots: slots.map(({ dayOfWeek, start, end, trackType, subjectId, categoryId, teacherId, expectedDurationMinutes }) => ({
+    slots: slots.map(({ dayOfWeek, start, end, trackType, kind, subjectId, categoryId, teacherId, expectedDurationMinutes }) => ({
       dayOfWeek,
       start,
       end,
       trackType: trackType ?? 'regular',
+      kind: kind ?? 'lesson',
       subjectId,
       categoryId,
       teacherId,

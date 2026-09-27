@@ -10,8 +10,8 @@ import type { InferSelectModel } from 'drizzle-orm';
 import { institutes } from '../../../institutes/infrastructure/persistence/institute.schema';
 import {
   classes,
-  trackTypeEnum,
 } from '../../../classes/infrastructure/persistence/class.schema';
+import { trackTypeEnum } from '../../../classes/infrastructure/persistence/enums.schema';
 import { users } from '../../../users/infrastructure/persistence/user.schema';
 
 export const attendanceStatusEnum = pgEnum('attendance_status', [

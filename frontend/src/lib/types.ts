@@ -109,6 +109,7 @@ export interface ScheduleSlot {
   start: Anchor;
   end: Anchor | null;
   trackType?: TrackType;
+  kind?: LessonKind;
   subjectId?: string | null;
   subjectName?: string | null;
   categoryId?: string | null;
@@ -128,6 +129,7 @@ export interface WeeklyPlanSlot {
   teacherId: string | null;
   teacherName?: string | null;
   trackType: string;
+  kind: LessonKind;
   expectedDurationMinutes?: number | null;
   lessonId?: string;
   lessonName?: string | null;

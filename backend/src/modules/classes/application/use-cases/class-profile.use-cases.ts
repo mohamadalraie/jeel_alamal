@@ -168,6 +168,7 @@ export class SetClassScheduleUseCase {
       start: { kind: string; value: string };
       end?: { kind: string; value: string } | null;
       trackType?: 'regular' | 'intensive';
+      kind?: 'lesson' | 'recitation';
       subjectId?: string | null;
       categoryId?: string | null;
       teacherId?: string | null;
@@ -186,6 +187,7 @@ export class SetClassScheduleUseCase {
         ? { kind: s.end.kind as AnchorKind, value: s.end.value }
         : null,
       trackType: s.trackType ?? 'regular',
+      kind: s.kind ?? 'lesson',
       subjectId: s.subjectId ?? null,
       categoryId: s.categoryId ?? null,
       teacherId: s.teacherId ?? null,

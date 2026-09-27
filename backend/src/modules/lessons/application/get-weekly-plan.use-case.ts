@@ -19,6 +19,7 @@ export interface WeeklyPlanSlot {
   teacherId: string | null;
   teacherName?: string | null;
   trackType: string;
+  kind: 'lesson' | 'recitation';
   expectedDurationMinutes?: number | null;
   // If completed:
   lessonId?: string;
@@ -162,6 +163,7 @@ export class GetWeeklyPlanUseCase {
             teacherId: lesson.teacher.id,
             teacherName: lesson.teacher.name ?? resolvedTeacherName,
             trackType: slot.trackType ?? 'regular',
+            kind: lesson.kind,
             expectedDurationMinutes:
               lesson.expectedDurationMinutes ?? slot.expectedDurationMinutes ?? null,
             startTime: { kind: slot.start.kind, value: slot.start.value },
@@ -181,6 +183,7 @@ export class GetWeeklyPlanUseCase {
             teacherId: slot.teacherId ?? null,
             teacherName: resolvedTeacherName,
             trackType: slot.trackType ?? 'regular',
+            kind: slot.kind ?? 'lesson',
             expectedDurationMinutes: slot.expectedDurationMinutes ?? null,
             startTime: { kind: slot.start.kind, value: slot.start.value },
             endTime: slot.end ? { kind: slot.end.kind, value: slot.end.value } : null,
@@ -204,6 +207,8 @@ export class GetWeeklyPlanUseCase {
             teacherId: lesson.teacher.id,
             teacherName: lesson.teacher.name,
             trackType: lesson.targetTrack ?? 'regular',
+            kind: lesson.kind,
+            expectedDurationMinutes: lesson.expectedDurationMinutes ?? null,
             isExceptional: true,
           });
         }

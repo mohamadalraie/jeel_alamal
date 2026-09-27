@@ -159,6 +159,18 @@ export function WeeklySchedule({
                       <div className="flex items-center gap-1.5">
                         <span className="text-muted-foreground w-9 shrink-0 text-xs">{t('startsAt')}</span>
                         <Select
+                          value={s.kind ?? 'lesson'}
+                          onValueChange={(k) => patch(i, { kind: k as any })}
+                        >
+                          <SelectTrigger className="h-8 w-24 shrink-0 px-2 text-xs font-semibold">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="lesson">درس</SelectItem>
+                            <SelectItem value="recitation">تسميع</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <Select
                           value={s.start.kind}
                           onValueChange={(k) => patch(i, { start: anchorFor(k as 'time' | 'prayer') })}
                         >
