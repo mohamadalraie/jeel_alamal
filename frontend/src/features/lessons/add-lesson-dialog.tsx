@@ -57,6 +57,8 @@ export function AddLessonDialog({
   onDone,
   preselectClassId,
   preselectDate,
+  preselectCategoryId,
+  preselectTeacherId,
   editing,
 }: {
   instituteId: string;
@@ -66,6 +68,8 @@ export function AddLessonDialog({
   onDone: () => void;
   preselectClassId?: string;
   preselectDate?: string;
+  preselectCategoryId?: string;
+  preselectTeacherId?: string;
   editing?: LessonEditing | null;
 }) {
   const t = useTranslations('lessons');
@@ -150,11 +154,11 @@ export function AddLessonDialog({
       setKind('lesson');
       setName('');
       setDescription('');
-      setCategoryId('');
+      setCategoryId(preselectCategoryId ?? '');
       setDate(preselectDate ?? todayISO());
       setDuration('');
       setSources([]);
-      setAssign(preselectClassId ? { [preselectClassId]: '' } : {});
+      setAssign(preselectClassId ? { [preselectClassId]: preselectTeacherId ?? '' } : {});
     }
     setError(null);
     // eslint-disable-next-line react-hooks/exhaustive-deps

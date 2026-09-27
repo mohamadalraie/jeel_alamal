@@ -6,8 +6,7 @@ import { ChevronRight, ChevronLeft, Plus, Calendar, Clock, BookOpen, CheckCircle
 import { Button } from '@/components/ui/button';
 import { getWeeklyPlan, listLessonCategories } from '@/lib/api';
 import type { WeeklyPlanSlot, LessonCategory, Weekday } from '@/lib/types';
-import { Badge } from '@/components/ui/badge';
-import Link from 'next/link';
+import { AddLessonDialog } from '@/features/lessons/add-lesson-dialog';
 
 // Compute the start of the week (Saturday) for a given date
 function getStartOfWeek(d: Date): Date {
@@ -44,6 +43,13 @@ export function WeeklyPlanView({
   const [categories, setCategories] = useState<LessonCategory[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const [addDialogOpen, setAddDialogOpen] = useState(false);
+  const [selectedSlot, setSelectedSlot] = useState<{
+    date: string;
+    categoryId?: string | null;
+    teacherId?: string | null;
+  } | null>(null);
+
   const fetchPlan = async () => {
     setLoading(true);
     try {
@@ -75,6 +81,15 @@ export function WeeklyPlanView({
     const d = new Date(weekStart);
     d.setDate(d.getDate() + 7);
     setWeekStart(d);
+  };
+
+  const handlePlanLesson = (slot: WeeklyPlanSlot) => {
+    setSelectedSlot({
+      date: slot.date,
+      categoryId: slot.categoryId,
+      teacherId: slot.teacherId,
+    });
+    setAddDialogOpen(true);
   };
 
   const DAYS: Weekday[] = ['sat', 'sun', 'mon', 'tue', 'wed', 'thu', 'fri'];
@@ -170,7 +185,12 @@ export function WeeklyPlanView({
                         </div>
 
                         {canManage && (
-                          <Button variant="secondary" size="sm" className="h-6 mt-1 w-full text-[10px] opacity-0 group-hover:opacity-100 transition-opacity">
+                          <Button
+                            variant="secondary"
+                            size="sm"
+                            className="h-6 mt-1 w-full text-[10px] opacity-0 group-hover:opacity-100 transition-opacity"
+                            onClick={() => handlePlanLesson(slot)}
+                          >
                             <Plus className="h-3 w-3 mr-1" />
                             {t('planLesson')}
                           </Button>
@@ -184,6 +204,18 @@ export function WeeklyPlanView({
           })}
         </div>
       )}
+
+      <AddLessonDialog
+        instituteId={instituteId}
+        categories={categories}
+        open={addDialogOpen}
+        onOpenChange={setAddDialogOpen}
+        onDone={fetchPlan}
+        preselectClassId={classId}
+        preselectDate={selectedSlot?.date}
+        preselectCategoryId={selectedSlot?.categoryId ?? undefined}
+        preselectTeacherId={selectedSlot?.teacherId ?? undefined}
+      />
     </div>
   );
 }
