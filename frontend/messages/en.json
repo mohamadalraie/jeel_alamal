@@ -125,6 +125,15 @@
     "student": "Student"
   },
   "dashboard": {
+    "prevWeek": "Previous week",
+    "nextWeek": "Next week",
+    "noCategory": "No subject",
+    "noTeacher": "No teacher",
+    "planLesson": "Plan lesson",
+    "selectCategory": "Select subject",
+    "category": "Subject",
+    "teacher": "Teacher",
+    "weeklyPlan": "Weekly Plan",
     "welcome": "Welcome, {name}",
     "institutes": "Institutes",
     "createInstitute": "Create new institute",

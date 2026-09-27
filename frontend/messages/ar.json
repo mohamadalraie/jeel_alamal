@@ -125,6 +125,15 @@
     "student": "طالب"
   },
   "dashboard": {
+    "prevWeek": "الأسبوع السابق",
+    "nextWeek": "الأسبوع القادم",
+    "noCategory": "بدون مادة",
+    "noTeacher": "بدون أستاذ",
+    "planLesson": "إعداد الدرس",
+    "selectCategory": "اختر المادة",
+    "category": "المادة",
+    "teacher": "الأستاذ",
+    "weeklyPlan": "الخطة الأسبوعية",
     "welcome": "مرحبًا، {name}",
     "institutes": "المعاهد",
     "createInstitute": "إنشاء معهد جديد",
