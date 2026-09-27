@@ -195,6 +195,23 @@ async function runAutoMigrations(config: ConfigService) {
     await safeQuery(`ALTER TABLE "class_schedule" ADD COLUMN IF NOT EXISTS "subject_name" varchar(200);`, 'class_schedule.subject_name');
     await safeQuery(`ALTER TABLE "lessons" ADD COLUMN IF NOT EXISTS "subject_name" varchar(200);`, 'lessons.subject_name');
 
+    // 11. Lesson subjects & extended class schedule columns (weekly plan upgrade)
+    await safeQuery(`
+      CREATE TABLE IF NOT EXISTS "lesson_subjects" (
+        "id" uuid PRIMARY KEY NOT NULL,
+        "institute_id" uuid NOT NULL REFERENCES "public"."institutes"("id") ON DELETE CASCADE,
+        "name" varchar(200) NOT NULL,
+        "color" varchar(20),
+        "archived_at" timestamp with time zone,
+        "created_at" timestamp with time zone DEFAULT now() NOT NULL
+      );
+    `, 'Table lesson_subjects');
+
+    await safeQuery(`ALTER TABLE "class_schedule" ADD COLUMN IF NOT EXISTS "subject_id" uuid REFERENCES "public"."lesson_subjects"("id") ON DELETE SET NULL;`, 'class_schedule.subject_id');
+    await safeQuery(`ALTER TABLE "class_schedule" ADD COLUMN IF NOT EXISTS "expected_duration_minutes" integer;`, 'class_schedule.expected_duration_minutes');
+    await safeQuery(`ALTER TABLE "class_schedule" ADD COLUMN IF NOT EXISTS "sort" smallint DEFAULT 0 NOT NULL;`, 'class_schedule.sort');
+    await safeQuery(`ALTER TABLE "lessons" ADD COLUMN IF NOT EXISTS "subject_id" uuid REFERENCES "public"."lesson_subjects"("id") ON DELETE SET NULL;`, 'lessons.subject_id');
+
   } catch (err: any) {
     Logger.error(`Auto-migration top-level note: ${err?.message || err}`, 'Migrations');
   } finally {
