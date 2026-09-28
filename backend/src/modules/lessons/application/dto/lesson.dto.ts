@@ -197,6 +197,8 @@ export interface ProgramEntryView {
   lessonId: string;
   kind: LessonKind;
   name: string | null;
+  subjectId?: string | null;
+  subjectName?: string | null;
   description: string | null;
   category: CategoryView | null;
   date: string;
@@ -238,6 +240,8 @@ export interface InstituteLessonView {
   lessonId: string;
   kind: LessonKind;
   name: string | null;
+  subjectId?: string | null;
+  subjectName?: string | null;
   description: string | null;
   category: CategoryView | null;
   date: string;

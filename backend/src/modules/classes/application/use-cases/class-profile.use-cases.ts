@@ -73,6 +73,7 @@ export class GetClassProfileUseCase {
         start: { kind: s.start.kind, value: s.start.value },
         end: s.end ? { kind: s.end.kind, value: s.end.value } : null,
         trackType: s.trackType ?? 'regular',
+        kind: s.kind ?? 'lesson',
         subjectId: s.subjectId ?? null,
         categoryId: s.categoryId ?? null,
         teacherId: s.teacherId ?? null,
