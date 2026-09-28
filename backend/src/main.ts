@@ -57,6 +57,9 @@ async function runAutoMigrations(config: ConfigService) {
     await safeQuery(`CREATE TYPE "public"."tajweed_level" AS ENUM('excellent', 'very_good', 'good', 'acceptable', 'weak');`, 'Type tajweed_level');
     await safeQuery(`CREATE TYPE "public"."track_type" AS ENUM('regular', 'intensive');`, 'Type track_type');
 
+    // Force add kind to class_schedule
+    await safeQuery(`ALTER TABLE "class_schedule" ADD COLUMN IF NOT EXISTS "kind" "lesson_kind" DEFAULT 'lesson' NOT NULL;`, 'Add kind to class_schedule');
+
     // 2. Users table missing profile columns
     await safeQuery(`ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "study_degree" "public"."study_degree";`, 'users.study_degree');
     await safeQuery(`ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "study_field" varchar(150);`, 'users.study_field');
