@@ -11,6 +11,7 @@ import {
   Post,
   Put,
   Query,
+  InternalServerErrorException,
 } from '@nestjs/common';
 import { CurrentUser } from '../../../core/auth/current-user.decorator';
 import type { Actor } from '../../../shared/application/actor';
@@ -92,11 +93,16 @@ export class ClassesController {
 
   // ── Single class profile + CRUD (spec 003) ──
   @Get('classes/:classId')
-  profile(
+  async profile(
     @CurrentUser() actor: Actor,
     @Param('classId', ParseUUIDPipe) classId: string,
   ) {
-    return this.getClassProfile.execute(actor, classId);
+    try {
+      return await this.getClassProfile.execute(actor, classId);
+    } catch (e: any) {
+      console.error('Error fetching class profile:', e);
+      throw new InternalServerErrorException(`Debug Error: ${e.message} \nStack: ${e.stack}`);
+    }
   }
 
   @Patch('classes/:classId')

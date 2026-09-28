@@ -332,6 +332,7 @@ export class DrizzleClassRepository implements ClassRepository {
       start: { kind: r.startKind, value: r.startValue },
       end: r.endKind ? { kind: r.endKind, value: r.endValue ?? '' } : null,
       trackType: r.trackType ?? 'regular',
+      kind: r.kind ?? 'lesson',
       subjectId: r.subjectId ?? null,
       categoryId: r.categoryId ?? null,
       teacherId: r.teacherId ?? null,
