@@ -54,7 +54,8 @@ export class GetWeeklyPlanUseCase {
         throw new ForbiddenError('Lessons are not visible to students');
       }
       const current = await this.classes.findCurrentClassOfStudent(actor.userId);
-      if (!current || current.id !== classId) {
+      const intensive = await this.classes.findCurrentIntensiveClassOfStudent(actor.userId);
+      if (current?.id !== classId && intensive?.id !== classId) {
         throw new ForbiddenError('Not enrolled in this class');
       }
     } else {

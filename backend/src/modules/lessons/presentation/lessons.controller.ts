@@ -39,6 +39,7 @@ import {
   GetInstituteProgramUseCase,
 } from '../application/class-program.use-case';
 import { GetWeeklyPlanUseCase } from '../application/get-weekly-plan.use-case';
+import { GetMyWeeklyPlanUseCase } from '../application/get-my-weekly-plan.use-case';
 import { GetMyLessonsUseCase } from '../application/teacher-lessons.use-case';
 import { GetStudentClassLessonsUseCase } from '../application/student-lessons.use-case';
 import {
@@ -79,6 +80,7 @@ export class LessonsController {
     private readonly getClassProgram: GetClassProgramUseCase,
     private readonly getInstituteProgram: GetInstituteProgramUseCase,
     private readonly getWeeklyPlan: GetWeeklyPlanUseCase,
+    private readonly getMyWeeklyPlan: GetMyWeeklyPlanUseCase,
     private readonly getMyLessons: GetMyLessonsUseCase,
     private readonly getStudentLessons: GetStudentClassLessonsUseCase,
     private readonly startLesson: StartLessonUseCase,
@@ -208,6 +210,14 @@ export class LessonsController {
     @Query('weekStart') weekStart: string,
   ) {
     return this.getWeeklyPlan.execute(actor, classId, weekStart);
+  }
+
+  @Get('weekly-plan/mine')
+  myWeeklyPlan(
+    @CurrentUser() actor: Actor,
+    @Query('weekStart') weekStart: string,
+  ) {
+    return this.getMyWeeklyPlan.execute(actor, weekStart);
   }
 
   @Get('classes/:classId/lessons/student')

@@ -526,6 +526,11 @@ export const getWeeklyPlan = (classId: string, weekStart: string) =>
     `/api/classes/${classId}/weekly-plan?weekStart=${encodeURIComponent(weekStart)}`
   );
 
+export const getMyWeeklyPlan = (weekStart: string) =>
+  request<import('./types').WeeklyPlanSlot[]>(
+    `/api/weekly-plan/mine?weekStart=${encodeURIComponent(weekStart)}`
+  );
+
 export const setClassLessonsVisibility = (classId: string, visible: boolean) =>
   put<void>(`/api/classes/${classId}/lessons-visibility`, { visible });
 

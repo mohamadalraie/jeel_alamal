@@ -29,6 +29,7 @@ import {
   GetInstituteProgramUseCase,
 } from './application/class-program.use-case';
 import { GetWeeklyPlanUseCase } from './application/get-weekly-plan.use-case';
+import { GetMyWeeklyPlanUseCase } from './application/get-my-weekly-plan.use-case';
 import { GetMyLessonsUseCase } from './application/teacher-lessons.use-case';
 import { GetStudentClassLessonsUseCase } from './application/student-lessons.use-case';
 import {
@@ -71,6 +72,7 @@ import { DrizzleLessonSettingsRepository } from './infrastructure/persistence/dr
     GetClassProgramUseCase,
     GetInstituteProgramUseCase,
     GetWeeklyPlanUseCase,
+    GetMyWeeklyPlanUseCase,
     GetMyLessonsUseCase,
     GetStudentClassLessonsUseCase,
     StartLessonUseCase,
