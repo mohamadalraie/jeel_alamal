@@ -35,6 +35,7 @@ export interface ScheduleSlot {
   categoryId?: string | null;
   teacherId?: string | null;
   expectedDurationMinutes?: number | null;
+  kind?: 'lesson' | 'recitation';
   sort?: number;
 }
 

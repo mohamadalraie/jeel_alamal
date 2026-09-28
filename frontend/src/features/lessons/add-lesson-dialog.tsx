@@ -162,12 +162,12 @@ export function AddLessonDialog({
     setSubBusy(true);
     try {
       const created = await createLessonSubject(instituteId, { name: subName.trim(), color: subColor });
-      queryClient.invalidateQueries({ queryKey: qk.lessonSubjects(instituteId) });
+      qc.invalidateQueries({ queryKey: qk.lessonSubjects(instituteId) });
       setSubjectId(created.id);
       setNewSub(false);
       setSubName('');
     } catch (err) {
-      notify.error(err instanceof ApiError ? err.message : tc('error'));
+      notify.error(err, tc('error'));
     } finally {
       setSubBusy(false);
     }

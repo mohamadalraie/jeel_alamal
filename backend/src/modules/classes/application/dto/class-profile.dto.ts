@@ -65,6 +65,10 @@ export class ScheduleSlotDto {
   @IsInt()
   @Min(1)
   expectedDurationMinutes?: number | null;
+
+  @IsOptional()
+  @IsIn(['lesson', 'recitation'])
+  kind?: 'lesson' | 'recitation';
 }
 
 export class SetScheduleDto {
@@ -84,6 +88,7 @@ interface SlotView {
   categoryId?: string | null;
   teacherId?: string | null;
   expectedDurationMinutes?: number | null;
+  kind?: 'lesson' | 'recitation';
   sort?: number;
 }
 
