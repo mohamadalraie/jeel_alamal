@@ -237,7 +237,6 @@ export function AddLessonDialog({
         await updateLesson(editing!.lessonId, {
           name: isLesson ? name.trim() : undefined,
           subjectId: isLesson ? subjectId || undefined : undefined,
-          subjectName: isLesson ? subjectName.trim() || undefined : undefined,
           description: isLesson ? description || undefined : undefined,
           categoryId: isLesson ? categoryId || undefined : undefined,
           date,
@@ -249,7 +248,6 @@ export function AddLessonDialog({
           kind,
           name: isLesson ? name.trim() : undefined,
           subjectId: isLesson && subjectId ? subjectId : undefined,
-          subjectName: isLesson ? subjectName.trim() || undefined : undefined,
           description: isLesson ? description || undefined : undefined,
           categoryId: isLesson && categoryId ? categoryId : undefined,
           date,
