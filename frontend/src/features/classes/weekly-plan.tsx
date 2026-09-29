@@ -2,9 +2,10 @@
 
 import { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
-import { ChevronRight, ChevronLeft, Plus, Calendar, Clock, BookOpen, CheckCircle2, User as UserIcon, BookMarked } from 'lucide-react';
+import { ChevronRight, ChevronLeft, Plus, Calendar, Clock, BookOpen, CheckCircle2, User as UserIcon, BookMarked, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { getWeeklyPlan, listLessonCategories } from '@/lib/api';
+import { getWeeklyPlan, listLessonCategories, createLesson } from '@/lib/api';
+import { notify } from '@/lib/toast';
 import type { WeeklyPlanSlot, LessonCategory, Weekday, ProgramEntry } from '@/lib/types';
 import { AddLessonDialog, type LessonEditing } from '@/features/lessons/add-lesson-dialog';
 import { LessonDetailsDialog } from '@/features/lessons/lesson-details-dialog';

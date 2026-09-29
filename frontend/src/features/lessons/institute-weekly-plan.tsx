@@ -4,7 +4,8 @@ import { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import { ChevronRight, ChevronLeft, Plus, Calendar, Clock, BookOpen, CheckCircle2, User as UserIcon, BookMarked, Check, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { getWeeklyPlan, listLessonCategories } from '@/lib/api';
+import { getWeeklyPlan, listLessonCategories, createLesson } from '@/lib/api';
+import { notify } from '@/lib/toast';
 import type { WeeklyPlanSlot, LessonCategory, Weekday, ProgramEntry } from '@/lib/types';
 import { AddLessonDialog, type LessonEditing } from '@/features/lessons/add-lesson-dialog';
 import { LessonDetailsDialog } from '@/features/lessons/lesson-details-dialog';
@@ -26,15 +27,10 @@ function getStartOfWeek(d: Date): Date {
 }
 
 export function InstituteWeeklyPlan({
-  
   instituteId,
-  canManage,
-  teachers,
 }: {
   
   instituteId: string;
-  canManage: boolean;
-  teachers: { id: string; name: string }[];
 }) {
   const t = useTranslations('dashboard');
   const tc = useTranslations('common');
@@ -85,7 +81,7 @@ export function InstituteWeeklyPlan({
 
   useEffect(() => {
     fetchPlan();
-  }, [weekStart, classId]);
+  }, [weekStart]);
 
   const prevWeek = () => {
     const d = new Date(weekStart);
@@ -200,18 +196,8 @@ export function InstituteWeeklyPlan({
             return (
               <div key={day} className="flex flex-col gap-2">
                 <div className="bg-muted text-center py-2 px-1 rounded-md font-semibold text-sm border flex flex-col items-center justify-between gap-1">
-                  <div className="flex items-center justify-between w-full px-1">
+                  <div className="flex items-center justify-center w-full px-1">
                     <span>{tw(day)}</span>
-                    {canManage && (
-                      <button
-                        type="button"
-                        onClick={() => handleAddExceptional(dateStr)}
-                        title="إضافة درس استثنائي خارج الجدول"
-                        className="text-primary hover:bg-primary/10 p-1 rounded transition"
-                      >
-                        <Plus className="h-3.5 w-3.5" />
-                      </button>
-                    )}
                   </div>
                   <div className="text-xs text-muted-foreground font-normal" dir="ltr">{dateStr}</div>
                 </div>
@@ -225,7 +211,7 @@ export function InstituteWeeklyPlan({
                   {daySlots.map((slot, i) => {
                     const categoryObj = categories.find((c) => c.id === slot.categoryId);
                     const catName = categoryObj?.name || (slot.categoryId ? t('category') : null);
-                    const teacherName = slot.teacherName || teachers.find((t) => t.id === slot.teacherId)?.name || t('noTeacher');
+                    const teacherName = slot.teacherName || t('noTeacher');
 
                     if (slot.type === 'completed') {
                       return (
@@ -336,22 +322,6 @@ export function InstituteWeeklyPlan({
                           <UserIcon className="h-3 w-3" />
                           <span className="truncate">{teacherName}</span>
                         </div>
-
-                        {canManage && (
-                          <Button
-                            variant="secondary"
-                            size="sm"
-                            className="h-6 mt-1 w-full text-[10px] opacity-90 group-hover:opacity-100 transition-opacity"
-                            onClick={() => handlePlanLesson(slot)}
-                          >
-                            {slot.kind === 'recitation' ? (
-                              <Check className="h-3 w-3 mr-1" />
-                            ) : (
-                              <Plus className="h-3 w-3 mr-1" />
-                            )}
-                            {slot.kind === 'recitation' ? 'تثبيت الجلسة' : t('planLesson')}
-                          </Button>
-                        )}
                       </div>
                     );
                   })}
@@ -383,14 +353,6 @@ export function InstituteWeeklyPlan({
         entry={viewLesson}
         open={!!viewLesson}
         onOpenChange={(op) => !op && setViewLesson(null)}
-        actions={
-          canManage ? (
-            <Button variant="outline" size="sm" onClick={() => viewLesson && handleEditLesson(viewLesson)}>
-              <Edit2 className="size-4 ml-2" />
-              تعديل معلومات الدرس
-            </Button>
-          ) : undefined
-        }
       />
     </div>
   );

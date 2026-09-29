@@ -114,18 +114,8 @@ export function StudentWeeklyPlanView({
             return (
               <div key={day} className="flex flex-col gap-2">
                 <div className="bg-muted text-center py-2 px-1 rounded-md font-semibold text-sm border flex flex-col items-center justify-between gap-1">
-                  <div className="flex items-center justify-between w-full px-1">
+                  <div className="flex items-center justify-center w-full px-1">
                     <span>{tw(day)}</span>
-                    {canManage && (
-                      <button
-                        type="button"
-                        onClick={() => handleAddExceptional(dateStr)}
-                        title="إضافة درس استثنائي خارج الجدول"
-                        className="text-primary hover:bg-primary/10 p-1 rounded transition"
-                      >
-                        <Plus className="h-3.5 w-3.5" />
-                      </button>
-                    )}
                   </div>
                   <div className="text-xs text-muted-foreground font-normal" dir="ltr">{dateStr}</div>
                 </div>
@@ -139,7 +129,7 @@ export function StudentWeeklyPlanView({
                   {daySlots.map((slot, i) => {
                     const categoryObj = categories.find((c) => c.id === slot.categoryId);
                     const catName = categoryObj?.name || (slot.categoryId ? t('category') : null);
-                    const teacherName = slot.teacherName || teachers.find((t) => t.id === slot.teacherId)?.name || t('noTeacher');
+                    const teacherName = slot.teacherName || t('noTeacher');
 
                     if (slot.type === 'completed') {
                       return (

@@ -137,6 +137,8 @@ export interface WeeklyPlanSlot {
   startTime?: Anchor;
   endTime?: Anchor | null;
   isExceptional?: boolean;
+  classId?: string | null;
+  className?: string | null;
 }
 
 export interface ClassProfile {
