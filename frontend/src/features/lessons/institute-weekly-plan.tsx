@@ -2,11 +2,13 @@
 
 import { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
-import { ChevronRight, ChevronLeft, Plus, Calendar, Clock, BookOpen, CheckCircle2, User as UserIcon, BookMarked } from 'lucide-react';
+import { ChevronRight, ChevronLeft, Plus, Calendar, Clock, BookOpen, CheckCircle2, User as UserIcon, BookMarked, Check, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { getMyWeeklyPlan, listLessonCategories } from '@/lib/api';
+import { getWeeklyPlan, listLessonCategories } from '@/lib/api';
 import type { WeeklyPlanSlot, LessonCategory, Weekday, ProgramEntry } from '@/lib/types';
+import { AddLessonDialog, type LessonEditing } from '@/features/lessons/add-lesson-dialog';
 import { LessonDetailsDialog } from '@/features/lessons/lesson-details-dialog';
+import { Edit2 } from 'lucide-react';
 
 // Compute the start of the week (Saturday) for a given date
 function getStartOfWeek(d: Date): Date {
@@ -23,10 +25,16 @@ function getStartOfWeek(d: Date): Date {
   return date;
 }
 
-export function StudentWeeklyPlanView({
+export function InstituteWeeklyPlan({
+  
   instituteId,
+  canManage,
+  teachers,
 }: {
+  
   instituteId: string;
+  canManage: boolean;
+  teachers: { id: string; name: string }[];
 }) {
   const t = useTranslations('dashboard');
   const tc = useTranslations('common');
@@ -38,12 +46,31 @@ export function StudentWeeklyPlanView({
   const [loading, setLoading] = useState(true);
 
   const [viewLesson, setViewLesson] = useState<ProgramEntry | null>(null);
+  const [editingLesson, setEditingLesson] = useState<LessonEditing | null>(null);
+  const [addDialogOpen, setAddDialogOpen] = useState(false);
+  const [selectedSlot, setSelectedSlot] = useState<{
+    date: string;
+    subjectId?: string | null;
+    subjectName?: string | null;
+    categoryId?: string | null;
+    teacherId?: string | null;
+    expectedDurationMinutes?: number | null;
+    kind?: 'lesson' | 'recitation';
+    classId?: string;
+    className?: string;
+  } | null>(null);
 
   const fetchPlan = async () => {
     setLoading(true);
     try {
       const dateStr = weekStart.toLocaleDateString('en-CA'); // YYYY-MM-DD
-      const data = await getMyWeeklyPlan(dateStr);
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api'}/institutes/${instituteId}/weekly-plan?weekStart=${dateStr}`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+      if (!res.ok) throw new Error('Failed to fetch plan');
+      const data = await res.json();
       setSlots(data);
     } catch (err) {
       console.error(err);
@@ -58,7 +85,7 @@ export function StudentWeeklyPlanView({
 
   useEffect(() => {
     fetchPlan();
-  }, [weekStart]);
+  }, [weekStart, classId]);
 
   const prevWeek = () => {
     const d = new Date(weekStart);
@@ -70,6 +97,65 @@ export function StudentWeeklyPlanView({
     const d = new Date(weekStart);
     d.setDate(d.getDate() + 7);
     setWeekStart(d);
+  };
+
+  const handlePlanLesson = async (slot: WeeklyPlanSlot) => {
+    if (slot.kind === 'recitation' && slot.teacherId) {
+      try {
+        setLoading(true);
+        await createLesson(instituteId, {
+          kind: 'recitation',
+          date: slot.date,
+          expectedDurationMinutes: slot.expectedDurationMinutes ?? undefined,
+          assignments: [{ classId: slot.classId || "", teacherId: slot.teacherId }],
+        });
+        await fetchPlan();
+      } catch (err) {
+        notify.error(err, tc('error'));
+        setLoading(false);
+      }
+      return;
+    }
+
+    setSelectedSlot({
+      date: slot.date,
+      subjectId: slot.subjectId,
+      subjectName: slot.subjectName,
+      categoryId: slot.categoryId,
+      teacherId: slot.teacherId,
+      expectedDurationMinutes: slot.expectedDurationMinutes,
+      kind: slot.kind,
+      classId: slot.classId ?? undefined,
+      className: slot.className ?? undefined,
+    });
+    setEditingLesson(null);
+    setAddDialogOpen(true);
+  };
+
+  const handleEditLesson = (lesson: ProgramEntry) => {
+    setViewLesson(null);
+    setSelectedSlot(null);
+    setEditingLesson({
+      lessonId: lesson.lessonId,
+      kind: lesson.kind,
+      name: lesson.name,
+      subjectId: lesson.subjectId ?? null,
+      subjectName: lesson.subjectName ?? null,
+      description: lesson.description,
+      categoryId: lesson.category?.id ?? null,
+      date: lesson.date,
+      expectedDurationMinutes: lesson.expectedDurationMinutes,
+      sources: lesson.sources.map((s) => ({ kind: s.kind, url: s.url, description: s.description ?? '' })),
+    });
+    setAddDialogOpen(true);
+  };
+
+  const handleAddExceptional = (dateStr: string) => {
+    setSelectedSlot({
+      date: dateStr,
+    });
+    setEditingLesson(null);
+    setAddDialogOpen(true);
   };
 
   const tp = useTranslations('prayers');
@@ -196,6 +282,9 @@ export function StudentWeeklyPlanView({
                             <UserIcon className="h-3 w-3" />
                             <span className="truncate">{teacherName}</span>
                           </div>
+                          <div className="flex items-center gap-1 text-[10px] text-muted-foreground/80 mt-1">
+                            <span className="bg-primary/10 text-primary px-1.5 py-0.5 rounded-sm">{slot.className ?? 'بدون حلقة'}</span>
+                          </div>
                         </button>
                       );
                     }
@@ -248,6 +337,21 @@ export function StudentWeeklyPlanView({
                           <span className="truncate">{teacherName}</span>
                         </div>
 
+                        {canManage && (
+                          <Button
+                            variant="secondary"
+                            size="sm"
+                            className="h-6 mt-1 w-full text-[10px] opacity-90 group-hover:opacity-100 transition-opacity"
+                            onClick={() => handlePlanLesson(slot)}
+                          >
+                            {slot.kind === 'recitation' ? (
+                              <Check className="h-3 w-3 mr-1" />
+                            ) : (
+                              <Plus className="h-3 w-3 mr-1" />
+                            )}
+                            {slot.kind === 'recitation' ? 'تثبيت الجلسة' : t('planLesson')}
+                          </Button>
+                        )}
                       </div>
                     );
                   })}
@@ -258,10 +362,35 @@ export function StudentWeeklyPlanView({
         </div>
       )}
 
+      <AddLessonDialog
+        instituteId={instituteId}
+        categories={categories}
+        open={addDialogOpen}
+        onOpenChange={setAddDialogOpen}
+        onDone={fetchPlan}
+        preselectClassId={selectedSlot?.classId}
+        preselectDate={selectedSlot?.date}
+        preselectSubjectId={selectedSlot?.subjectId ?? undefined}
+        preselectSubjectName={selectedSlot?.subjectName ?? undefined}
+        preselectCategoryId={selectedSlot?.categoryId ?? undefined}
+        preselectTeacherId={selectedSlot?.teacherId ?? undefined}
+        preselectDuration={selectedSlot?.expectedDurationMinutes ?? undefined}
+        preselectKind={selectedSlot?.kind ?? undefined}
+        editing={editingLesson}
+      />
+
       <LessonDetailsDialog
         entry={viewLesson}
         open={!!viewLesson}
         onOpenChange={(op) => !op && setViewLesson(null)}
+        actions={
+          canManage ? (
+            <Button variant="outline" size="sm" onClick={() => viewLesson && handleEditLesson(viewLesson)}>
+              <Edit2 className="size-4 ml-2" />
+              تعديل معلومات الدرس
+            </Button>
+          ) : undefined
+        }
       />
     </div>
   );

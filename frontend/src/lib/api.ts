@@ -486,7 +486,7 @@ export const updateLessonSubject = (
   input: { name?: string; color?: string },
 ) => patch<void>(`/api/lesson-subjects/${subjectId}`, input);
 export const archiveLessonSubject = (subjectId: string) =>
-  del<void>(`/api/lesson-subjects/${subjectId}`);
+  post<void>(`/api/lesson-subjects/${subjectId}/archive`, undefined);
 
 export const createLesson = (instituteId: string, input: CreateLessonInput) =>
   post<{ lessonId: string }>(`/api/institutes/${instituteId}/lessons`, input);

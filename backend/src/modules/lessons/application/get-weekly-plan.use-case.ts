@@ -105,40 +105,54 @@ export class GetWeeklyPlanUseCase {
         .sort((a, b) => (a.sort ?? 0) - (b.sort ?? 0));
 
       const usedLessonIds = new Set<string>();
+      const slotMatches = new Map<string, number>();
 
-      // Pair recurring schedule template slots with actual lessons given on this date
+      // Pass 1: Strict match by subjectId
       for (const slot of daySchedule) {
-        // Priority 1: Match by subjectId if set in schedule slot
-        let matchedIndex = dayLessons.findIndex(
-          (l) =>
-            !usedLessonIds.has(l.lessonId) &&
-            slot.subjectId &&
-            l.subjectId === slot.subjectId,
-        );
+        if (slot.subjectId) {
+          const idx = dayLessons.findIndex((l) => !usedLessonIds.has(l.lessonId) && l.subjectId === slot.subjectId);
+          if (idx !== -1) {
+            slotMatches.set(slot.id, idx);
+            usedLessonIds.add(dayLessons[idx].lessonId);
+          }
+        }
+      }
 
-        // Priority 2: Match by categoryId if set and no subject match
-        if (matchedIndex === -1) {
-          matchedIndex = dayLessons.findIndex(
-            (l) =>
-              !usedLessonIds.has(l.lessonId) &&
-              slot.categoryId &&
-              l.category?.id === slot.categoryId,
+      // Pass 2: Strict match by categoryId
+      for (const slot of daySchedule) {
+        if (!slotMatches.has(slot.id) && slot.categoryId) {
+          const idx = dayLessons.findIndex((l) => !usedLessonIds.has(l.lessonId) && l.category?.id === slot.categoryId);
+          if (idx !== -1) {
+            slotMatches.set(slot.id, idx);
+            usedLessonIds.add(dayLessons[idx].lessonId);
+          }
+        }
+      }
+
+      // Pass 3: Loose matches (trackType, kind, fallback)
+      for (const slot of daySchedule) {
+        if (!slotMatches.has(slot.id)) {
+          let idx = dayLessons.findIndex(
+            (l) => !usedLessonIds.has(l.lessonId) && (l.targetTrack ?? 'regular') === (slot.trackType ?? 'regular') && l.kind === (slot.kind ?? 'lesson')
           );
+          if (idx === -1) {
+            idx = dayLessons.findIndex(
+              (l) => !usedLessonIds.has(l.lessonId) && (l.targetTrack ?? 'regular') === (slot.trackType ?? 'regular')
+            );
+          }
+          if (idx === -1) {
+            idx = dayLessons.findIndex((l) => !usedLessonIds.has(l.lessonId));
+          }
+          if (idx !== -1) {
+            slotMatches.set(slot.id, idx);
+            usedLessonIds.add(dayLessons[idx].lessonId);
+          }
         }
+      }
 
-        // Priority 3: Any unused lesson for this track type
-        if (matchedIndex === -1) {
-          matchedIndex = dayLessons.findIndex(
-            (l) =>
-              !usedLessonIds.has(l.lessonId) &&
-              (l.targetTrack ?? 'regular') === (slot.trackType ?? 'regular'),
-          );
-        }
-
-        // Priority 4: Fallback to any unused lesson on this day
-        if (matchedIndex === -1) {
-          matchedIndex = dayLessons.findIndex((l) => !usedLessonIds.has(l.lessonId));
-        }
+      // Render the slots
+      for (const slot of daySchedule) {
+        const matchedIndex = slotMatches.get(slot.id);
 
         const resolvedSubjectName = slot.subjectId
           ? (subjectMap.get(slot.subjectId) ?? null)
@@ -148,15 +162,13 @@ export class GetWeeklyPlanUseCase {
           ? (teacherMap.get(slot.teacherId) ?? null)
           : null;
 
-        if (matchedIndex !== -1) {
+        if (matchedIndex !== undefined) {
           const lesson = dayLessons[matchedIndex];
-          usedLessonIds.add(lesson.lessonId);
-
           result.push({
             type: 'completed',
             date: dateStr,
             dayOfWeek,
-            scheduleSlotId: (slot as any).id ?? null,
+            scheduleSlotId: slot.id,
             lessonId: lesson.lessonId,
             lessonName: lesson.name,
             subjectId: lesson.subjectId ?? slot.subjectId ?? null,
@@ -179,7 +191,7 @@ export class GetWeeklyPlanUseCase {
             type: 'pending',
             date: dateStr,
             dayOfWeek,
-            scheduleSlotId: (slot as any).id ?? null,
+            scheduleSlotId: slot.id,
             subjectId: slot.subjectId ?? null,
             subjectName: resolvedSubjectName,
             categoryId: slot.categoryId ?? null,

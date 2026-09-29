@@ -20,6 +20,8 @@ import { LessonProgramList } from './lesson-program-list';
 import { AddLessonDialog, type LessonEditing } from './add-lesson-dialog';
 import { CategoryManager } from './category-manager';
 import { SubjectManager } from './subject-manager';
+import { InstituteWeeklyPlan } from './institute-weekly-plan';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 /**
  * Flatten institute lessons into one ProgramEntry per class binding so that
@@ -124,26 +126,39 @@ export function InstituteLessonsHub({ instituteId }: { instituteId: string }) {
         </div>
       </div>
 
-      <LessonProgramList
-        entries={entries}
-        emptyText={t('noLessons')}
-        showTeacher
-        showClass
-        onAddDay={(ymd) => openCreate(ymd)}
-        renderActions={(e) => (
-          <EntryMenu
-            onEdit={() => openEdit(e)}
-            onRemoveFromClass={async () => {
-              await removeLessonClass(e.lessonClassId);
-              refresh();
-            }}
-            onDelete={async () => {
-              await deleteLesson(e.lessonId);
-              refresh();
-            }}
+      <Tabs defaultValue="weekly" className="flex flex-col gap-4">
+        <TabsList className="self-start">
+          <TabsTrigger value="weekly">الخطة الأسبوعية</TabsTrigger>
+          <TabsTrigger value="list">قائمة الدروس</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="weekly" className="mt-0 outline-none">
+          <InstituteWeeklyPlan instituteId={instituteId} />
+        </TabsContent>
+
+        <TabsContent value="list" className="mt-0 outline-none">
+          <LessonProgramList
+            entries={entries}
+            emptyText={t('noLessons')}
+            showTeacher
+            showClass
+            onAddDay={(ymd) => openCreate(ymd)}
+            renderActions={(e) => (
+              <EntryMenu
+                onEdit={() => openEdit(e)}
+                onRemoveFromClass={async () => {
+                  await removeLessonClass(e.lessonClassId);
+                  refresh();
+                }}
+                onDelete={async () => {
+                  await deleteLesson(e.lessonId);
+                  refresh();
+                }}
+              />
+            )}
           />
-        )}
-      />
+        </TabsContent>
+      </Tabs>
 
       <AddLessonDialog
         instituteId={instituteId}

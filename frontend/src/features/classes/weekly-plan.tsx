@@ -91,7 +91,24 @@ export function WeeklyPlanView({
     setWeekStart(d);
   };
 
-  const handlePlanLesson = (slot: WeeklyPlanSlot) => {
+  const handlePlanLesson = async (slot: WeeklyPlanSlot) => {
+    if (slot.kind === 'recitation' && slot.teacherId) {
+      try {
+        setLoading(true);
+        await createLesson(instituteId, {
+          kind: 'recitation',
+          date: slot.date,
+          expectedDurationMinutes: slot.expectedDurationMinutes ?? undefined,
+          assignments: [{ classId, teacherId: slot.teacherId }],
+        });
+        await fetchPlan();
+      } catch (err) {
+        notify.error(err, tc('error'));
+        setLoading(false);
+      }
+      return;
+    }
+
     setSelectedSlot({
       date: slot.date,
       subjectId: slot.subjectId,
@@ -314,8 +331,12 @@ export function WeeklyPlanView({
                             className="h-6 mt-1 w-full text-[10px] opacity-90 group-hover:opacity-100 transition-opacity"
                             onClick={() => handlePlanLesson(slot)}
                           >
-                            <Plus className="h-3 w-3 mr-1" />
-                            {t('planLesson')}
+                            {slot.kind === 'recitation' ? (
+                              <Check className="h-3 w-3 mr-1" />
+                            ) : (
+                              <Plus className="h-3 w-3 mr-1" />
+                            )}
+                            {slot.kind === 'recitation' ? 'تثبيت الجلسة' : t('planLesson')}
                           </Button>
                         )}
                       </div>
