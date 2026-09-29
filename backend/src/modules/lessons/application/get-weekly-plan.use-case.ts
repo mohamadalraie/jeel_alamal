@@ -244,7 +244,7 @@ export class GetWeeklyPlanUseCase {
     await this.policy.assertManagerOf(actor, instituteId);
     
     // Fetch all classes in the institute
-    const classes = await this.classes.findClassesByInstitute(instituteId);
+    const classes = await this.classes.findAllByInstitute(instituteId);
     
     // Get plan for each class
     const allSlots: WeeklyPlanSlot[] = [];
