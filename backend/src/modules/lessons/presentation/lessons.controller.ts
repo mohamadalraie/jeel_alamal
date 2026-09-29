@@ -212,6 +212,15 @@ export class LessonsController {
     return this.getWeeklyPlan.execute(actor, classId, weekStart);
   }
 
+  @Get('institutes/:instituteId/weekly-plan')
+  instituteWeeklyPlan(
+    @CurrentUser() actor: Actor,
+    @Param('instituteId', ParseUUIDPipe) instituteId: string,
+    @Query('weekStart') weekStart: string,
+  ) {
+    return this.getWeeklyPlan.executeForInstitute(actor, instituteId, weekStart);
+  }
+
   @Get('weekly-plan/mine')
   myWeeklyPlan(
     @CurrentUser() actor: Actor,

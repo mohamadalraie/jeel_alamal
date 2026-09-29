@@ -30,6 +30,8 @@ export interface WeeklyPlanSlot {
   endTime?: { kind: string; value: string } | null;
   /** Whether this lesson was created outside the regular schedule (no matching slot). */
   isExceptional?: boolean;
+  classId?: string | null;
+  className?: string | null;
 }
 
 @Injectable()
@@ -232,5 +234,39 @@ export class GetWeeklyPlanUseCase {
     }
 
     return result;
+  }
+
+  async executeForInstitute(
+    actor: Actor,
+    instituteId: string,
+    weekStart: string,
+  ): Promise<WeeklyPlanSlot[]> {
+    await this.policy.assertManagerOf(actor, instituteId);
+    
+    // Fetch all classes in the institute
+    const classes = await this.classes.findClassesByInstitute(instituteId);
+    
+    // Get plan for each class
+    const allSlots: WeeklyPlanSlot[] = [];
+    
+    // Process them in parallel for speed, though we could do sequential
+    await Promise.all(
+      classes.map(async (klass) => {
+        try {
+          const slots = await this.execute(actor, klass.id, weekStart);
+          // Decorate with classId and className
+          slots.forEach(slot => {
+            slot.classId = klass.id;
+            slot.className = klass.name;
+          });
+          allSlots.push(...slots);
+        } catch (err) {
+          // Ignore forbidden errors if any (though manager should have access)
+          console.warn(`Could not fetch plan for class ${klass.id}:`, err);
+        }
+      })
+    );
+    
+    return allSlots;
   }
 }
