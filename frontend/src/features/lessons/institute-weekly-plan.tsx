@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import { ChevronRight, ChevronLeft, Plus, Calendar, Clock, BookOpen, CheckCircle2, User as UserIcon, BookMarked, Check, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { getWeeklyPlan, listLessonCategories, createLesson } from '@/lib/api';
+import { getWeeklyPlan, listLessonCategories, createLesson, apiFetch } from '@/lib/api';
 import { notify } from '@/lib/toast';
 import type { WeeklyPlanSlot, LessonCategory, Weekday, ProgramEntry } from '@/lib/types';
 import { AddLessonDialog, type LessonEditing } from '@/features/lessons/add-lesson-dialog';
@@ -60,13 +60,9 @@ export function InstituteWeeklyPlan({
     setLoading(true);
     try {
       const dateStr = weekStart.toLocaleDateString('en-CA'); // YYYY-MM-DD
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api'}/institutes/${instituteId}/weekly-plan?weekStart=${dateStr}`, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
-      });
-      if (!res.ok) throw new Error('Failed to fetch plan');
-      const data = await res.json();
+      const data = await apiFetch<WeeklyPlanSlot[]>(
+        `/institutes/${instituteId}/weekly-plan?weekStart=${dateStr}`
+      );
       setSlots(data);
     } catch (err) {
       console.error(err);

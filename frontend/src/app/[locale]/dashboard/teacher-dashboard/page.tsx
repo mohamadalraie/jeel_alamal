@@ -127,7 +127,7 @@ function TeacherClassCard({
             size="sm"
             className="w-full justify-start gap-2 h-9 text-xs font-medium text-muted-foreground hover:text-foreground"
           >
-            <Link href={`/dashboard/classes`}>
+            <Link href={`/dashboard/classes/${classItem.id}`}>
               <ChevronLeft className="size-4" />
               <span>{t('classDetails')}</span>
             </Link>
@@ -153,6 +153,9 @@ function TeacherClassCard({
           <AddRecitationDialog
             surahs={surahs ?? []}
             students={roster}
+            open={recitationOpen}
+            onOpenChange={setRecitationOpen}
+            withTrigger={false}
             onDone={() => {
               qc.invalidateQueries({ queryKey: qk.classRecitation(classItem.id) });
               setRecitationOpen(false);
@@ -221,7 +224,7 @@ export default function TeacherDashboardPage() {
       setStartingLessonId(lessonClassId);
       await startLesson(lessonClassId);
       qc.invalidateQueries({ queryKey: qk.myLessons });
-      router.push(`/dashboard/lesson-timer?id=${lessonClassId}`);
+      router.push(`/dashboard/lesson-timer/${lessonClassId}`);
     } catch (err) {
       notify.error(err, tc('error'));
     } finally {
@@ -407,7 +410,7 @@ export default function TeacherDashboardPage() {
 
                     {isStarted && (
                       <Button asChild size="sm" className="bg-emerald-600 hover:bg-emerald-700 text-xs gap-1.5">
-                        <Link href={`/dashboard/lesson-timer?id=${lesson.lessonClassId}`}>
+                        <Link href={`/dashboard/lesson-timer/${lesson.lessonClassId}`}>
                           <Play className="size-3.5 fill-white" />
                           <span>{t('continueTimer')}</span>
                         </Link>

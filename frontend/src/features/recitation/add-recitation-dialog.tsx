@@ -38,18 +38,27 @@ export function AddRecitationDialog({
   studentId,
   students,
   onDone,
+  open: openProp,
+  onOpenChange,
+  withTrigger = true,
 }: {
   surahs: Surah[];
   studentId?: string;
   students?: { id: string; name: string }[];
   onDone: () => void;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  withTrigger?: boolean;
 }) {
   const t = useTranslations('recitation');
   const tc = useTranslations('common');
   const tr = useTranslations('ratings');
   const qc = useQueryClient();
 
-  const [open, setOpen] = useState(false);
+  const [internalOpen, setInternalOpen] = useState(false);
+  const isControlled = openProp !== undefined;
+  const open = isControlled ? openProp : internalOpen;
+  const setOpen = (v: boolean) => (isControlled ? onOpenChange?.(v) : setInternalOpen(v));
   const [student, setStudent] = useState(studentId ?? '');
   const [query, setQuery] = useState('');
   const [surah, setSurah] = useState<Surah | null>(null);
@@ -118,10 +127,12 @@ export function AddRecitationDialog({
       }}
     >
       <DialogTrigger asChild>
-        <Button>
-          <Plus data-icon="inline-start" />
-          {t('recite')}
-        </Button>
+        {withTrigger ? (
+          <Button>
+            <Plus data-icon="inline-start" />
+            {t('recite')}
+          </Button>
+        ) : <span className="hidden" />}
       </DialogTrigger>
       <DialogContent className="max-h-[90dvh] overflow-y-auto sm:max-w-md">
         <DialogHeader>
