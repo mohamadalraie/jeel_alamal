@@ -28,7 +28,6 @@ import {
   requestNotificationPermission,
   triggerNativeNotification,
   registerPushSubscription,
-  sendTestPushNotification,
 } from '@/features/notifications/device-notifications';
 
 export function NotificationBell() {
@@ -242,25 +241,7 @@ export function NotificationBell() {
           )}
         </div>
 
-        {/* Footer diagnostic action */}
-        <div className="p-2 border-t border-border bg-muted/40 flex items-center justify-between">
-          <Button
-            variant="outline"
-            size="sm"
-            className="w-full text-xs gap-1.5 h-8 font-medium text-foreground bg-background hover:bg-accent"
-            onClick={async () => {
-              const ok = await sendTestPushNotification();
-              if (ok) {
-                alert('📲 تم إرسال إشعار تجريبي! أغلق المتصفح أو التطبيق الآن لتجربة وصول الإشعار في الخلفية.');
-              } else {
-                alert('⚠️ تعذر إرسال الإشعار. تأكد من تفعيل إذن الإشعارات بالجهاز.');
-              }
-            }}
-          >
-            <Bell className="size-3.5 text-amber-500" />
-            اختبار إشعار الخلفية (Test Push)
-          </Button>
-        </div>
+
       </DropdownMenuContent>
     </DropdownMenu>
   );
