@@ -184,24 +184,38 @@ export class CreateLessonUseCase extends LessonBase {
     );
     await this.lessons.createLesson(lesson, bindings);
 
-    // Send notifications to students in the assigned classes
+    // Send notifications to students in the assigned classes and to the assigned teachers
     try {
-      const recipientIds = new Set<string>();
+      const studentRecipientIds = new Set<string>();
+      const teacherRecipientIds = new Set<string>();
       for (const assignment of dto.assignments) {
+        if (assignment.teacherId) {
+          teacherRecipientIds.add(assignment.teacherId);
+        }
         const membership = await this.classes.getMembership(assignment.classId);
         if (membership) {
-          membership.studentIds.forEach((id) => recipientIds.add(id));
-          membership.intensiveStudentIds.forEach((id) => recipientIds.add(id));
+          membership.studentIds.forEach((id) => studentRecipientIds.add(id));
+          membership.intensiveStudentIds.forEach((id) => studentRecipientIds.add(id));
         }
       }
       
-      const filteredRecipientIds = Array.from(recipientIds).filter((id) => id !== actor.userId);
-      if (filteredRecipientIds.length > 0) {
-        await this.notifications.sendToUsers(filteredRecipientIds, {
-          title: `درس جديد: ${lesson.name || 'درس غير معنون'}`,
+      const filteredStudentRecipientIds = Array.from(studentRecipientIds).filter((id) => id !== actor.userId);
+      if (filteredStudentRecipientIds.length > 0) {
+        await this.notifications.sendToUsers(filteredStudentRecipientIds, {
+          title: `درس جديد: ${lesson.name || 'جلسة تسميع'}`,
           message: `تمت إضافة درس جديد بتاريخ ${lesson.date}`,
           type: 'lesson',
           link: '/dashboard/my-lessons',
+        });
+      }
+
+      const filteredTeacherRecipientIds = Array.from(teacherRecipientIds).filter((id) => id !== actor.userId);
+      if (filteredTeacherRecipientIds.length > 0) {
+        await this.notifications.sendToUsers(filteredTeacherRecipientIds, {
+          title: `تعيين درس جديد: ${lesson.name || 'جلسة تسميع'}`,
+          message: `تم تعيين درس جديد لك بتاريخ ${lesson.date}`,
+          type: 'lesson',
+          link: '/dashboard/teacher-dashboard',
         });
       }
     } catch (err) {
