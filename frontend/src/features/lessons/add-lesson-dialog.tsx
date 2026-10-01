@@ -9,7 +9,7 @@ import type {
   LessonSourceInput,
 } from '@/lib/types';
 import { createLesson, updateLesson, createLessonCategory, createLessonSubject, getClassProfile, ApiError } from '@/lib/api';
-import { useClasses, useLessonSubjects, useQueries, useQueryClient, qk, useTeachers } from '@/lib/queries';
+import { useClasses, useLessonSubjects, useQueries, useQueryClient, qk, useTeachers, useManagers } from '@/lib/queries';
 import { notify } from '@/lib/toast';
 import { CATEGORY_PALETTE } from './lesson-colors';
 import { Button } from '@/components/ui/button';
@@ -91,6 +91,7 @@ export function AddLessonDialog({
 
   const { data: classes = [] } = useClasses(instituteId);
   const { data: allTeachers = [] } = useTeachers(instituteId);
+  const { data: managers = [] } = useManagers(instituteId);
 
   // Fetch every class profile in parallel — Radix Dialog unmounts on close so this
   // component only exists while the dialog is open; no `enabled` guard needed.
@@ -512,13 +513,29 @@ export function AddLessonDialog({
                                   ))}
                                 </SelectGroup>
                               )}
-                              {allTeachers.length > 0 && (
+                              
+                              {managers.length > 0 && (
                                 <>
                                   {cm?.teachers && cm.teachers.length > 0 && <SelectSeparator />}
                                   <SelectGroup>
+                                    <SelectLabel className="text-xs text-muted-foreground font-semibold py-1">إدارة المعهد</SelectLabel>
+                                    {managers
+                                      .filter((m) => !cm?.teachers?.find((ct) => ct.id === m.id))
+                                      .map((ma) => (
+                                        <SelectItem key={ma.id} value={ma.id}>
+                                          {ma.firstName} {ma.lastName}
+                                        </SelectItem>
+                                      ))}
+                                  </SelectGroup>
+                                </>
+                              )}
+                              {allTeachers.length > 0 && (
+                                <>
+                                  {((cm?.teachers?.length ?? 0) > 0 || managers.length > 0) && <SelectSeparator />}
+                                  <SelectGroup>
                                     <SelectLabel className="text-xs text-muted-foreground font-semibold py-1">باقي أساتذة المعهد</SelectLabel>
                                     {allTeachers
-                                      .filter((t) => !cm?.teachers?.find((ct) => ct.id === t.id))
+                                      .filter((t) => !cm?.teachers?.find((ct) => ct.id === t.id) && !managers.find((m) => m.id === t.id))
                                       .map((te) => (
                                         <SelectItem key={te.id} value={te.id}>
                                           {te.firstName} {te.lastName}
@@ -527,7 +544,7 @@ export function AddLessonDialog({
                                   </SelectGroup>
                                 </>
                               )}
-                              {(!cm?.teachers || cm.teachers.length === 0) && allTeachers.length === 0 && (
+                              {(!cm?.teachers || cm?.teachers?.length === 0) && allTeachers.length === 0 && managers.length === 0 && (
                                 <SelectItem value="__none__" disabled>
                                   {t('noClassTeachers')}
                                 </SelectItem>
