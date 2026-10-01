@@ -14,6 +14,7 @@ import { EmptyState } from '@/features/shared/empty-state';
 import { ConfirmDialog } from '@/features/shared/confirm-dialog';
 import { LessonStatusBadge } from './lesson-status-badge';
 import { LessonTimerDinars } from './lesson-timer-dinars';
+import { LessonTimerNotes } from './lesson-timer-notes';
 
 /** Format a whole number of seconds as MM:SS (or HH:MM:SS past an hour). */
 function formatElapsed(totalSeconds: number): string {
@@ -204,7 +205,10 @@ export function LessonTimerPage({ lessonClassId }: { lessonClassId: string }) {
 
       {/* Dinar options for students during lesson execution */}
       {data.status === 'started' && data.instituteId && data.classId && (
-        <LessonTimerDinars instituteId={data.instituteId} classId={data.classId} />
+        <>
+          <LessonTimerDinars instituteId={data.instituteId} classId={data.classId} />
+          <LessonTimerNotes instituteId={data.instituteId} classId={data.classId} />
+        </>
       )}
     </div>
   );
