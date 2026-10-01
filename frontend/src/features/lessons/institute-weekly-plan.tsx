@@ -151,8 +151,17 @@ export function InstituteWeeklyPlan({
   };
 
   const tp = useTranslations('prayers');
+  const formatTime12h = (time: string) => {
+    if (!time || !time.includes(':')) return time;
+    const [h, m] = time.split(':');
+    const hour = parseInt(h, 10);
+    const ampm = hour >= 12 ? 'م' : 'ص';
+    const h12 = hour % 12 || 12;
+    return `${h12.toString().padStart(2, '0')}:${m} ${ampm}`;
+  };
+
   const formatAnchor = (a: { kind: string; value: string }) => {
-    return a.kind === 'prayer' ? tp(a.value) : a.value;
+    return a.kind === 'prayer' ? tp(a.value) : formatTime12h(a.value);
   };
 
   const DAYS: Weekday[] = ['sat', 'sun', 'mon', 'tue', 'wed', 'thu', 'fri'];
@@ -206,8 +215,9 @@ export function InstituteWeeklyPlan({
                   )}
                   {daySlots.map((slot, i) => {
                     const categoryObj = categories.find((c) => c.id === slot.categoryId);
-                    const catName = categoryObj?.name || (slot.categoryId ? t('category') : null);
-                    const teacherName = slot.teacherName || t('noTeacher');
+                    const catName = categoryObj?.name || null;
+                    const teacherName = slot.teacherName ? `أ. ${slot.teacherName}` : t('noTeacher');
+                    const showTeacher = !(slot.kind === 'recitation' && !slot.teacherId);
 
                     if (slot.type === 'completed') {
                       return (
@@ -260,10 +270,12 @@ export function InstituteWeeklyPlan({
                               <span className="truncate">{catName}</span>
                             </div>
                           )}
-                          <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                            <UserIcon className="h-3 w-3" />
-                            <span className="truncate">{teacherName}</span>
-                          </div>
+                          {showTeacher && (
+                            <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                              <UserIcon className="h-3 w-3" />
+                              <span className="truncate">{teacherName}</span>
+                            </div>
+                          )}
                           <div className="flex items-center gap-1 text-[10px] text-muted-foreground/80 mt-1">
                             <span className="bg-primary/10 text-primary px-1.5 py-0.5 rounded-sm">{slot.className ?? 'بدون حلقة'}</span>
                           </div>
@@ -314,10 +326,12 @@ export function InstituteWeeklyPlan({
                             <span className="truncate">{catName}</span>
                           </div>
                         )}
-                        <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                          <UserIcon className="h-3 w-3" />
-                          <span className="truncate">{teacherName}</span>
-                        </div>
+                        {showTeacher && (
+                          <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                            <UserIcon className="h-3 w-3" />
+                            <span className="truncate">{teacherName}</span>
+                          </div>
+                        )}
                       </div>
                     );
                   })}

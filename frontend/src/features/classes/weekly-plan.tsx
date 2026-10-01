@@ -150,8 +150,17 @@ export function WeeklyPlanView({
   };
 
   const tp = useTranslations('prayers');
+  const formatTime12h = (time: string) => {
+    if (!time || !time.includes(':')) return time;
+    const [h, m] = time.split(':');
+    const hour = parseInt(h, 10);
+    const ampm = hour >= 12 ? 'م' : 'ص';
+    const h12 = hour % 12 || 12;
+    return `${h12.toString().padStart(2, '0')}:${m} ${ampm}`;
+  };
+
   const formatAnchor = (a: { kind: string; value: string }) => {
-    return a.kind === 'prayer' ? tp(a.value) : a.value;
+    return a.kind === 'prayer' ? tp(a.value) : formatTime12h(a.value);
   };
 
   const DAYS: Weekday[] = ['sat', 'sun', 'mon', 'tue', 'wed', 'thu', 'fri'];
@@ -215,8 +224,10 @@ export function WeeklyPlanView({
                   )}
                   {daySlots.map((slot, i) => {
                     const categoryObj = categories.find((c) => c.id === slot.categoryId);
-                    const catName = categoryObj?.name || (slot.categoryId ? t('category') : null);
-                    const teacherName = slot.teacherName || teachers.find((t) => t.id === slot.teacherId)?.name || t('noTeacher');
+                    const catName = categoryObj?.name || null;
+                    const rawTeacherName = slot.teacherName || teachers.find((t) => t.id === slot.teacherId)?.name;
+                    const teacherName = rawTeacherName ? `أ. ${rawTeacherName}` : t('noTeacher');
+                    const showTeacher = !(slot.kind === 'recitation' && (!slot.teacherId && !rawTeacherName));
 
                     if (slot.type === 'completed') {
                       return (
@@ -269,10 +280,12 @@ export function WeeklyPlanView({
                               <span className="truncate">{catName}</span>
                             </div>
                           )}
-                          <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                            <UserIcon className="h-3 w-3" />
-                            <span className="truncate">{teacherName}</span>
-                          </div>
+                          {showTeacher && (
+                            <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                              <UserIcon className="h-3 w-3" />
+                              <span className="truncate">{teacherName}</span>
+                            </div>
+                          )}
                         </button>
                       );
                     }
@@ -320,10 +333,12 @@ export function WeeklyPlanView({
                             <span className="truncate">{catName}</span>
                           </div>
                         )}
-                        <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                          <UserIcon className="h-3 w-3" />
-                          <span className="truncate">{teacherName}</span>
-                        </div>
+                        {showTeacher && (
+                          <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                            <UserIcon className="h-3 w-3" />
+                            <span className="truncate">{teacherName}</span>
+                          </div>
+                        )}
 
                         {canManage && (
                           <Button
