@@ -137,7 +137,11 @@ export function StudentWeeklyPlanView({
                           type="button"
                           key={i}
                           onClick={() => slot.fullLesson && setViewLesson(slot.fullLesson)}
-                          className="relative bg-primary/5 border border-primary/20 rounded-md p-2.5 flex flex-col gap-1.5 hover:bg-primary/10 transition-colors text-start focus:outline-none focus:ring-2 focus:ring-primary/40"
+                          className={`relative border rounded-md p-2.5 flex flex-col gap-1.5 text-start focus:outline-none focus:ring-2 focus:ring-primary/40 ${
+                            slot.fullLesson
+                              ? 'bg-primary/5 border-primary/20 hover:bg-primary/10 transition-colors cursor-pointer'
+                              : 'bg-muted/30 border-border/40 cursor-default'
+                          }`}
                         >
                           <div className="absolute -top-2 -right-2 bg-primary text-primary-foreground text-[10px] w-5 h-5 rounded-full flex items-center justify-center font-bold shadow-sm">
                             {i + 1}

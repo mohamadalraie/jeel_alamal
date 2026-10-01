@@ -52,9 +52,6 @@ export class GetWeeklyPlanUseCase {
     if (!klass) throw new NotFoundError('Class not found');
 
     if (actor.role === UserRole.Student) {
-      if (!klass.lessonsVisibleToStudents) {
-        throw new ForbiddenError('Lessons are not visible to students');
-      }
       const current = await this.classes.findCurrentClassOfStudent(actor.userId);
       const intensive = await this.classes.findCurrentIntensiveClassOfStudent(actor.userId);
       if (current?.id !== classId && intensive?.id !== classId) {
@@ -63,6 +60,8 @@ export class GetWeeklyPlanUseCase {
     } else {
       await this.policy.assertStaffOf(actor, klass.instituteId);
     }
+
+    const canViewLessons = actor.role !== UserRole.Student || klass.lessonsVisibleToStudents;
 
     // Parse weekStart as UTC date at midnight to avoid timezone issues
     const startDate = new Date(`${weekStart}T00:00:00Z`);
@@ -185,7 +184,7 @@ export class GetWeeklyPlanUseCase {
             startTime: { kind: slot.start.kind, value: slot.start.value },
             endTime: slot.end ? { kind: slot.end.kind, value: slot.end.value } : null,
             isExceptional: false,
-            fullLesson: lesson,
+            fullLesson: canViewLessons ? lesson : undefined,
           });
         } else {
           // Unfulfilled template slot for this week (pending confirmation/setup by manager)
@@ -227,7 +226,7 @@ export class GetWeeklyPlanUseCase {
             kind: lesson.kind,
             expectedDurationMinutes: lesson.expectedDurationMinutes ?? null,
             isExceptional: true,
-            fullLesson: lesson,
+            fullLesson: canViewLessons ? lesson : undefined,
           });
         }
       }
