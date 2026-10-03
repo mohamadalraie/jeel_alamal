@@ -64,11 +64,9 @@ export function TakeAttendanceDialog({
 
   const activeRoster = roster;
 
-  // Default everyone in active roster to present.
-  const resetAllPresent = () => {
-    const next: Record<string, AttendanceStatus> = {};
-    for (const s of activeRoster) next[s.id] = 'present';
-    setStatuses(next);
+  // Default everyone to undefined (unchecked)
+  const resetAllUnchecked = () => {
+    setStatuses({});
   };
 
   // On each open transition, jump to the requested date (or today).
@@ -82,7 +80,7 @@ export function TakeAttendanceDialog({
 
   useEffect(() => {
     if (!open) return;
-    resetAllPresent();
+    resetAllUnchecked();
     getSessionAttendance(classId, date, undefined)
       .then((session) => {
         if (!session) return;
@@ -113,7 +111,7 @@ export function TakeAttendanceDialog({
         date,
         entries: activeRoster.map((s) => ({
           studentId: s.id,
-          status: statuses[s.id] ?? 'present',
+          status: statuses[s.id] ?? 'present', // fallback just in case
         })),
       });
       await Promise.all([
@@ -173,49 +171,113 @@ export function TakeAttendanceDialog({
           ))}
         </div>
 
+        {/* Progress bar */}
+        {activeRoster.length > 0 && (
+          <div className="flex flex-col gap-1 px-1">
+            <div className="flex justify-between text-xs text-muted-foreground font-medium">
+              <span>الإنجاز</span>
+              <span>{activeRoster.filter(s => statuses[s.id] !== undefined).length} / {activeRoster.length}</span>
+            </div>
+            <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden">
+              <div 
+                className="h-full bg-primary transition-all duration-300" 
+                style={{ width: `${(activeRoster.filter(s => statuses[s.id] !== undefined).length / activeRoster.length) * 100}%` }} 
+              />
+            </div>
+          </div>
+        )}
+
         {/* Roster */}
-        <div className="flex flex-col divide-y overflow-y-auto">
+        <div className="flex flex-col gap-4 overflow-y-auto pr-1">
           {activeRoster.length === 0 ? (
             <div className="p-6 text-center text-xs text-muted-foreground">
-              لا يوجد طلاب مضافون للمسار المكثف في هذه الحلقة بعد.
+              لا يوجد طلاب مضافون في هذه الحلقة بعد.
             </div>
           ) : (
-            activeRoster.map((s) => (
-              <div key={s.id} className="flex flex-col gap-1.5 py-2">
-                <span className="text-sm font-medium flex items-center justify-between">
-                  <span>{s.name}</span>
-                  {s.isIntensive && (
-                    <span className="text-[10px] bg-amber-500/10 text-amber-600 dark:text-amber-400 px-1.5 py-0.5 rounded border border-amber-500/20 font-semibold">
-                      ⚡ مسار مكثف
-                    </span>
-                  )}
-                </span>
-                <div className="flex flex-wrap gap-1.5">
-                {STATUS_ORDER.map((status) => {
-                  const active = (statuses[s.id] ?? 'present') === status;
-                  return (
-                    <button
-                      key={status}
-                      type="button"
-                      onClick={() => setStatus(s.id, status)}
-                      className={cn(
-                        'rounded-md border px-2.5 py-1 text-xs font-medium transition',
-                        active ? 'text-white' : 'hover:opacity-80',
-                      )}
-                      style={
-                        active
-                          ? { backgroundColor: STATUS_COLOR[status], borderColor: STATUS_COLOR[status] }
-                          : { borderColor: STATUS_COLOR[status], color: STATUS_COLOR[status] }
-                      }
-                    >
-                      {t(status)}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          ))
-        )}
+            <>
+              {/* Unchecked Students */}
+              {activeRoster.filter(s => statuses[s.id] === undefined).length > 0 && (
+                <div className="flex flex-col gap-2">
+                  <h4 className="text-sm font-semibold text-muted-foreground border-b pb-1">لم يتم التفقد</h4>
+                  <div className="flex flex-col divide-y">
+                    {activeRoster
+                      .filter((s) => statuses[s.id] === undefined)
+                      .map((s) => (
+                        <div key={s.id} className="flex flex-col gap-2 py-3 transition-all duration-500 animate-in fade-in slide-in-from-top-2">
+                          <span className="text-sm font-medium flex items-center justify-between">
+                            <span>{s.name}</span>
+                            {s.isIntensive && (
+                              <span className="text-[10px] bg-amber-500/10 text-amber-600 dark:text-amber-400 px-1.5 py-0.5 rounded border border-amber-500/20 font-semibold">
+                                ⚡ مكثف
+                              </span>
+                            )}
+                          </span>
+                          <div className="flex flex-wrap gap-1.5">
+                            {STATUS_ORDER.map((status) => {
+                              return (
+                                <button
+                                  key={status}
+                                  type="button"
+                                  onClick={() => setStatus(s.id, status)}
+                                  className="flex-1 rounded-md border px-2 py-1.5 text-xs font-medium transition hover:opacity-80 active:scale-95"
+                                  style={{ borderColor: STATUS_COLOR[status], color: STATUS_COLOR[status] }}
+                                >
+                                  {t(status)}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Checked Students */}
+              {activeRoster.filter(s => statuses[s.id] !== undefined).length > 0 && (
+                <div className="flex flex-col gap-2 mt-2">
+                  <h4 className="text-sm font-semibold text-muted-foreground border-b pb-1">تم تفقدّهم</h4>
+                  <div className="flex flex-col divide-y opacity-70">
+                    {activeRoster
+                      .filter((s) => statuses[s.id] !== undefined)
+                      .map((s) => (
+                        <div key={s.id} className="flex flex-col gap-2 py-2 transition-all duration-500 animate-in fade-in slide-in-from-top-2">
+                          <span className="text-sm font-medium flex items-center justify-between">
+                            <span>{s.name}</span>
+                            <span className="text-xs font-semibold" style={{ color: STATUS_COLOR[statuses[s.id]!] }}>
+                              {t(statuses[s.id]!)}
+                            </span>
+                          </span>
+                          <div className="flex flex-wrap gap-1.5 mt-1">
+                            {STATUS_ORDER.map((status) => {
+                              const active = statuses[s.id] === status;
+                              return (
+                                <button
+                                  key={status}
+                                  type="button"
+                                  onClick={() => setStatus(s.id, status)}
+                                  className={cn(
+                                    'rounded-md border px-2 py-1 text-[10px] font-medium transition',
+                                    active ? 'text-white' : 'hover:opacity-80',
+                                  )}
+                                  style={
+                                    active
+                                      ? { backgroundColor: STATUS_COLOR[status], borderColor: STATUS_COLOR[status] }
+                                      : { borderColor: STATUS_COLOR[status], color: STATUS_COLOR[status] }
+                                  }
+                                >
+                                  {t(status)}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      ))}
+                  </div>
+                </div>
+              )}
+            </>
+          )}
         </div>
 
         {error && <p role="alert" className="text-destructive text-sm">{error}</p>}
