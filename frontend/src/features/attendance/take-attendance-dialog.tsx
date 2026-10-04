@@ -163,8 +163,7 @@ export function TakeAttendanceDialog({
               key={s}
               type="button"
               onClick={() => markAll(s)}
-              className="rounded-md border px-2 py-1 text-xs font-medium transition hover:opacity-80"
-              style={{ borderColor: STATUS_COLOR[s], color: STATUS_COLOR[s] }}
+              className="rounded-md border border-muted bg-muted/30 px-2 py-1 text-xs font-medium text-muted-foreground transition hover:bg-muted"
             >
               {t('markAll')}: {t(s)}
             </button>
@@ -219,8 +218,7 @@ export function TakeAttendanceDialog({
                                   key={status}
                                   type="button"
                                   onClick={() => setStatus(s.id, status)}
-                                  className="flex-1 rounded-md border px-2 py-1.5 text-xs font-medium transition hover:opacity-80 active:scale-95"
-                                  style={{ borderColor: STATUS_COLOR[status], color: STATUS_COLOR[status] }}
+                                  className="flex-1 rounded-md border border-muted bg-muted/30 px-2 py-1.5 text-xs font-medium text-muted-foreground transition hover:bg-muted active:scale-95"
                                 >
                                   {t(status)}
                                 </button>
@@ -258,12 +256,12 @@ export function TakeAttendanceDialog({
                                   onClick={() => setStatus(s.id, status)}
                                   className={cn(
                                     'rounded-md border px-2 py-1 text-[10px] font-medium transition',
-                                    active ? 'text-white' : 'hover:opacity-80',
+                                    active ? 'text-white' : 'border-muted bg-muted/30 text-muted-foreground hover:bg-muted',
                                   )}
                                   style={
                                     active
                                       ? { backgroundColor: STATUS_COLOR[status], borderColor: STATUS_COLOR[status] }
-                                      : { borderColor: STATUS_COLOR[status], color: STATUS_COLOR[status] }
+                                      : {}
                                   }
                                 >
                                   {t(status)}
