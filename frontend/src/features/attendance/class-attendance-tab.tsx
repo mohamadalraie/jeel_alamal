@@ -4,9 +4,9 @@ import { useMemo, useState } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 import { AlertTriangle, Download } from 'lucide-react';
 import {
-  Bar,
-  BarChart,
-  Cell,
+  CartesianGrid,
+  Line,
+  LineChart,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -54,10 +54,14 @@ export function ClassAttendanceTab({ classId }: { classId: string }) {
     return [...(data?.sessions ?? [])]
       .filter((s) => !cutoff || s.date.slice(0, 10) >= cutoff)
       .reverse()
-      .map((s) => ({
-        date: new Date(s.date).toLocaleDateString(formatDateLocale(locale), { month: 'short', day: 'numeric' }),
-        rate: rateOf(s.counts),
-      }));
+      .map((s) => {
+        const d = new Date(s.date);
+        return {
+          timestamp: d.getTime(),
+          dateStr: d.toLocaleDateString(formatDateLocale(locale), { month: 'short', day: 'numeric' }),
+          rate: rateOf(s.counts),
+        };
+      });
   }, [data?.sessions, locale, range]);
 
   if (isLoading || !data) return <ListSkeleton />;
@@ -122,16 +126,34 @@ export function ClassAttendanceTab({ classId }: { classId: string }) {
               </CardHeader>
               <CardContent className="h-56">
                 <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={rateData}>
-                    <XAxis dataKey="date" tick={{ fontSize: 11, fill: 'currentColor' }} className="text-muted-foreground" />
+                  <LineChart data={rateData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} className="stroke-muted opacity-50" />
+                    <XAxis 
+                      dataKey="timestamp" 
+                      type="number"
+                      scale="time"
+                      domain={['dataMin', 'dataMax']}
+                      tickFormatter={(val) => new Date(val).toLocaleDateString(formatDateLocale(locale), { month: 'short', day: 'numeric' })}
+                      tick={{ fontSize: 11, fill: 'currentColor' }} 
+                      className="text-muted-foreground" 
+                      tickMargin={8}
+                    />
                     <YAxis domain={[0, 100]} tick={{ fontSize: 11, fill: 'currentColor' }} className="text-muted-foreground" width={32} />
-                    <Tooltip formatter={(v) => `٪${v}`} />
-                    <Bar dataKey="rate" name={t('rate')} radius={[4, 4, 0, 0]}>
-                      {rateData.map((_, i) => (
-                        <Cell key={i} fill="#16A34A" />
-                      ))}
-                    </Bar>
-                  </BarChart>
+                    <Tooltip 
+                      labelFormatter={(val) => new Date(val as number).toLocaleDateString(formatDateLocale(locale), { month: 'short', day: 'numeric', year: 'numeric' })}
+                      formatter={(v) => `٪${v}`} 
+                      contentStyle={{ borderRadius: '8px', fontSize: '13px' }}
+                    />
+                    <Line 
+                      type="monotone" 
+                      dataKey="rate" 
+                      name={t('rate')} 
+                      stroke="#16A34A" 
+                      strokeWidth={2}
+                      dot={{ fill: '#16A34A', r: 4, strokeWidth: 0 }}
+                      activeDot={{ r: 6 }}
+                    />
+                  </LineChart>
                 </ResponsiveContainer>
               </CardContent>
             </Card>
