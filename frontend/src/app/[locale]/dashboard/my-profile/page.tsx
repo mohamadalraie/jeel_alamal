@@ -42,7 +42,9 @@ export default function MyProfilePage() {
   const instituteId = user.instituteId ?? '';
   const { data: profile, isLoading } = useStudentProfile(instituteId, user.id);
   const classId = profile?.currentClass?.id ?? '';
+  const intensiveClassId = profile?.intensiveClass?.id ?? '';
   const { data: classProfile } = useClassProfile(classId);
+  const { data: intensiveClassProfile } = useClassProfile(intensiveClassId);
   const { data: recData } = useStudentRecitation(user.id);
 
   const chartData = useMemo(() => {
@@ -74,6 +76,9 @@ export default function MyProfilePage() {
           <TabsTrigger value="info">{t('basicInfo')}</TabsTrigger>
           <TabsTrigger value="analytics">الإحصائيات والإنجاز</TabsTrigger>
           <TabsTrigger value="class">{t('myClass')}</TabsTrigger>
+          {intensiveClassId && (
+            <TabsTrigger value="intensiveClass">المسار المكثف</TabsTrigger>
+          )}
           <TabsTrigger value="recitation">{tRec('tab')}</TabsTrigger>
           <TabsTrigger value="attendance">{tAtt('myAttendance')}</TabsTrigger>
           <TabsTrigger value="dinars">{tDin('tab')}</TabsTrigger>
@@ -136,6 +141,43 @@ export default function MyProfilePage() {
             </>
           )}
         </TabsContent>
+
+        {/* Tab 2.5: Intensive class — details + lesson times */}
+        {intensiveClassId && (
+          <TabsContent value="intensiveClass" className="flex flex-col gap-4 pt-4">
+            {!intensiveClassProfile ? (
+              <CardsSkeleton />
+            ) : (
+              <>
+                <Card>
+                  <CardHeader>
+                    <CardTitle>{intensiveClassProfile.class.name}</CardTitle>
+                  </CardHeader>
+                  {intensiveClassProfile.class.description && (
+                    <CardContent>
+                      <p className="text-muted-foreground text-sm">
+                        {intensiveClassProfile.class.description}
+                      </p>
+                    </CardContent>
+                  )}
+                </Card>
+                <Card>
+                  <CardHeader>
+                    <CardTitle>{t('lessonTimes')}</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <WeeklySchedule
+                      classId={profile.intensiveClass!.id}
+                      initial={intensiveClassProfile.schedule}
+                      canEdit={false}
+                      onSaved={() => {}}
+                    />
+                  </CardContent>
+                </Card>
+              </>
+            )}
+          </TabsContent>
+        )}
 
         {/* Tab 3: Recitation — read-only heart map + activity chart */}
         <TabsContent value="recitation" className="flex flex-col gap-4 pt-4">

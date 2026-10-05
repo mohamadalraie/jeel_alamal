@@ -185,6 +185,8 @@ export class GetWeeklyPlanUseCase {
             endTime: slot.end ? { kind: slot.end.kind, value: slot.end.value } : null,
             isExceptional: false,
             fullLesson: canViewLessons ? lesson : undefined,
+            classId: klass.id,
+            className: klass.name,
           });
         } else {
           // Unfulfilled template slot for this week (pending confirmation/setup by manager)
@@ -203,6 +205,8 @@ export class GetWeeklyPlanUseCase {
             expectedDurationMinutes: slot.expectedDurationMinutes ?? null,
             startTime: { kind: slot.start.kind, value: slot.start.value },
             endTime: slot.end ? { kind: slot.end.kind, value: slot.end.value } : null,
+            classId: klass.id,
+            className: klass.name,
           });
         }
       }
@@ -227,6 +231,8 @@ export class GetWeeklyPlanUseCase {
             expectedDurationMinutes: lesson.expectedDurationMinutes ?? null,
             isExceptional: true,
             fullLesson: canViewLessons ? lesson : undefined,
+            classId: klass.id,
+            className: klass.name,
           });
         }
       }

@@ -188,6 +188,12 @@ export function StudentWeeklyPlanView({
                             </div>
                           )}
 
+                          {slot.className && (
+                            <div className="text-[10px] text-muted-foreground truncate bg-muted/40 w-fit px-1.5 py-0.5 rounded border">
+                              {slot.className}
+                            </div>
+                          )}
+
                           {catName && (
                             <div className="flex items-center gap-1 text-xs text-muted-foreground">
                               {categoryObj?.color && (
@@ -240,6 +246,12 @@ export function StudentWeeklyPlanView({
                             {slot.subjectName}
                           </div>
                         ) : null}
+
+                        {slot.className && (
+                          <div className="text-[10px] text-muted-foreground truncate bg-muted/40 w-fit px-1.5 py-0.5 rounded border mt-0.5">
+                            {slot.className}
+                          </div>
+                        )}
                         
                         {catName && (
                           <div className="flex items-center gap-1 text-xs text-muted-foreground">
