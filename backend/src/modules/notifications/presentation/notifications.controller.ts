@@ -77,7 +77,7 @@ export class NotificationsController {
       userId: actor.userId,
       title: 'جيل العمل — إشعار تجريبي 📲',
       message: 'وصلك هذا الإشعار في الخلفية بنجاح! نظام الإشعارات يعمل بكفاءة.',
-      link: '/notifications',
+      link: '/dashboard',
       type: 'test',
     });
     return { success: true, message: 'Test notification queued' };

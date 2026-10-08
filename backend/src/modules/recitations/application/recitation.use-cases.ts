@@ -114,7 +114,7 @@ export class AddRecitationUseCase {
       userId: studentId,
       title: '📖 تسميع جديد',
       message: `تم تسجيل تسميع ${surahName} (من الآية ${dto.fromAyah} إلى ${dto.toAyah})`,
-      link: '/recitations',
+      link: '/dashboard/my-profile?tab=recitation',
       type: 'recitation',
     }).catch(() => {});
   }

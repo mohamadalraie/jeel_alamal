@@ -11,6 +11,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Badge } from '@/components/ui/badge';
+import { useInstitute } from '@/features/layout/institute-context';
 
 export interface NotificationItem {
   id: string;
@@ -32,6 +33,7 @@ import {
 
 export function NotificationBell() {
   const router = useRouter();
+  const { user } = useInstitute();
   const [unreadCount, setUnreadCount] = useState<number>(0);
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [open, setOpen] = useState(false);
@@ -114,7 +116,18 @@ export function NotificationBell() {
     }
     if (n.link) {
       setOpen(false);
-      router.push(n.link);
+      let targetLink = n.link;
+      
+      // Patch legacy links
+      if (targetLink === '/recitations') {
+        targetLink = '/dashboard/my-profile?tab=recitation';
+      } else if (targetLink === '/notifications') {
+        targetLink = '/dashboard';
+      } else if (targetLink === '/dashboard/my-lessons' && user?.role === 'student') {
+        targetLink = '/dashboard/my-schedule';
+      }
+      
+      router.push(targetLink);
     }
   };
 

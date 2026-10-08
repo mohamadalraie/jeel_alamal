@@ -197,7 +197,7 @@ export class CreateLessonUseCase extends LessonBase {
           title: `درس جديد: ${lesson.name || 'جلسة تسميع'}`,
           message: `تمت إضافة درس جديد بتاريخ ${lesson.date}`,
           type: 'lesson',
-          link: '/dashboard/my-lessons',
+          link: '/dashboard/my-schedule',
         });
       }
 
