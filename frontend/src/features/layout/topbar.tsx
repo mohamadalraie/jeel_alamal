@@ -122,7 +122,7 @@ export function Topbar() {
               <ChevronDown className="size-4" />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
+          <DropdownMenuContent align="end" className="w-56">
             <DropdownMenuLabel className="font-normal">
               <div className="flex flex-col">
                 <span className="font-medium">
