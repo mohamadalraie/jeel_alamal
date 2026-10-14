@@ -95,15 +95,15 @@ export default async function LocaleLayout({
       suppressHydrationWarning
     >
       <body className="bg-background text-foreground min-h-full font-sans">
-        <ThemeProvider>
-          <QueryProvider>
-            <NextIntlClientProvider messages={messages}>
+        <NextIntlClientProvider locale={locale} messages={messages}>
+          <ThemeProvider dir={direction}>
+            <QueryProvider>
               {children}
               <PwaInstallBanner />
               <Toaster richColors position="top-center" dir={direction} />
-            </NextIntlClientProvider>
-          </QueryProvider>
-        </ThemeProvider>
+            </QueryProvider>
+          </ThemeProvider>
+        </NextIntlClientProvider>
       </body>
     </html>
   );
