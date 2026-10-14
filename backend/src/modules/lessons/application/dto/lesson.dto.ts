@@ -167,15 +167,29 @@ export class SetLessonsVisibilityDto {
   visible: boolean;
 }
 
-// ── Lesson settings (spec 009) ──
+// ── Lesson settings (spec 009 & 012) ──
 export class UpdateLessonSettingsDto {
+  @IsOptional()
   @IsInt()
   @Min(0)
   @Max(120)
-  durationThresholdMinutes: number;
+  durationThresholdMinutes?: number;
 
+  @IsOptional()
   @IsBoolean()
-  durationStatusEnabled: boolean;
+  durationStatusEnabled?: boolean;
+
+  @IsOptional()
+  @IsString()
+  webhookUrl?: string;
+
+  @IsOptional()
+  @IsString()
+  webhookSecret?: string;
+
+  @IsOptional()
+  @IsBoolean()
+  webhookEnabled?: boolean;
 }
 
 // ── Read models returned to the presentation layer ──
@@ -210,6 +224,11 @@ export interface ProgramEntryView {
   actualEndTime: string | null;
   teacher: { id: string; name: string };
   className: string;
+  classId?: string;
+  isMaterialized?: boolean;
+  scheduleSlotId?: string | null;
+  startTime?: { kind: string; value: string };
+  endTime?: { kind: string; value: string } | null;
   sources: {
     kind: LessonSourceKind;
     url: string;
@@ -262,10 +281,13 @@ export interface InstituteLessonView {
   }[];
 }
 
-/** Per-institute lesson settings returned to the manager (spec 009). */
+/** Per-institute lesson settings returned to the manager (spec 009 & 012). */
 export interface LessonSettingsView {
   durationThresholdMinutes: number;
   durationStatusEnabled: boolean;
+  webhookUrl?: string | null;
+  webhookSecret?: string | null;
+  webhookEnabled?: boolean;
 }
 
 /** The teacher timer page payload for one binding (spec 009). */

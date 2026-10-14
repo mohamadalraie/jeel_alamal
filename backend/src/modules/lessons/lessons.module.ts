@@ -41,13 +41,22 @@ import {
   GetLessonSettingsUseCase,
   UpdateLessonSettingsUseCase,
 } from './application/lesson-settings.use-cases';
+import { MaterializeScheduledLessonUseCase } from './application/materialize-scheduled-lesson.use-case';
+import { SubmitLessonReportUseCase } from './application/submit-lesson-report.use-case';
+import { GetLessonReportUseCase } from './application/get-lesson-report.use-case';
+import { UpdateLessonReportUseCase } from './application/update-lesson-report.use-case';
+import { RetryLessonReportWebhookUseCase } from './application/retry-lesson-report-webhook.use-case';
 import { LESSON_REPOSITORY } from './domain/lesson.repository';
 import { LESSON_SETTINGS_REPOSITORY } from './domain/lesson-settings.repository';
+import { LESSON_REPORT_REPOSITORY } from './domain/lesson-report.repository';
+import { WEBHOOK_DISPATCHER } from './domain/webhook-dispatcher.port';
 import { DrizzleLessonRepository } from './infrastructure/persistence/drizzle-lesson.repository';
 import { DrizzleLessonSettingsRepository } from './infrastructure/persistence/drizzle-lesson-settings.repository';
+import { DrizzleLessonReportRepository } from './infrastructure/persistence/drizzle-lesson-report.repository';
+import { HttpWebhookDispatcher } from './infrastructure/webhook/http-webhook.dispatcher';
 
 /**
- * Class lessons program (الدروس) — spec 008. Reuses USER_REPOSITORY,
+ * Class lessons program (الدروس) — spec 008, 009 & 012. Reuses USER_REPOSITORY,
  * CLASS_REPOSITORY, InstituteAccessPolicy, and MANAGER_ASSIGNMENTS from the
  * modules it imports.
  */
@@ -80,10 +89,23 @@ import { DrizzleLessonSettingsRepository } from './infrastructure/persistence/dr
     GetLessonTimerUseCase,
     GetLessonSettingsUseCase,
     UpdateLessonSettingsUseCase,
+    MaterializeScheduledLessonUseCase,
+    SubmitLessonReportUseCase,
+    GetLessonReportUseCase,
+    UpdateLessonReportUseCase,
+    RetryLessonReportWebhookUseCase,
     { provide: LESSON_REPOSITORY, useClass: DrizzleLessonRepository },
     {
       provide: LESSON_SETTINGS_REPOSITORY,
       useClass: DrizzleLessonSettingsRepository,
+    },
+    {
+      provide: LESSON_REPORT_REPOSITORY,
+      useClass: DrizzleLessonReportRepository,
+    },
+    {
+      provide: WEBHOOK_DISPATCHER,
+      useClass: HttpWebhookDispatcher,
     },
   ],
   exports: [LESSON_REPOSITORY],

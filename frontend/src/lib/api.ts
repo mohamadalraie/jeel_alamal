@@ -46,6 +46,10 @@ import type {
   DinarLedgerItem,
   StudentDinars,
   DinarLeaderboard,
+  LessonReport,
+  MaterializeScheduledLessonInput,
+  SubmitLessonReportInput,
+  UpdateLessonReportInput,
 } from './types';
 
 /**
@@ -570,4 +574,34 @@ export const getStudentDinars = (studentId: string) =>
 export const getDinarLeaderboard = (instituteId: string, classId?: string) =>
   request<DinarLeaderboard>(
     `/api/institutes/${instituteId}/dinar-leaderboard${classId ? `?classId=${classId}` : ''}`,
+  );
+
+// ── Spec 012: Materialization & Lesson Reports ──
+export const materializeScheduledLesson = (input: MaterializeScheduledLessonInput) =>
+  post<{ lessonId: string; lessonClassId: string; started: boolean }>(
+    '/api/lesson-classes/materialize',
+    input,
+  );
+
+export const submitLessonReport = (
+  lessonClassId: string,
+  input: SubmitLessonReportInput,
+) =>
+  post<{ reportId: string; webhookStatus: string }>(
+    `/api/lesson-classes/${lessonClassId}/report`,
+    input,
+  );
+
+export const getLessonReport = (lessonClassId: string) =>
+  request<LessonReport>(`/api/lesson-classes/${lessonClassId}/report`);
+
+export const updateLessonReport = (
+  lessonClassId: string,
+  input: UpdateLessonReportInput,
+) =>
+  patch<void>(`/api/lesson-classes/${lessonClassId}/report`, input);
+
+export const retryLessonReportWebhook = (lessonClassId: string) =>
+  post<{ success: boolean; error?: string }>(
+    `/api/lesson-classes/${lessonClassId}/report/retry-webhook`,
   );

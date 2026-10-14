@@ -12,6 +12,9 @@ const toSettings = (r: LessonSettingsRow): LessonSettings =>
     instituteId: r.instituteId,
     durationThresholdMinutes: r.durationThresholdMinutes,
     durationStatusEnabled: r.durationStatusEnabled,
+    webhookUrl: r.webhookUrl ?? null,
+    webhookSecret: r.webhookSecret ?? null,
+    webhookEnabled: r.webhookEnabled ?? false,
     updatedAt: r.updatedAt,
   });
 
@@ -36,6 +39,9 @@ export class DrizzleLessonSettingsRepository implements LessonSettingsRepository
         instituteId: settings.instituteId,
         durationThresholdMinutes: settings.durationThresholdMinutes,
         durationStatusEnabled: settings.durationStatusEnabled,
+        webhookUrl: settings.webhookUrl,
+        webhookSecret: settings.webhookSecret,
+        webhookEnabled: settings.webhookEnabled,
         updatedAt: settings.updatedAt,
       })
       .onConflictDoUpdate({
@@ -43,6 +49,9 @@ export class DrizzleLessonSettingsRepository implements LessonSettingsRepository
         set: {
           durationThresholdMinutes: settings.durationThresholdMinutes,
           durationStatusEnabled: settings.durationStatusEnabled,
+          webhookUrl: settings.webhookUrl,
+          webhookSecret: settings.webhookSecret,
+          webhookEnabled: settings.webhookEnabled,
           updatedAt: settings.updatedAt,
         },
       });

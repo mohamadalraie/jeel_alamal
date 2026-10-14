@@ -30,6 +30,7 @@ export const qk = {
   myLessons: ['my-lessons'] as const,
   lessonTimer: (id: string) => ['lesson-timer', id] as const,
   lessonSettings: (id: string) => ['lesson-settings', id] as const,
+  lessonReport: (id: string) => ['lesson-report', id] as const,
   dinarRules: (id: string) => ['dinar-rules', id] as const,
   studentDinars: (id: string) => ['student-dinars', id] as const,
   dinarLeaderboard: (instituteId: string, classId: string) =>
@@ -195,6 +196,13 @@ export const useLessonSettings = (instituteId?: string) =>
     queryKey: qk.lessonSettings(instituteId ?? ''),
     queryFn: () => api.getLessonSettings(instituteId!),
     enabled: !!instituteId,
+  });
+
+export const useLessonReport = (lessonClassId?: string) =>
+  useQuery({
+    queryKey: qk.lessonReport(lessonClassId ?? ''),
+    queryFn: () => api.getLessonReport(lessonClassId!),
+    enabled: !!lessonClassId,
   });
 
 export const useClassAttendance = (classId: string) =>

@@ -39,6 +39,8 @@ export const toEntryView = (
   actualEndTime: e.actualEndTime?.toISOString() ?? null,
   teacher: e.teacher,
   className: e.className,
+  classId: e.classId,
+  isMaterialized: true,
   sources: e.sources,
 });
 

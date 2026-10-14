@@ -142,6 +142,9 @@ export const lessonSettings = pgTable('lesson_settings', {
   durationStatusEnabled: boolean('duration_status_enabled')
     .notNull()
     .default(true),
+  webhookUrl: varchar('webhook_url', { length: 500 }),
+  webhookSecret: varchar('webhook_secret', { length: 255 }),
+  webhookEnabled: boolean('webhook_enabled').notNull().default(false),
   updatedAt: timestamp('updated_at', { withTimezone: true })
     .notNull()
     .defaultNow(),

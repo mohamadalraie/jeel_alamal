@@ -477,6 +477,9 @@ export type LessonBindingStatus =
 export interface LessonSettings {
   durationThresholdMinutes: number;
   durationStatusEnabled: boolean;
+  webhookUrl?: string | null;
+  webhookSecret?: string | null;
+  webhookEnabled?: boolean;
 }
 
 /** The teacher timer page payload for one lesson-class binding. */
@@ -556,7 +559,68 @@ export interface ProgramEntry {
   actualEndTime: string | null;
   teacher: { id: string; name: string };
   className: string;
+  classId?: string;
+  isMaterialized?: boolean;
+  scheduleSlotId?: string | null;
+  startTime?: { kind: string; value: string };
+  endTime?: { kind: string; value: string } | null;
   sources: LessonSourceView[];
+}
+
+export type LessonReportWebhookStatus =
+  | 'pending'
+  | 'sent'
+  | 'failed'
+  | 'disabled';
+
+export interface LessonReport {
+  id: string;
+  lessonClassId: string;
+  lessonId: string;
+  lessonTitle: string | null;
+  subjectName: string | null;
+  className: string;
+  teacherName: string | null;
+  date: string;
+  actualDurationMinutes: number | null;
+  expectedDurationMinutes: number | null;
+  mainIdeas: string;
+  positives?: string | null;
+  negatives?: string | null;
+  teacherNotes?: string | null;
+  submittedBy: string;
+  webhookStatus: LessonReportWebhookStatus;
+  webhookError?: string | null;
+  webhookSentAt?: string | null;
+  createdAt: string;
+  updatedAt: string;
+  canEdit: boolean;
+}
+
+export interface MaterializeScheduledLessonInput {
+  classId: string;
+  date: string;
+  scheduleSlotId?: string;
+  kind: LessonKind;
+  name?: string;
+  subjectId?: string;
+  categoryId?: string;
+  description?: string;
+  expectedDurationMinutes?: number;
+  startImmediately?: boolean;
+}
+
+export interface SubmitLessonReportInput {
+  mainIdeas: string;
+  positives?: string;
+  negatives?: string;
+  teacherNotes?: string;
+}
+
+export interface UpdateLessonReportInput {
+  mainIdeas?: string;
+  positives?: string;
+  negatives?: string;
 }
 
 export interface ClassProgram {

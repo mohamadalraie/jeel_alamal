@@ -71,13 +71,24 @@ export function LessonCard({
                 <span className="text-muted-foreground text-xs font-medium">{index}.</span>
               )}
               <BookOpen className="text-primary size-4 shrink-0" />
-              {isRecitation ? t('recitation') : entry.name}
+              {isRecitation
+                ? t('recitation')
+                : (entry.name || entry.subjectName || t('scheduledSlot'))}
             </span>
             <div onClick={(e) => e.stopPropagation()}>{actions}</div>
           </div>
 
           <div className="flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
-            {showStatus && <LessonStatusBadge status={entry.status} />}
+            {entry.isMaterialized === false ? (
+              <Badge
+                variant="outline"
+                className="border-amber-500/40 bg-amber-500/10 text-amber-600 dark:text-amber-400 text-[10px]"
+              >
+                {t('unmaterializedBadge')}
+              </Badge>
+            ) : (
+              showStatus && <LessonStatusBadge status={entry.status} />
+            )}
             {entry.category && (
               <span
                 className="inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[11px] font-medium"

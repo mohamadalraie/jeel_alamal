@@ -1,7 +1,7 @@
 <!-- SPECKIT START -->
 For additional context about technologies to be used, project structure,
 shell commands, and other important information, read the current plan:
-`specs/010-dinars/plan.md` (Dinars — نظام الدنانير).
+`specs/012-lesson-scheduling-reports/plan.md` (Scheduled Lessons Materialization & Lesson Reports).
 <!-- SPECKIT END -->
 
 # جيل العمل / Jeel Alamal

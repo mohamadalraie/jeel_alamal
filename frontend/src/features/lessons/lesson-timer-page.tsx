@@ -2,19 +2,20 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
-import { ArrowLeft, ArrowRight, BookOpen, Clock, Play } from 'lucide-react';
+import { ArrowLeft, ArrowRight, BookOpen, Clock, FileText, Play } from 'lucide-react';
 import { useRouter } from '@/i18n/navigation';
-import { endLesson, startLesson } from '@/lib/api';
+import { startLesson } from '@/lib/api';
 import { useLessonTimer, useQueryClient, qk } from '@/lib/queries';
 import { notify } from '@/lib/toast';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { ListSkeleton } from '@/features/shared/skeletons';
 import { EmptyState } from '@/features/shared/empty-state';
-import { ConfirmDialog } from '@/features/shared/confirm-dialog';
 import { LessonStatusBadge } from './lesson-status-badge';
 import { LessonTimerDinars } from './lesson-timer-dinars';
 import { LessonTimerNotes } from './lesson-timer-notes';
+import { LessonReportDialog } from './lesson-report-dialog';
+import { LessonReportViewDialog } from './lesson-report-view-dialog';
 
 /** Format a whole number of seconds as MM:SS (or HH:MM:SS past an hour). */
 function formatElapsed(totalSeconds: number): string {
@@ -27,9 +28,8 @@ function formatElapsed(totalSeconds: number): string {
 }
 
 /**
- * The teacher's live lesson timer (spec 009). Counts up from the server-recorded
- * `actualStartTime`, so a page refresh reconstructs the elapsed time exactly
- * without restarting. Ending the lesson computes the final status server-side.
+ * The teacher's live lesson timer (spec 009 & 012). Counts up from the server-recorded
+ * `actualStartTime`, and prompts for a comprehensive Lesson Report upon ending.
  */
 export function LessonTimerPage({ lessonClassId }: { lessonClassId: string }) {
   const t = useTranslations('lessons');
@@ -42,6 +42,8 @@ export function LessonTimerPage({ lessonClassId }: { lessonClassId: string }) {
   const { data, isLoading, isError } = useLessonTimer(lessonClassId);
   const [now, setNow] = useState(() => Date.now());
   const [busy, setBusy] = useState(false);
+  const [reportDialogOpen, setReportDialogOpen] = useState(false);
+  const [viewReportOpen, setViewReportOpen] = useState(false);
 
   // Tick every second only while the lesson is running.
   const running = data?.status === 'started' && !!data.actualStartTime;
@@ -63,9 +65,8 @@ export function LessonTimerPage({ lessonClassId }: { lessonClassId: string }) {
   if (isLoading) return <ListSkeleton />;
   if (isError || !data) return <EmptyState icon={BookOpen} title={t('timerNotFound')} />;
 
-  const title = data.kind === 'recitation' ? t('recitation') : data.name;
+  const title = data.kind === 'recitation' ? t('recitation') : (data.name ?? t('lesson'));
   const expected = data.expectedDurationMinutes;
-  // Progress against expected (visual only; capped at 100%).
   const expectedSeconds = expected != null ? expected * 60 : null;
   const progress =
     expectedSeconds && expectedSeconds > 0
@@ -82,27 +83,6 @@ export function LessonTimerPage({ lessonClassId }: { lessonClassId: string }) {
     } catch (err) {
       notify.error(err, tc('error'));
     } finally {
-      setBusy(false);
-    }
-  }
-
-  async function end() {
-    setBusy(true);
-    try {
-      const result = await endLesson(lessonClassId);
-      await Promise.all([
-        refreshTimer(),
-        qc.invalidateQueries({
-          predicate: (q) =>
-            ['my-lessons', 'class-lessons', 'institute-lessons'].includes(
-              q.queryKey[0] as string,
-            ),
-        }),
-      ]);
-      notify.success(t(`status_${result.status}`));
-      back();
-    } catch (err) {
-      notify.error(err, tc('error'));
       setBusy(false);
     }
   }
@@ -162,19 +142,15 @@ export function LessonTimerPage({ lessonClassId }: { lessonClassId: string }) {
                   </span>
                 </div>
               )}
-              <ConfirmDialog
-                title={t('endLesson')}
-                message={t('endLessonConfirm')}
-                confirmText={t('endLesson')}
-                variant="default"
-                showSuccessToast={false}
-                onConfirm={end}
-                trigger={
-                  <Button size="lg" className="w-full" disabled={busy}>
-                    {t('endLesson')}
-                  </Button>
-                }
-              />
+              <Button
+                size="lg"
+                className="w-full gap-2 font-semibold"
+                disabled={busy}
+                onClick={() => setReportDialogOpen(true)}
+              >
+                <FileText className="size-4" />
+                {t('endLessonAndWriteReport')}
+              </Button>
             </>
           )}
 
@@ -196,9 +172,19 @@ export function LessonTimerPage({ lessonClassId }: { lessonClassId: string }) {
 
           {/* Terminal — already ended */}
           {data.status !== 'pending' && data.status !== 'started' && (
-            <Button variant="secondary" className="w-full" onClick={back}>
-              {t('back')}
-            </Button>
+            <div className="flex w-full flex-col gap-2">
+              <Button
+                variant="default"
+                className="w-full gap-2"
+                onClick={() => setViewReportOpen(true)}
+              >
+                <FileText className="size-4" />
+                {t('viewLessonReport')}
+              </Button>
+              <Button variant="secondary" className="w-full" onClick={back}>
+                {t('back')}
+              </Button>
+            </div>
           )}
         </CardContent>
       </Card>
@@ -210,6 +196,31 @@ export function LessonTimerPage({ lessonClassId }: { lessonClassId: string }) {
           <LessonTimerNotes instituteId={data.instituteId} classId={data.classId} />
         </>
       )}
+
+      {/* Lesson Report Dialog on End */}
+      <LessonReportDialog
+        open={reportDialogOpen}
+        onOpenChange={setReportDialogOpen}
+        lessonClassId={lessonClassId}
+        lessonTitle={title}
+        className={data.className}
+        onSuccess={() => {
+          qc.invalidateQueries({
+            predicate: (q) =>
+              ['my-lessons', 'class-lessons', 'institute-lessons', 'lesson-report'].includes(
+                q.queryKey[0] as string,
+              ),
+          });
+          back();
+        }}
+      />
+
+      {/* Lesson Report View Dialog */}
+      <LessonReportViewDialog
+        open={viewReportOpen}
+        onOpenChange={setViewReportOpen}
+        lessonClassId={lessonClassId}
+      />
     </div>
   );
 }

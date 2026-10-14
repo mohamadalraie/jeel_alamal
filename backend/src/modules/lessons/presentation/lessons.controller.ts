@@ -51,6 +51,16 @@ import {
   GetLessonSettingsUseCase,
   UpdateLessonSettingsUseCase,
 } from '../application/lesson-settings.use-cases';
+import { MaterializeScheduledLessonUseCase } from '../application/materialize-scheduled-lesson.use-case';
+import { SubmitLessonReportUseCase } from '../application/submit-lesson-report.use-case';
+import { GetLessonReportUseCase } from '../application/get-lesson-report.use-case';
+import { UpdateLessonReportUseCase } from '../application/update-lesson-report.use-case';
+import { RetryLessonReportWebhookUseCase } from '../application/retry-lesson-report-webhook.use-case';
+import { MaterializeScheduledLessonDto } from '../application/dto/materialize-lesson.dto';
+import {
+  SubmitLessonReportDto,
+  UpdateLessonReportDto,
+} from '../application/dto/lesson-report.dto';
 import {
   CreateCategoryDto,
   CreateLessonDto,
@@ -88,6 +98,11 @@ export class LessonsController {
     private readonly getLessonTimer: GetLessonTimerUseCase,
     private readonly getLessonSettings: GetLessonSettingsUseCase,
     private readonly updateLessonSettings: UpdateLessonSettingsUseCase,
+    private readonly materializeLesson: MaterializeScheduledLessonUseCase,
+    private readonly submitReport: SubmitLessonReportUseCase,
+    private readonly getReport: GetLessonReportUseCase,
+    private readonly updateReport: UpdateLessonReportUseCase,
+    private readonly retryWebhook: RetryLessonReportWebhookUseCase,
   ) {}
 
   // ── Categories ──
@@ -332,5 +347,51 @@ export class LessonsController {
     @Body() dto: UpdateLessonSettingsDto,
   ) {
     return this.updateLessonSettings.execute(actor, instituteId, dto);
+  }
+
+  // ── Spec 012: Materialization & Lesson Reports ──
+  @Post('lesson-classes/materialize')
+  @HttpCode(HttpStatus.CREATED)
+  materializeScheduledSlot(
+    @CurrentUser() actor: Actor,
+    @Body() dto: MaterializeScheduledLessonDto,
+  ) {
+    return this.materializeLesson.execute(actor, dto);
+  }
+
+  @Post('lesson-classes/:lessonClassId/report')
+  @HttpCode(HttpStatus.CREATED)
+  submitLessonReport(
+    @CurrentUser() actor: Actor,
+    @Param('lessonClassId', ParseUUIDPipe) lessonClassId: string,
+    @Body() dto: SubmitLessonReportDto,
+  ) {
+    return this.submitReport.execute(actor, lessonClassId, dto);
+  }
+
+  @Get('lesson-classes/:lessonClassId/report')
+  getLessonReport(
+    @CurrentUser() actor: Actor,
+    @Param('lessonClassId', ParseUUIDPipe) lessonClassId: string,
+  ) {
+    return this.getReport.execute(actor, lessonClassId);
+  }
+
+  @Patch('lesson-classes/:lessonClassId/report')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async updateLessonReport(
+    @CurrentUser() actor: Actor,
+    @Param('lessonClassId', ParseUUIDPipe) lessonClassId: string,
+    @Body() dto: UpdateLessonReportDto,
+  ) {
+    await this.updateReport.execute(actor, lessonClassId, dto);
+  }
+
+  @Post('lesson-classes/:lessonClassId/report/retry-webhook')
+  retryReportWebhook(
+    @CurrentUser() actor: Actor,
+    @Param('lessonClassId', ParseUUIDPipe) lessonClassId: string,
+  ) {
+    return this.retryWebhook.execute(actor, lessonClassId);
   }
 }

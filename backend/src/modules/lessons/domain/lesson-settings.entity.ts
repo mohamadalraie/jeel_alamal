@@ -9,13 +9,16 @@ interface LessonSettingsProps {
   instituteId: string;
   durationThresholdMinutes: number;
   durationStatusEnabled: boolean;
+  webhookUrl: string | null;
+  webhookSecret: string | null;
+  webhookEnabled: boolean;
   updatedAt: Date;
 }
 
 /**
- * Per-institute lesson settings (spec 009). Governs how a finished lesson's
- * actual duration is compared against its expected duration. The identity is
- * the institute id (one row per institute), created on first save (upsert).
+ * Per-institute lesson settings (spec 009 & 012). Governs how a finished lesson's
+ * actual duration is compared against its expected duration, plus n8n Webhook
+ * settings for WhatsApp integration.
  */
 export class LessonSettings extends Entity<string> {
   private constructor(
@@ -31,6 +34,9 @@ export class LessonSettings extends Entity<string> {
       instituteId,
       durationThresholdMinutes: DEFAULT_DURATION_THRESHOLD_MINUTES,
       durationStatusEnabled: true,
+      webhookUrl: null,
+      webhookSecret: null,
+      webhookEnabled: false,
       updatedAt: new Date(),
     });
   }
@@ -43,20 +49,45 @@ export class LessonSettings extends Entity<string> {
   }
 
   update(input: {
-    durationThresholdMinutes: number;
-    durationStatusEnabled: boolean;
+    durationThresholdMinutes?: number;
+    durationStatusEnabled?: boolean;
+    webhookUrl?: string | null;
+    webhookSecret?: string | null;
+    webhookEnabled?: boolean;
   }): void {
-    if (
-      !Number.isInteger(input.durationThresholdMinutes) ||
-      input.durationThresholdMinutes < 0 ||
-      input.durationThresholdMinutes > MAX_DURATION_THRESHOLD_MINUTES
-    ) {
-      throw new BusinessRuleError(
-        `Threshold must be a whole number between 0 and ${MAX_DURATION_THRESHOLD_MINUTES} minutes`,
-      );
+    if (input.durationThresholdMinutes !== undefined) {
+      if (
+        !Number.isInteger(input.durationThresholdMinutes) ||
+        input.durationThresholdMinutes < 0 ||
+        input.durationThresholdMinutes > MAX_DURATION_THRESHOLD_MINUTES
+      ) {
+        throw new BusinessRuleError(
+          `Threshold must be a whole number between 0 and ${MAX_DURATION_THRESHOLD_MINUTES} minutes`,
+        );
+      }
+      this.props.durationThresholdMinutes = input.durationThresholdMinutes;
     }
-    this.props.durationThresholdMinutes = input.durationThresholdMinutes;
-    this.props.durationStatusEnabled = input.durationStatusEnabled;
+
+    if (input.durationStatusEnabled !== undefined) {
+      this.props.durationStatusEnabled = input.durationStatusEnabled;
+    }
+
+    if (input.webhookUrl !== undefined) {
+      const url = input.webhookUrl?.trim() || null;
+      if (url && !/^https?:\/\//i.test(url)) {
+        throw new BusinessRuleError('Webhook URL must begin with http:// or https://');
+      }
+      this.props.webhookUrl = url;
+    }
+
+    if (input.webhookSecret !== undefined) {
+      this.props.webhookSecret = input.webhookSecret?.trim() || null;
+    }
+
+    if (input.webhookEnabled !== undefined) {
+      this.props.webhookEnabled = input.webhookEnabled;
+    }
+
     this.props.updatedAt = new Date();
   }
 
@@ -91,6 +122,15 @@ export class LessonSettings extends Entity<string> {
   }
   get durationStatusEnabled() {
     return this.props.durationStatusEnabled;
+  }
+  get webhookUrl() {
+    return this.props.webhookUrl;
+  }
+  get webhookSecret() {
+    return this.props.webhookSecret;
+  }
+  get webhookEnabled() {
+    return this.props.webhookEnabled;
   }
   get updatedAt() {
     return this.props.updatedAt;
