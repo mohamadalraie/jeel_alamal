@@ -1,6 +1,8 @@
 import { setRequestLocale } from 'next-intl/server';
 import { AppShell } from '@/features/layout/app-shell';
 
+export const dynamic = 'force-dynamic';
+
 export default async function DashboardLayout({
   children,
   params,

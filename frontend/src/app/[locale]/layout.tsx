@@ -18,10 +18,7 @@ const tajawal = Tajawal({
   variable: '--font-tajawal',
 });
 
-// Pre-render both locales at build time.
-export function generateStaticParams() {
-  return routing.locales.map((locale) => ({ locale }));
-}
+export const dynamic = 'force-dynamic';
 
 // Mobile-first viewport.
 export const viewport: Viewport = {
