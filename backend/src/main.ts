@@ -216,6 +216,30 @@ async function runAutoMigrations(config: ConfigService) {
     await safeQuery(`ALTER TABLE "class_schedule" ADD COLUMN IF NOT EXISTS "sort" smallint DEFAULT 0 NOT NULL;`, 'class_schedule.sort');
     await safeQuery(`ALTER TABLE "lessons" ADD COLUMN IF NOT EXISTS "subject_id" uuid REFERENCES "public"."lesson_subjects"("id") ON DELETE SET NULL;`, 'lessons.subject_id');
 
+    // 12. Spec 012 Lesson Reports & Webhook Settings
+    await safeQuery(`CREATE TYPE "public"."lesson_report_webhook_status" AS ENUM('pending', 'sent', 'failed', 'disabled');`, 'Type lesson_report_webhook_status');
+    await safeQuery(`ALTER TABLE "lesson_settings" ADD COLUMN IF NOT EXISTS "webhook_url" varchar(500);`, 'lesson_settings.webhook_url');
+    await safeQuery(`ALTER TABLE "lesson_settings" ADD COLUMN IF NOT EXISTS "webhook_secret" varchar(255);`, 'lesson_settings.webhook_secret');
+    await safeQuery(`ALTER TABLE "lesson_settings" ADD COLUMN IF NOT EXISTS "webhook_enabled" boolean DEFAULT false NOT NULL;`, 'lesson_settings.webhook_enabled');
+
+    await safeQuery(`
+      CREATE TABLE IF NOT EXISTS "lesson_reports" (
+        "id" uuid PRIMARY KEY NOT NULL,
+        "lesson_class_id" uuid NOT NULL REFERENCES "public"."lesson_classes"("id") ON DELETE CASCADE,
+        "main_ideas" text NOT NULL,
+        "positives" text,
+        "negatives" text,
+        "teacher_notes" text,
+        "submitted_by" uuid NOT NULL REFERENCES "public"."users"("id"),
+        "webhook_status" "public"."lesson_report_webhook_status" DEFAULT 'pending' NOT NULL,
+        "webhook_error" text,
+        "webhook_sent_at" timestamp with time zone,
+        "created_at" timestamp with time zone DEFAULT now() NOT NULL,
+        "updated_at" timestamp with time zone DEFAULT now() NOT NULL,
+        CONSTRAINT "lesson_reports_lesson_class_id_unique" UNIQUE("lesson_class_id")
+      );
+    `, 'Table lesson_reports');
+
   } catch (err: any) {
     Logger.error(`Auto-migration top-level note: ${err?.message || err}`, 'Migrations');
   } finally {

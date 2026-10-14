@@ -1,7 +1,7 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
-import { GraduationCap, Users, BookOpen, Building2, BarChart3, UserCircle, ShieldCheck, CalendarClock, CalendarRange, Coins, Trophy, LayoutDashboard, Megaphone } from 'lucide-react';
+import { GraduationCap, Users, BookOpen, Building2, BarChart3, UserCircle, ShieldCheck, CalendarClock, CalendarRange, Coins, Trophy, LayoutDashboard, Megaphone, Settings } from 'lucide-react';
 import { Link, usePathname } from '@/i18n/navigation';
 import { cn } from '@/lib/utils';
 import { useInstitute } from './institute-context';
@@ -37,6 +37,7 @@ const ITEMS: NavItem[] = [
   { href: '/dashboard/classes', labelKey: 'classes', icon: BookOpen, hideForStudent: true },
   { href: '/dashboard/intensive', labelKey: 'intensiveTrack', icon: BookOpen, requiresIntensiveTrack: true, hideForStudent: true },
   { href: '/dashboard/lessons', labelKey: 'lessons', icon: CalendarRange, managersOnly: true },
+  { href: '/dashboard/lessons/settings', labelKey: 'lessonSettings', icon: Settings, managersOnly: true },
   { href: '/dashboard/dinars/leaderboard', labelKey: 'dinarsLeaderboard', icon: Trophy, hideForStudent: true },
   { href: '/dashboard/dinars/settings', labelKey: 'dinarsSettings', icon: Coins, managersOnly: true },
 ];

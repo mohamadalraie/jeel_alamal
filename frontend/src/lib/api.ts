@@ -605,3 +605,12 @@ export const retryLessonReportWebhook = (lessonClassId: string) =>
   post<{ success: boolean; error?: string }>(
     `/api/lesson-classes/${lessonClassId}/report/retry-webhook`,
   );
+
+export const testLessonWebhook = (
+  instituteId: string,
+  input: { url: string; secret?: string },
+) =>
+  post<{ success: boolean; error?: string }>(
+    `/api/institutes/${instituteId}/lesson-settings/test-webhook`,
+    input,
+  );

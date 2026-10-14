@@ -13,9 +13,11 @@ import {
   Users,
   ChevronLeft,
   Sparkles,
+  CalendarPlus,
 } from 'lucide-react';
 import { Link, useRouter } from '@/i18n/navigation';
 import { useInstitute } from '@/features/layout/institute-context';
+import { MaterializeLessonDialog } from '@/features/lessons/materialize-lesson-dialog';
 import {
   useMyLessons,
   useClasses,
@@ -192,9 +194,15 @@ export default function TeacherDashboardPage() {
   const qc = useQueryClient();
 
   const [startingLessonId, setStartingLessonId] = useState<string | null>(null);
+  const [materializeSlot, setMaterializeSlot] = useState<TeacherLessonEntry | null>(null);
+  const [materializeOpen, setMaterializeOpen] = useState(false);
 
-  // Queries
-  const { data: lessonsData, isLoading: lessonsLoading } = useMyLessons(user.role === 'teacher');
+  // Queries - enable for teachers, managers and super admins
+  const isTeacherOrManager =
+    user.role === 'teacher' ||
+    user.role === 'institute_manager' ||
+    user.role === 'super_admin';
+  const { data: lessonsData, isLoading: lessonsLoading } = useMyLessons(isTeacherOrManager);
   const { data: classes, isLoading: classesLoading } = useClasses(selected?.id);
   const { data: surahs } = useSurahs();
 
@@ -211,8 +219,13 @@ export default function TeacherDashboardPage() {
   // Ongoing/started lesson banner check
   const activeLesson = entries.find((l) => l.status === 'started');
 
-  // Filter teacher's assigned classes
-  const teacherClasses = (classes ?? []).filter((c) => c.teacherIds.includes(user.id));
+  // Filter teacher's assigned classes (for managers testing, include institute classes)
+  const teacherClasses = (classes ?? []).filter(
+    (c) =>
+      c.teacherIds.includes(user.id) ||
+      user.role === 'super_admin' ||
+      user.role === 'institute_manager',
+  );
 
   // Filter upcoming lessons (only pending or started, exclude ended/past status: finished, under_time, over_time, not_given)
   const upcomingLessons = entries.filter(
@@ -355,6 +368,7 @@ export default function TeacherDashboardPage() {
             {upcomingLessons.slice(0, 4).map((lesson) => {
               const isStarted = lesson.status === 'started';
               const isPending = lesson.status === 'pending';
+              const isUnmaterialized = lesson.isMaterialized === false;
               const isStartingThis = startingLessonId === lesson.lessonClassId;
 
               return (
@@ -374,19 +388,29 @@ export default function TeacherDashboardPage() {
                           {lesson.name || (lesson.kind === 'recitation' ? tLess('recitation') : tLess('lesson'))}
                         </h3>
                       </div>
-                      {lesson.category && (
-                        <Badge
-                          style={{
-                            backgroundColor: `${lesson.category.color}20`,
-                            color: lesson.category.color,
-                            borderColor: `${lesson.category.color}40`,
-                          }}
-                          variant="outline"
-                          className="text-xs font-medium shrink-0"
-                        >
-                          {lesson.category.name}
-                        </Badge>
-                      )}
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        {isUnmaterialized && (
+                          <Badge
+                            variant="outline"
+                            className="text-xs border-amber-500/40 text-amber-600 bg-amber-500/10 font-semibold"
+                          >
+                            مجدول (غير مثبت)
+                          </Badge>
+                        )}
+                        {lesson.category && (
+                          <Badge
+                            style={{
+                              backgroundColor: `${lesson.category.color}20`,
+                              color: lesson.category.color,
+                              borderColor: `${lesson.category.color}40`,
+                            }}
+                            variant="outline"
+                            className="text-xs font-medium"
+                          >
+                            {lesson.category.name}
+                          </Badge>
+                        )}
+                      </div>
                     </div>
 
                     <p className="text-xs text-muted-foreground flex items-center gap-2">
@@ -405,7 +429,7 @@ export default function TeacherDashboardPage() {
                       variant={isStarted ? 'default' : 'secondary'}
                       className={`text-xs ${isStarted ? 'bg-emerald-600' : ''}`}
                     >
-                      {tLess(`status_${lesson.status}`)}
+                      {isUnmaterialized ? 'مجدول' : tLess(`status_${lesson.status}`)}
                     </Badge>
 
                     {isStarted && (
@@ -417,7 +441,20 @@ export default function TeacherDashboardPage() {
                       </Button>
                     )}
 
-                    {isPending && (
+                    {isUnmaterialized ? (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => {
+                          setMaterializeSlot(lesson);
+                          setMaterializeOpen(true);
+                        }}
+                        className="text-xs gap-1.5 border-primary/30 text-primary hover:bg-primary/10"
+                      >
+                        <CalendarPlus className="size-3.5" />
+                        <span>تثبيت الدرس</span>
+                      </Button>
+                    ) : isPending ? (
                       <Button
                         size="sm"
                         disabled={isStartingThis}
@@ -427,7 +464,7 @@ export default function TeacherDashboardPage() {
                         <Play className="size-3.5" />
                         <span>{tLess('startLesson')}</span>
                       </Button>
-                    )}
+                    ) : null}
                   </div>
                 </Card>
               );
@@ -440,6 +477,14 @@ export default function TeacherDashboardPage() {
       <section className="pt-4 border-t border-border/40">
         <TeacherAnalyticsView instituteId={selected.id} teacherId={user.id} />
       </section>
+
+      <MaterializeLessonDialog
+        open={materializeOpen}
+        onOpenChange={setMaterializeOpen}
+        slot={materializeSlot as any}
+        instituteId={selected.id}
+        onDone={() => qc.invalidateQueries({ queryKey: qk.myLessons })}
+      />
     </div>
   );
 }

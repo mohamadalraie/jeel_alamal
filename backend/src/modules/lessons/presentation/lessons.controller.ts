@@ -2,9 +2,11 @@ import {
   Body,
   Controller,
   Delete,
+  ForbiddenException,
   Get,
   HttpCode,
   HttpStatus,
+  Inject,
   Param,
   ParseUUIDPipe,
   Patch,
@@ -14,6 +16,11 @@ import {
 } from '@nestjs/common';
 import { CurrentUser } from '../../../core/auth/current-user.decorator';
 import type { Actor } from '../../../shared/application/actor';
+import {
+  WEBHOOK_DISPATCHER,
+  type WebhookDispatcherPort,
+  type LessonReportWebhookPayload,
+} from '../domain/webhook-dispatcher.port';
 import {
   AddCategoryUseCase,
   ListCategoriesUseCase,
@@ -103,6 +110,8 @@ export class LessonsController {
     private readonly getReport: GetLessonReportUseCase,
     private readonly updateReport: UpdateLessonReportUseCase,
     private readonly retryWebhook: RetryLessonReportWebhookUseCase,
+    @Inject(WEBHOOK_DISPATCHER)
+    private readonly webhookDispatcher: WebhookDispatcherPort,
   ) {}
 
   // ── Categories ──
@@ -393,5 +402,45 @@ export class LessonsController {
     @Param('lessonClassId', ParseUUIDPipe) lessonClassId: string,
   ) {
     return this.retryWebhook.execute(actor, lessonClassId);
+  }
+
+  @Post('institutes/:instituteId/lesson-settings/test-webhook')
+  async testWebhook(
+    @CurrentUser() actor: Actor,
+    @Param('instituteId', ParseUUIDPipe) instituteId: string,
+    @Body() body: { url: string; secret?: string },
+  ) {
+    if (actor.role !== 'super_admin' && actor.role !== 'institute_manager') {
+      throw new ForbiddenException();
+    }
+    const samplePayload: LessonReportWebhookPayload = {
+      event: 'lesson.report.completed',
+      instituteId,
+      classId: '00000000-0000-0000-0000-000000000000',
+      className: 'حلقة تجريبية',
+      lessonClassId: '00000000-0000-0000-0000-000000000000',
+      lessonId: '00000000-0000-0000-0000-000000000000',
+      lessonTitle: 'درس تجريبي لاختبار الربط مع n8n والواتساب',
+      subjectName: 'تفسير القرآن',
+      date: new Date().toISOString().split('T')[0],
+      actualStartTime: new Date(),
+      actualEndTime: new Date(),
+      actualDurationMinutes: 45,
+      expectedDurationMinutes: 45,
+      teacher: {
+        id: actor.userId,
+        name: 'أستاذ تجريبي',
+      },
+      report: {
+        mainIdeas: 'تم الاتصال بسيرفر n8n بنجاح عبر نظام جيل الأمل!',
+        parentMessageFormatted:
+          '📌 *تقرير تجريبي لاختبار الربط مع واتساب*\n• تم الاتصال بنجاح بسيرفر n8n ونظام إدارة الحلقات.',
+      },
+    };
+    return this.webhookDispatcher.dispatchReport(
+      samplePayload,
+      body.url,
+      body.secret,
+    );
   }
 }

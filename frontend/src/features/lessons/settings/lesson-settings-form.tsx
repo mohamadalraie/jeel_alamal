@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { updateLessonSettings } from '@/lib/api';
+import { updateLessonSettings, testLessonWebhook } from '@/lib/api';
 import { useLessonSettings, useQueryClient, qk } from '@/lib/queries';
 import { notify } from '@/lib/toast';
 import { Button } from '@/components/ui/button';
@@ -12,7 +12,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { ListSkeleton } from '@/features/shared/skeletons';
 import { CategoryManager } from '../category-manager';
 import { SubjectManager } from '../subject-manager';
-import { MessageSquareShare } from 'lucide-react';
+import { MessageSquareShare, Send } from 'lucide-react';
 
 /**
  * Lesson settings for an institute (spec 009 & 012):
@@ -35,6 +35,7 @@ export function LessonSettingsForm({ instituteId }: { instituteId: string }) {
   const [webhookEnabled, setWebhookEnabled] = useState(false);
 
   const [busy, setBusy] = useState(false);
+  const [testingWebhook, setTestingWebhook] = useState(false);
 
   useEffect(() => {
     if (!data) return;
@@ -66,6 +67,29 @@ export function LessonSettingsForm({ instituteId }: { instituteId: string }) {
       notify.error(err, tc('error'));
     } finally {
       setBusy(false);
+    }
+  }
+
+  async function handleTestWebhook() {
+    if (!webhookUrl.trim()) {
+      notify.error(t('webhookUrlRequired') || 'يرجى إدخال رابط Webhook أولاً');
+      return;
+    }
+    setTestingWebhook(true);
+    try {
+      const res = await testLessonWebhook(instituteId, {
+        url: webhookUrl.trim(),
+        secret: webhookSecret.trim() || undefined,
+      });
+      if (res.success) {
+        notify.success('تم إرسال إشعار تجريبي بنجاح إلى سيرفر n8n والواتساب!');
+      } else {
+        notify.error(res.error || 'تعذر الاتصال بسيرفر n8n');
+      }
+    } catch (err) {
+      notify.error(err, tc('error'));
+    } finally {
+      setTestingWebhook(false);
     }
   }
 
@@ -184,9 +208,21 @@ export function LessonSettingsForm({ instituteId }: { instituteId: string }) {
             <span className="text-muted-foreground text-xs">{t('webhookSecretHint')}</span>
           </div>
 
-          <Button onClick={save} disabled={busy} className="self-start mt-2">
-            {busy ? tc('loading') : tc('save')}
-          </Button>
+          <div className="flex flex-wrap items-center gap-2 mt-2">
+            <Button onClick={save} disabled={busy || testingWebhook}>
+              {busy ? tc('loading') : tc('save')}
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleTestWebhook}
+              disabled={busy || testingWebhook || !webhookEnabled}
+              className="gap-2 border-primary/30 text-primary hover:bg-primary/10"
+            >
+              <Send className="size-3.5" />
+              <span>{testingWebhook ? 'جارِ فحص الاتصال...' : 'فحص الاتصال بسيرفر n8n'}</span>
+            </Button>
+          </div>
         </CardContent>
       </Card>
 

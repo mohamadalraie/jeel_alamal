@@ -32,15 +32,41 @@ export class GetMyLessonsUseCase {
       isNext: false,
     }));
 
-    // Retrieve teacher's classes to surface upcoming template slots (spec 012)
+    // Retrieve candidate classes to surface upcoming template slots (spec 012)
     const teacherClasses = await this.classes.findClassesByTeacher(actor.userId);
-    const unmaterializedEntries: TeacherProgramEntry[] = [];
+    const candidateMap = new Map<string, typeof teacherClasses[0]>();
+    for (const c of teacherClasses) {
+      candidateMap.set(c.id, c);
+    }
 
+    const isManagerOrAdmin =
+      actor.role === 'institute_manager' || actor.role === 'super_admin';
+
+    if (actor.instituteId) {
+      const instituteClasses = await this.classes.findAllByInstitute(actor.instituteId);
+      for (const ic of instituteClasses) {
+        if (!candidateMap.has(ic.id)) {
+          if (isManagerOrAdmin) {
+            candidateMap.set(ic.id, ic);
+          }
+        }
+      }
+    }
+
+    const unmaterializedEntries: TeacherProgramEntry[] = [];
     const todayDate = new Date(`${today}T00:00:00Z`);
 
-    for (const klass of teacherClasses) {
+    for (const klass of candidateMap.values()) {
       const schedule = await this.classes.getSchedule(klass.id);
-      const teacherSlots = schedule.filter((s) => s.teacherId === actor.userId);
+      const isTeacherOfThisClass = teacherClasses.some((c) => c.id === klass.id);
+
+      const teacherSlots = schedule.filter((s) => {
+        if (s.teacherId === actor.userId) return true;
+        if (!s.teacherId && isTeacherOfThisClass) return true;
+        if (isManagerOrAdmin) return true;
+        return false;
+      });
+
       if (teacherSlots.length === 0) continue;
 
       for (let offset = 0; offset < 14; offset++) {
@@ -57,7 +83,9 @@ export class GetMyLessonsUseCase {
             (e) =>
               e.classId === klass.id &&
               e.date === dateStr &&
-              (!slot.subjectId || e.subjectId === slot.subjectId),
+              (slot.subjectId
+                ? e.subjectId === slot.subjectId
+                : e.kind === slot.kind && (e.sort ?? 0) === (slot.sort ?? 0)),
           );
 
           if (!exists) {
@@ -70,7 +98,7 @@ export class GetMyLessonsUseCase {
                 slot.kind === 'recitation'
                   ? LessonKind.Recitation
                   : LessonKind.Lesson,
-              name: null,
+              name: slot.kind === 'recitation' ? 'جلسة تسميع' : null,
               subjectId: slot.subjectId ?? null,
               subjectName: null,
               description: null,
