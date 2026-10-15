@@ -27,7 +27,10 @@ export const qk = {
   classLessons: (id: string) => ['class-lessons', id] as const,
   instituteLessons: (id: string) => ['institute-lessons', id] as const,
   studentClassLessons: (id: string) => ['student-class-lessons', id] as const,
-  myLessons: ['my-lessons'] as const,
+  myLessons: (instituteId?: string) =>
+    instituteId
+      ? (['my-lessons', instituteId] as const)
+      : (['my-lessons'] as const),
   lessonTimer: (id: string) => ['lesson-timer', id] as const,
   lessonSettings: (id: string) => ['lesson-settings', id] as const,
   lessonReport: (id: string) => ['lesson-report', id] as const,
@@ -180,8 +183,12 @@ export const useStudentClassLessons = (classId?: string, enabled = true) =>
     enabled: !!classId && enabled,
   });
 
-export const useMyLessons = (enabled = true) =>
-  useQuery({ queryKey: qk.myLessons, queryFn: api.getMyLessons, enabled });
+export const useMyLessons = (instituteId?: string, enabled = true) =>
+  useQuery({
+    queryKey: qk.myLessons(instituteId),
+    queryFn: () => api.getMyLessons(instituteId),
+    enabled: enabled && (instituteId ? instituteId.length > 0 : true),
+  });
 
 // ── Lesson lifecycle (spec 009) ──
 export const useLessonTimer = (lessonClassId?: string) =>

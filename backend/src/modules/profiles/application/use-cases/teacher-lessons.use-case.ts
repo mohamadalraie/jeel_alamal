@@ -56,18 +56,8 @@ export class GetTeacherLessonsUseCase {
     const inInstitute = await this.users.isInInstitute(teacherId, instituteId);
     if (!inInstitute) throw new NotFoundError('Teacher not found in this institute');
 
-    // Fetch all lesson entries for this teacher
-    const allEntries = await this.lessons.getTeacherProgram(teacherId);
-
-    // Filter to lessons that belong to this institute's classes
-    // (teacher may be in multiple institutes; filter by instituteId via classes)
-    // We rely on class institute relation — entries already have classId
-    // For now return all entries and let client filter; alternatively
-    // we add an institute-scoped variant. Since getTeacherProgram already
-    // returns all entries, we filter by checking the instituteId on classes.
-    // TODO: add instituteId to ProgramEntryRead for proper filtering.
-    // For now, return all lessons (institute isolation via auth is enough).
-    const entries = allEntries;
+    // Fetch lesson entries for this teacher scoped to this institute
+    const entries = await this.lessons.getTeacherProgram(teacherId, instituteId);
 
     // Compute stats
     const total = entries.length;

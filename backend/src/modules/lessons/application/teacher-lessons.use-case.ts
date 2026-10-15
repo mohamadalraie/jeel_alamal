@@ -1,10 +1,14 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { Actor } from '../../../shared/application/actor';
+import { UserRole } from '../../../shared/domain/user-role';
 import { LESSON_REPOSITORY } from '../domain/lesson.repository';
 import type { LessonRepository } from '../domain/lesson.repository';
 import { LessonKind } from '../domain/lesson-kind';
 import { CLASS_REPOSITORY } from '../../classes/domain/class.repository';
 import type { ClassRepository } from '../../classes/domain/class.repository';
+import { USER_REPOSITORY } from '../../users/domain/user.repository';
+import type { UserRepository } from '../../users/domain/user.repository';
+import { InstituteAccessPolicy } from '../../institutes/application/institute-access.policy';
 import { TeacherProgramEntry } from './dto/lesson.dto';
 import { toEntryView } from './class-program.use-case';
 
@@ -15,16 +19,46 @@ const dayMapping = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'] as const;
  * The lessons assigned to the acting teacher (spec 008, 009 & 012):
  * Merges concrete materialized lessons with unmaterialized upcoming weekly slots,
  * with the next upcoming session flagged for Quick Access highlight.
+ * Scoped strictly to the requested or current institute to prevent leakage across institutes.
  */
 @Injectable()
 export class GetMyLessonsUseCase {
   constructor(
     @Inject(LESSON_REPOSITORY) private readonly lessons: LessonRepository,
     @Inject(CLASS_REPOSITORY) private readonly classes: ClassRepository,
+    @Inject(USER_REPOSITORY) private readonly users: UserRepository,
+    private readonly policy: InstituteAccessPolicy,
   ) {}
 
-  async execute(actor: Actor): Promise<{ entries: TeacherProgramEntry[] }> {
-    const raw = await this.lessons.getTeacherProgram(actor.userId); // sorted date,sort
+  async execute(
+    actor: Actor,
+    requestedInstituteId?: string,
+  ): Promise<{ entries: TeacherProgramEntry[] }> {
+    const targetInstituteId = requestedInstituteId || actor.instituteId;
+
+    // Security check: teacher must belong to the institute; manager must manage it
+    if (targetInstituteId && actor.role !== UserRole.SuperAdmin) {
+      if (actor.role === UserRole.Teacher) {
+        const isMember = await this.users.isInInstitute(
+          actor.userId,
+          targetInstituteId,
+        );
+        if (!isMember) {
+          return { entries: [] };
+        }
+      } else if (actor.role === UserRole.InstituteManager) {
+        try {
+          await this.policy.assertManagerOf(actor, targetInstituteId);
+        } catch {
+          return { entries: [] };
+        }
+      }
+    }
+
+    const raw = await this.lessons.getTeacherProgram(
+      actor.userId,
+      targetInstituteId,
+    ); // sorted date,sort
     const today = todayISO();
 
     const materializedEntries: TeacherProgramEntry[] = raw.map((e) => ({
@@ -34,21 +68,24 @@ export class GetMyLessonsUseCase {
 
     // Retrieve candidate classes to surface upcoming template slots (spec 012)
     const teacherClasses = await this.classes.findClassesByTeacher(actor.userId);
-    const candidateMap = new Map<string, typeof teacherClasses[0]>();
-    for (const c of teacherClasses) {
+    const relevantTeacherClasses = targetInstituteId
+      ? teacherClasses.filter((c) => c.instituteId === targetInstituteId)
+      : teacherClasses;
+
+    const candidateMap = new Map<string, (typeof teacherClasses)[0]>();
+    for (const c of relevantTeacherClasses) {
       candidateMap.set(c.id, c);
     }
 
     const isManagerOrAdmin =
       actor.role === 'institute_manager' || actor.role === 'super_admin';
 
-    if (actor.instituteId) {
-      const instituteClasses = await this.classes.findAllByInstitute(actor.instituteId);
+    if (targetInstituteId && isManagerOrAdmin) {
+      const instituteClasses =
+        await this.classes.findAllByInstitute(targetInstituteId);
       for (const ic of instituteClasses) {
         if (!candidateMap.has(ic.id)) {
-          if (isManagerOrAdmin) {
-            candidateMap.set(ic.id, ic);
-          }
+          candidateMap.set(ic.id, ic);
         }
       }
     }
@@ -57,10 +94,15 @@ export class GetMyLessonsUseCase {
     const todayDate = new Date(`${today}T00:00:00Z`);
 
     for (const klass of candidateMap.values()) {
+      if (targetInstituteId && klass.instituteId !== targetInstituteId) {
+        continue;
+      }
       const schedule = await this.classes.getSchedule(klass.id);
       const isTeacherOfThisClass = teacherClasses.some((c) => c.id === klass.id);
 
       const teacherSlots = schedule.filter((s) => {
+        // Point 3: recitation slots do not need materialization by teachers
+        if (s.kind === 'recitation') return false;
         if (s.teacherId === actor.userId) return true;
         if (!s.teacherId && isTeacherOfThisClass) return true;
         if (isManagerOrAdmin) return true;

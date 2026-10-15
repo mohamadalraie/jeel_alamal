@@ -10,7 +10,19 @@
     "create": "Create",
     "logout": "Log out",
     "noData": "No data yet",
-    "error": "Something went wrong"
+    "error": "Something went wrong",
+    "close": "Close",
+    "edit": "Edit",
+    "delete": "Delete",
+    "saveSuccess": "Saved successfully",
+    "lesson": "Lesson",
+    "noResults": "No results found",
+    "confirm": "Confirm",
+    "back": "Back",
+    "actions": "Actions",
+    "details": "Details",
+    "search": "Search",
+    "refresh": "Refresh"
   },
   "pwa": {
     "installTitle": "Install Jeel Al-Amal App",
@@ -277,7 +289,8 @@
     "quickActions": "Quick Actions",
     "quickAttendance": "Attendance",
     "quickRecitation": "Quick Recitation",
-    "quickDinars": "Award Dinars"
+    "quickDinars": "Award Dinars",
+    "lessonSettings": "Lesson Settings & Webhook"
   },
   "prayers": {
     "fajr": "Fajr",
@@ -509,7 +522,13 @@
     "durationThreshold": "Allowed difference (minutes)",
     "durationThresholdHint": "How far actual time may differ from expected before it is flagged as over or under time.",
     "settingsSaved": "Settings saved",
-    "lessonSettings": "Lesson settings",
+    "lessonSettings": "Lesson Settings & Webhook",
+    "lessonName": "Lesson title",
+    "lessonNamePlaceholder": "Enter lesson title...",
+    "expectedDurationLabel": "Expected duration (minutes)",
+    "descriptionPlaceholder": "Enter lesson description or objectives (optional)...",
+    "webhookUrlRequired": "Please enter Webhook URL first",
+    "webhookTestSuccess": "Test notification sent successfully to n8n and WhatsApp!",
     "materializeTitle": "Materialize Scheduled Lesson",
     "materializeOnly": "Materialize Lesson",
     "materializeAndStart": "Materialize & Start Now",

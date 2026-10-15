@@ -125,6 +125,9 @@ export interface LessonRepository {
     classId: string,
     today: string,
   ): Promise<ProgramEntryRead[]>;
-  /** The lessons assigned to a teacher across their classes. */
-  getTeacherProgram(teacherId: string): Promise<ProgramEntryRead[]>;
+  /** The lessons assigned to a teacher across their classes, optionally filtered by institute. */
+  getTeacherProgram(
+    teacherId: string,
+    instituteId?: string,
+  ): Promise<ProgramEntryRead[]>;
 }

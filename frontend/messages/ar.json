@@ -10,7 +10,19 @@
     "create": "إنشاء",
     "logout": "تسجيل الخروج",
     "noData": "لا توجد بيانات بعد",
-    "error": "حدث خطأ"
+    "error": "حدث خطأ",
+    "close": "إغلاق",
+    "edit": "تعديل",
+    "delete": "حذف",
+    "saveSuccess": "تم الحفظ بنجاح",
+    "lesson": "درس",
+    "noResults": "لا توجد نتائج",
+    "confirm": "تأكيد",
+    "back": "رجوع",
+    "actions": "إجراءات",
+    "details": "التفاصيل",
+    "search": "بحث",
+    "refresh": "تحديث"
   },
   "pwa": {
     "installTitle": "ثبّت تطبيق جيل العمل",
@@ -277,7 +289,8 @@
     "quickActions": "إجراءات سريعة",
     "quickAttendance": "تسجيل حضور",
     "quickRecitation": "تسميع سريع",
-    "quickDinars": "منح دنانير"
+    "quickDinars": "منح دنانير",
+    "lessonSettings": "إعدادات الدروس والـ Webhook"
   },
   "prayers": {
     "fajr": "الفجر",
@@ -520,7 +533,13 @@
     "durationThreshold": "الفارق المسموح (دقائق)",
     "durationThresholdHint": "مقدار الفارق المسموح بين الوقت الفعلي والمتوقع قبل اعتباره تجاوزاً أو نقصاناً.",
     "settingsSaved": "تم حفظ الإعدادات",
-    "lessonSettings": "إعدادات الدروس",
+    "lessonSettings": "إعدادات الدروس والـ Webhook",
+    "lessonName": "اسم الدرس",
+    "lessonNamePlaceholder": "أدخل عنوان الدرس...",
+    "expectedDurationLabel": "المدة المتوقعة (دقائق)",
+    "descriptionPlaceholder": "اكتب وصفاً أو أهدافاً للدرس (اختياري)...",
+    "webhookUrlRequired": "يرجى إدخال رابط Webhook أولاً",
+    "webhookTestSuccess": "تم إرسال إشعار تجريبي بنجاح إلى سيرفر n8n والواتساب!",
     "materializeTitle": "تثبيت الدرس المجدول",
     "materializeOnly": "تثبيت الدرس",
     "materializeAndStart": "تثبيت وبدء الدرس مباشرة",

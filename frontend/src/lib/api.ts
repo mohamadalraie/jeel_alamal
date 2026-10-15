@@ -513,8 +513,10 @@ export const getClassLessons = (classId: string, from?: string, to?: string) => 
 };
 export const getStudentClassLessons = (classId: string) =>
   request<{ entries: StudentLessonEntry[] }>(`/api/classes/${classId}/lessons/student`);
-export const getMyLessons = () =>
-  request<{ entries: TeacherLessonEntry[] }>(`/api/lessons/mine`);
+export const getMyLessons = (instituteId?: string) =>
+  request<{ entries: TeacherLessonEntry[] }>(
+    `/api/lessons/mine${instituteId ? `?instituteId=${encodeURIComponent(instituteId)}` : ''}`
+  );
 export const getInstituteLessons = (instituteId: string, from?: string, to?: string) => {
   const qs = new URLSearchParams();
   if (from) qs.set('from', from);

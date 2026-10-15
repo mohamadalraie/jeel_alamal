@@ -202,7 +202,10 @@ export default function TeacherDashboardPage() {
     user.role === 'teacher' ||
     user.role === 'institute_manager' ||
     user.role === 'super_admin';
-  const { data: lessonsData, isLoading: lessonsLoading } = useMyLessons(isTeacherOrManager);
+  const { data: lessonsData, isLoading: lessonsLoading } = useMyLessons(
+    selected?.id,
+    isTeacherOrManager,
+  );
   const { data: classes, isLoading: classesLoading } = useClasses(selected?.id);
   const { data: surahs } = useSurahs();
 
@@ -236,7 +239,7 @@ export default function TeacherDashboardPage() {
     try {
       setStartingLessonId(lessonClassId);
       await startLesson(lessonClassId);
-      qc.invalidateQueries({ queryKey: qk.myLessons });
+      qc.invalidateQueries({ queryKey: qk.myLessons(selected?.id) });
       router.push(`/dashboard/lesson-timer/${lessonClassId}`);
     } catch (err) {
       notify.error(err, tc('error'));
@@ -483,7 +486,9 @@ export default function TeacherDashboardPage() {
         onOpenChange={setMaterializeOpen}
         slot={materializeSlot as any}
         instituteId={selected.id}
-        onDone={() => qc.invalidateQueries({ queryKey: qk.myLessons })}
+        onDone={() =>
+          qc.invalidateQueries({ queryKey: qk.myLessons(selected?.id) })
+        }
       />
     </div>
   );

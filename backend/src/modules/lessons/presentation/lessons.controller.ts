@@ -262,8 +262,11 @@ export class LessonsController {
   }
 
   @Get('lessons/mine')
-  mine(@CurrentUser() actor: Actor) {
-    return this.getMyLessons.execute(actor);
+  mine(
+    @CurrentUser() actor: Actor,
+    @Query('instituteId') instituteId?: string,
+  ) {
+    return this.getMyLessons.execute(actor, instituteId);
   }
 
   // ── Lesson lifecycle (spec 009) ──

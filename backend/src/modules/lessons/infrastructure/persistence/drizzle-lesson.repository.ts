@@ -461,8 +461,15 @@ export class DrizzleLessonRepository implements LessonRepository {
     return this.queryEntries(and(...conds)!);
   }
 
-  async getTeacherProgram(teacherId: string): Promise<ProgramEntryRead[]> {
-    return this.queryEntries(eq(lessonClasses.teacherId, teacherId));
+  async getTeacherProgram(
+    teacherId: string,
+    instituteId?: string,
+  ): Promise<ProgramEntryRead[]> {
+    const conds = [eq(lessonClasses.teacherId, teacherId)];
+    if (instituteId) {
+      conds.push(eq(lessons.instituteId, instituteId));
+    }
+    return this.queryEntries(and(...conds)!);
   }
 
   /** Shared join + source assembly for the program read models. */

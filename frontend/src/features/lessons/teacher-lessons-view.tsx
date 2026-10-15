@@ -3,6 +3,7 @@
 import { useTranslations } from 'next-intl';
 import { CalendarClock } from 'lucide-react';
 import { useMyLessons } from '@/lib/queries';
+import { useInstitute } from '@/features/layout/institute-context';
 import { Card, CardContent } from '@/components/ui/card';
 import { ListSkeleton } from '@/features/shared/skeletons';
 import { LessonProgramList } from './lesson-program-list';
@@ -15,10 +16,12 @@ const todayISO = () => new Date().toISOString().slice(0, 10);
  * A teacher's assigned lessons (spec 008/009): the next lesson highlighted, then
  * the full program grouped by month/day — matching the manager الدروس view — with
  * a start/resume control on each lesson.
+ * Scoped to the currently selected institute.
  */
 export function TeacherLessonsView() {
   const t = useTranslations('lessons');
-  const { data, isLoading } = useMyLessons();
+  const { selected } = useInstitute();
+  const { data, isLoading } = useMyLessons(selected?.id);
 
   if (isLoading || !data) return <ListSkeleton />;
 
