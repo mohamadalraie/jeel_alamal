@@ -17,11 +17,11 @@ import {
 } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 
-type FilterMode = 'memorized' | 'partial' | 'full' | 'all';
+type FilterMode = 'all' | 'partial' | 'full';
 
 /**
  * Simplified & Compact Memorization Map:
- * Defaults to showing ONLY memorized/in-progress surahs to keep the page concise.
+ * Defaults to showing all surahs, with tabs for in-progress (partial) and completed (full).
  * Includes a quick Surah dropdown selector, live search, and filter tabs.
  */
 export function HeartMap({ cells }: { cells: HeartCell[] }) {
@@ -30,7 +30,7 @@ export function HeartMap({ cells }: { cells: HeartCell[] }) {
   const tr = useTranslations('ratings');
 
   const [selected, setSelected] = useState<HeartCell | null>(null);
-  const [filterMode, setFilterMode] = useState<FilterMode>('memorized');
+  const [filterMode, setFilterMode] = useState<FilterMode>('all');
   const [query, setQuery] = useState<string>('');
 
   // Calculate summary metrics
@@ -53,7 +53,6 @@ export function HeartMap({ cells }: { cells: HeartCell[] }) {
   const filteredCells = useMemo(() => {
     return cells.filter((cell) => {
       // 1. Filter by mode
-      if (filterMode === 'memorized' && cell.percent === 0) return false;
       if (filterMode === 'partial' && cell.status !== 'partial') return false;
       if (filterMode === 'full' && cell.status !== 'full') return false;
 
@@ -126,10 +125,10 @@ export function HeartMap({ cells }: { cells: HeartCell[] }) {
       {/* Filter Tabs */}
       <div className="flex flex-wrap items-center gap-1.5 border-b border-border pb-2.5">
         <FilterTab
-          active={filterMode === 'memorized'}
-          onClick={() => setFilterMode('memorized')}
-          count={stats.memorizedCount}
-          label={t('filterMemorized')}
+          active={filterMode === 'all'}
+          onClick={() => setFilterMode('all')}
+          count={114}
+          label={t('filterAll')}
         />
         <FilterTab
           active={filterMode === 'partial'}
@@ -142,12 +141,6 @@ export function HeartMap({ cells }: { cells: HeartCell[] }) {
           onClick={() => setFilterMode('full')}
           count={stats.full}
           label={t('filterFull')}
-        />
-        <FilterTab
-          active={filterMode === 'all'}
-          onClick={() => setFilterMode('all')}
-          count={114}
-          label={t('filterAll')}
         />
       </div>
 
@@ -258,18 +251,8 @@ export function HeartMap({ cells }: { cells: HeartCell[] }) {
         <div className="border-border bg-muted/20 flex flex-col items-center justify-center gap-3 rounded-2xl border border-dashed py-10 px-4 text-center">
           <BookOpen className="size-8 text-muted-foreground/50" />
           <p className="text-muted-foreground text-xs sm:text-sm max-w-sm">
-            {filterMode === 'memorized' ? t('noMemorizedSurahs') : tc('noResults')}
+            {tc('noResults')}
           </p>
-          {filterMode === 'memorized' && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setFilterMode('all')}
-              className="rounded-xl text-xs"
-            >
-              {t('showAllSurahs')}
-            </Button>
-          )}
         </div>
       )}
 
@@ -280,15 +263,6 @@ export function HeartMap({ cells }: { cells: HeartCell[] }) {
           <Legend swatch="#F5C518" label={t('legendPartial')} />
           <Legend swatch="#FFFFFF" label={t('legendNone')} border />
         </div>
-        {filterMode === 'memorized' && (
-          <button
-            type="button"
-            onClick={() => setFilterMode('all')}
-            className="text-xs text-primary hover:underline font-medium"
-          >
-            {t('showAllSurahs')}
-          </button>
-        )}
       </div>
     </div>
   );

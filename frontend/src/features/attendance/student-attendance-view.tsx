@@ -2,6 +2,16 @@
 
 import { useMemo } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
+import { TrendingUp } from 'lucide-react';
+import {
+  Line,
+  LineChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+} from 'recharts';
 import type { AttendanceStatus } from '@/lib/types';
 import { useStudentAttendance, useClassProfile } from '@/lib/queries';
 import { formatDateLocale } from '@/lib/utils';
@@ -40,6 +50,28 @@ export function StudentAttendanceView({
     [classProfile?.schedule],
   );
 
+  // Cumulative attendance evolution curve over time with real time coordinates
+  const attendanceChartData = useMemo(() => {
+    if (!data?.log || data.log.length === 0) return [];
+    const sorted = [...data.log].sort((a, b) => a.date.localeCompare(b.date));
+    let runningAttended = 0;
+    let runningTotal = 0;
+
+    return sorted.map((item) => {
+      runningTotal += 1;
+      if (item.status === 'present' || item.status === 'late') {
+        runningAttended += 1;
+      }
+      const rate = Math.round((runningAttended / runningTotal) * 100);
+      return {
+        timestamp: new Date(`${item.date.slice(0, 10)}T12:00:00Z`).getTime(),
+        date: item.date,
+        status: item.status,
+        rate,
+      };
+    });
+  }, [data?.log]);
+
   if (isLoading || !data) return <ListSkeleton />;
 
   if (data.total === 0) {
@@ -74,6 +106,69 @@ export function StudentAttendanceView({
           </span>
         ))}
       </div>
+
+      {/* Attendance Evolution Curve with real time coordinates and line connecting dots */}
+      {attendanceChartData.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-sm font-bold flex items-center gap-2">
+              <TrendingUp className="size-4 text-emerald-600 dark:text-emerald-400" />
+              <span>منحنى نسبة الحضور التراكمي عبر الزمن</span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="h-56">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={attendanceChartData} margin={{ top: 10, right: 15, left: -20, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} className="stroke-muted opacity-50" />
+                <XAxis
+                  dataKey="timestamp"
+                  type="number"
+                  scale="time"
+                  domain={['dataMin', 'dataMax']}
+                  tickFormatter={(val) =>
+                    new Date(val).toLocaleDateString(formatDateLocale(locale), {
+                      month: 'short',
+                      day: 'numeric',
+                    })
+                  }
+                  tick={{ fontSize: 11, fill: 'currentColor' }}
+                  className="text-muted-foreground"
+                  tickMargin={8}
+                />
+                <YAxis
+                  domain={[0, 100]}
+                  tick={{ fontSize: 11, fill: 'currentColor' }}
+                  className="text-muted-foreground"
+                  width={32}
+                  tickFormatter={(v) => `٪${v}`}
+                />
+                <Tooltip
+                  labelFormatter={(val) =>
+                    new Date(val as number).toLocaleDateString(formatDateLocale(locale), {
+                      month: 'long',
+                      day: 'numeric',
+                      year: 'numeric',
+                    })
+                  }
+                  formatter={(val: any, _name: any, item: any) => [
+                    `٪${val} (${t(item?.payload?.status ?? 'present')})`,
+                    t('overallRate'),
+                  ]}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="rate"
+                  name={t('overallRate')}
+                  stroke="#10B981"
+                  strokeWidth={2.5}
+                  dot={{ fill: '#10B981', r: 4, strokeWidth: 0 }}
+                  activeDot={{ r: 6 }}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Calendar */}
       <Card>

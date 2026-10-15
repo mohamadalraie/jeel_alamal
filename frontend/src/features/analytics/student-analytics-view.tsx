@@ -1,10 +1,12 @@
 'use client';
 
+import { useMemo } from 'react';
 import { useTranslations } from 'next-intl';
 import { BookOpen, CheckCircle2, Award, Sparkles, TrendingUp } from 'lucide-react';
 import {
-  BarChart,
-  Bar,
+  LineChart,
+  Line,
+  CartesianGrid,
   XAxis,
   YAxis,
   Tooltip,
@@ -58,6 +60,14 @@ export function StudentAnalyticsView({
     },
   ];
 
+  const recitationHistoryData = useMemo(() => {
+    return (analytics.dailyRecitationHistory ?? []).map((item) => ({
+      timestamp: new Date(`${item.date}T12:00:00Z`).getTime(),
+      date: item.date,
+      ayahs: item.ayahs,
+    }));
+  }, [analytics.dailyRecitationHistory]);
+
   const pieData = [
     { name: 'الدروس', value: analytics.dinars.contextBreakdown.lesson ?? 0 },
     { name: 'التسميع', value: analytics.dinars.contextBreakdown.recitation ?? 0 },
@@ -80,10 +90,6 @@ export function StudentAnalyticsView({
             </p>
           </div>
         </div>
-
-        <Badge variant="outline" className="text-xs font-semibold px-3 py-1">
-          إنجاز مميز
-        </Badge>
       </div>
 
       {/* KPI Cards */}
@@ -118,13 +124,17 @@ export function StudentAnalyticsView({
             </CardDescription>
           </CardHeader>
           <CardContent className="h-64">
-            {analytics.dailyRecitationHistory.length === 0 ? (
+            {recitationHistoryData.length === 0 ? (
               <p className="text-muted-foreground text-xs text-center py-12">لا يوجد بيانات تسميع مسجلة مؤخراً</p>
             ) : (
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={analytics.dailyRecitationHistory}>
+                <LineChart data={recitationHistoryData} margin={{ top: 10, right: 15, left: -20, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} className="stroke-muted opacity-50" />
                   <XAxis
-                    dataKey="date"
+                    dataKey="timestamp"
+                    type="number"
+                    scale="time"
+                    domain={['dataMin', 'dataMax']}
                     tick={{ fontSize: 10, fill: 'currentColor' }}
                     tickFormatter={(val) =>
                       new Date(val).toLocaleDateString(formatDateLocale('ar'), {
@@ -132,19 +142,29 @@ export function StudentAnalyticsView({
                         month: 'short',
                       })
                     }
+                    tickMargin={8}
                   />
                   <YAxis allowDecimals={false} tick={{ fontSize: 10, fill: 'currentColor' }} width={24} />
                   <Tooltip
                     labelFormatter={(label) =>
-                      new Date(label).toLocaleDateString(formatDateLocale('ar'), {
+                      new Date(label as number).toLocaleDateString(formatDateLocale('ar'), {
                         day: 'numeric',
                         month: 'long',
                         year: 'numeric',
                       })
                     }
+                    formatter={(val) => [`${val} آية`, 'الآيات']}
                   />
-                  <Bar dataKey="ayahs" name="الآيات" fill="#BE9B5F" radius={[4, 4, 0, 0]} />
-                </BarChart>
+                  <Line
+                    type="monotone"
+                    dataKey="ayahs"
+                    name="الآيات"
+                    stroke="#BE9B5F"
+                    strokeWidth={2.5}
+                    dot={{ fill: '#BE9B5F', r: 4, strokeWidth: 0 }}
+                    activeDot={{ r: 6 }}
+                  />
+                </LineChart>
               </ResponsiveContainer>
             )}
           </CardContent>
