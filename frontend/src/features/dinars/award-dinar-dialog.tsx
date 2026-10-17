@@ -233,10 +233,10 @@ export function AwardDinarDialog({
             <div className="flex flex-col gap-1.5">
               <Label>{t('rule')}</Label>
               <Select value={ruleId} onValueChange={setRuleId}>
-                <SelectTrigger>
+                <SelectTrigger className="w-full">
                   <SelectValue placeholder={t('selectRule')} />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="z-[70] max-h-56">
                   {rules.map((r) => (
                     <SelectItem key={r.id} value={r.id}>
                       <bdi>

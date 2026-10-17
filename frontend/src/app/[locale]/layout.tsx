@@ -94,7 +94,7 @@ export default async function LocaleLayout({
       className={`${tajawal.variable} h-full antialiased`}
       suppressHydrationWarning
     >
-      <body className="bg-background text-foreground min-h-full font-sans">
+      <body dir={direction} className="bg-background text-foreground min-h-full font-sans">
         <NextIntlClientProvider locale={locale} messages={messages}>
           <ThemeProvider dir={direction}>
             <QueryProvider>

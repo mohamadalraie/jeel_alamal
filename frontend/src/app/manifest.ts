@@ -10,7 +10,7 @@ export default function manifest(): MetadataRoute.Manifest {
     id: 'jeel-alamal-pwa',
     display: 'standalone',
     display_override: ['standalone', 'minimal-ui'],
-    orientation: 'portrait',
+    orientation: 'any',
     background_color: '#123b50',
     theme_color: '#123b50',
     dir: 'rtl',

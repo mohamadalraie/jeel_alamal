@@ -157,17 +157,21 @@ export function TakeAttendanceDialog({
         </div>
 
         {/* Quick "mark all" row */}
-        <div className="flex flex-wrap gap-1.5">
-          {STATUS_ORDER.map((s) => (
-            <button
-              key={s}
-              type="button"
-              onClick={() => markAll(s)}
-              className="rounded-md border border-muted bg-muted/30 px-2 py-1 text-xs font-medium text-muted-foreground transition hover:bg-muted"
-            >
-              {t('markAll')}: {t(s)}
-            </button>
-          ))}
+        {/* Quick "mark all" row */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-2.5 rounded-xl bg-muted/30 border border-border/50">
+          <span className="text-xs font-semibold text-muted-foreground shrink-0">{t('markAll')}:</span>
+          <div className="grid grid-cols-4 gap-1.5 flex-1">
+            {STATUS_ORDER.map((s) => (
+              <button
+                key={s}
+                type="button"
+                onClick={() => markAll(s)}
+                className="rounded-lg border border-border/60 bg-background/80 hover:bg-muted py-1.5 px-1 text-xs font-medium text-foreground transition active:scale-95 text-center truncate"
+              >
+                {s === 'justified' ? t('justifiedShort') : t(s)}
+              </button>
+            ))}
+          </div>
         </div>
 
         {/* Progress bar */}
@@ -211,16 +215,16 @@ export function TakeAttendanceDialog({
                               </span>
                             )}
                           </span>
-                          <div className="flex flex-wrap gap-1.5">
+                          <div className="grid grid-cols-4 gap-1.5">
                             {STATUS_ORDER.map((status) => {
                               return (
                                 <button
                                   key={status}
                                   type="button"
                                   onClick={() => setStatus(s.id, status)}
-                                  className="flex-1 rounded-md border border-muted bg-muted/30 px-2 py-1.5 text-xs font-medium text-muted-foreground transition hover:bg-muted active:scale-95"
+                                  className="rounded-lg border border-border/60 bg-muted/40 hover:bg-muted py-2 px-1 text-xs font-medium text-foreground transition hover:border-primary/50 active:scale-95 text-center truncate"
                                 >
-                                  {t(status)}
+                                  {status === 'justified' ? t('justifiedShort') : t(status)}
                                 </button>
                               );
                             })}
@@ -246,7 +250,7 @@ export function TakeAttendanceDialog({
                               {t(statuses[s.id]!)}
                             </span>
                           </span>
-                          <div className="flex flex-wrap gap-1.5 mt-1">
+                          <div className="grid grid-cols-4 gap-1.5 mt-1">
                             {STATUS_ORDER.map((status) => {
                               const active = statuses[s.id] === status;
                               return (
@@ -255,8 +259,8 @@ export function TakeAttendanceDialog({
                                   type="button"
                                   onClick={() => setStatus(s.id, status)}
                                   className={cn(
-                                    'rounded-md border px-2 py-1 text-[10px] font-medium transition',
-                                    active ? 'text-white' : 'border-muted bg-muted/30 text-muted-foreground hover:bg-muted',
+                                    'rounded-lg border py-1.5 px-1 text-xs font-medium transition text-center truncate',
+                                    active ? 'text-white font-bold shadow-xs' : 'border-border/50 bg-muted/20 text-muted-foreground hover:bg-muted',
                                   )}
                                   style={
                                     active
@@ -264,7 +268,7 @@ export function TakeAttendanceDialog({
                                       : {}
                                   }
                                 >
-                                  {t(status)}
+                                  {status === 'justified' ? t('justifiedShort') : t(status)}
                                 </button>
                               );
                             })}

@@ -149,10 +149,10 @@ export function AddRecitationDialog({
                   setSurah(null);
                 }}
               >
-                <SelectTrigger>
+                <SelectTrigger className="w-full">
                   <SelectValue placeholder={t('selectStudent')} />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="z-[70] max-h-56">
                   {students.map((s) => (
                     <SelectItem key={s.id} value={s.id}>
                       {s.name}
@@ -255,10 +255,10 @@ export function AddRecitationDialog({
           <div className="flex flex-col gap-1.5">
             <Label>{t('rating')}</Label>
             <Select value={rating} onValueChange={(v) => setRating(v as RecitationRating)}>
-              <SelectTrigger>
+              <SelectTrigger className="w-full">
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="z-[70] max-h-56">
                 {RATINGS.map((r) => (
                   <SelectItem key={r} value={r}>
                     {tr(r)}
