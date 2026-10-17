@@ -34,7 +34,7 @@ export class GetMyLessonsUseCase {
     actor: Actor,
     requestedInstituteId?: string,
   ): Promise<{ entries: TeacherProgramEntry[] }> {
-    const targetInstituteId = requestedInstituteId || actor.instituteId;
+    const targetInstituteId = requestedInstituteId || actor.instituteId || undefined;
 
     // Security check: teacher must belong to the institute; manager must manage it
     if (targetInstituteId && actor.role !== UserRole.SuperAdmin) {
