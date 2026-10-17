@@ -50,6 +50,7 @@ import type {
   MaterializeScheduledLessonInput,
   SubmitLessonReportInput,
   UpdateLessonReportInput,
+  StudentsAchievementReportResponse,
 } from './types';
 
 /**
@@ -373,6 +374,25 @@ export const getStudentAnalytics = (instituteId: string, studentId?: string) =>
   request<StudentAnalytics>(
     `/api/institutes/${instituteId}/analytics/student${studentId ? `?studentId=${studentId}` : ''}`,
   );
+export const getStudentsAchievementReport = (
+  instituteId: string,
+  params?: {
+    startDate?: string;
+    endDate?: string;
+    classId?: string;
+    track?: 'all' | 'regular' | 'intensive';
+  },
+) => {
+  const q = new URLSearchParams();
+  if (params?.startDate) q.set('startDate', params.startDate);
+  if (params?.endDate) q.set('endDate', params.endDate);
+  if (params?.classId) q.set('classId', params.classId);
+  if (params?.track) q.set('track', params.track);
+  const qs = q.toString();
+  return request<StudentsAchievementReportResponse>(
+    `/api/institutes/${instituteId}/reports/students-achievement${qs ? `?${qs}` : ''}`,
+  );
+};
 
 // ── Quran recitation (spec 005) ──
 export const listSurahs = () => request<Surah[]>('/api/quran/surahs');

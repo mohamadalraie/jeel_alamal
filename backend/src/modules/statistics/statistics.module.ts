@@ -9,6 +9,7 @@ import {
   GetTeacherAnalyticsUseCase,
   GetStudentAnalyticsUseCase,
 } from './application/get-analytics.use-cases';
+import { GetStudentsAchievementReportUseCase } from './application/get-students-achievement-report.use-case';
 
 @Module({
   imports: [UsersModule, ClassesModule, InstitutesModule],
@@ -18,6 +19,7 @@ import {
     GetManagerAnalyticsUseCase,
     GetTeacherAnalyticsUseCase,
     GetStudentAnalyticsUseCase,
+    GetStudentsAchievementReportUseCase,
   ],
 })
 export class StatisticsModule {}

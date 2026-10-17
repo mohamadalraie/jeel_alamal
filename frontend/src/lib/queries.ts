@@ -43,6 +43,15 @@ export const qk = {
     ['teacher-analytics', inst, teacherId ?? ''] as const,
   studentAnalytics: (inst: string, studentId?: string) =>
     ['student-analytics', inst, studentId ?? ''] as const,
+  studentsAchievementReport: (
+    inst: string,
+    params?: {
+      startDate?: string;
+      endDate?: string;
+      classId?: string;
+      track?: 'all' | 'regular' | 'intensive';
+    },
+  ) => ['students-achievement-report', inst, params ?? {}] as const,
 };
 
 export const useInstitutes = () =>
@@ -74,6 +83,22 @@ export const useStudentAnalytics = (instituteId?: string, studentId?: string) =>
     queryKey: qk.studentAnalytics(instituteId ?? '', studentId),
     queryFn: () => api.getStudentAnalytics(instituteId!, studentId),
     enabled: !!instituteId,
+  });
+
+export const useStudentsAchievementReport = (
+  instituteId?: string,
+  params?: {
+    startDate?: string;
+    endDate?: string;
+    classId?: string;
+    track?: 'all' | 'regular' | 'intensive';
+  },
+  options?: { enabled?: boolean },
+) =>
+  useQuery({
+    queryKey: qk.studentsAchievementReport(instituteId ?? '', params),
+    queryFn: () => api.getStudentsAchievementReport(instituteId!, params),
+    enabled: !!instituteId && (options?.enabled ?? true),
   });
 
 export const useTeachers = (instituteId?: string) =>

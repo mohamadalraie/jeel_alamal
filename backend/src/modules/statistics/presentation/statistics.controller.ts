@@ -7,6 +7,7 @@ import {
   GetTeacherAnalyticsUseCase,
   GetStudentAnalyticsUseCase,
 } from '../application/get-analytics.use-cases';
+import { GetStudentsAchievementReportUseCase } from '../application/get-students-achievement-report.use-case';
 
 @Controller('institutes/:instituteId')
 export class StatisticsController {
@@ -15,6 +16,7 @@ export class StatisticsController {
     private readonly getManagerAnalytics: GetManagerAnalyticsUseCase,
     private readonly getTeacherAnalytics: GetTeacherAnalyticsUseCase,
     private readonly getStudentAnalytics: GetStudentAnalyticsUseCase,
+    private readonly getStudentsAchievementReport: GetStudentsAchievementReportUseCase,
   ) {}
 
   @Get('stats')
@@ -49,5 +51,22 @@ export class StatisticsController {
     @Query('studentId') studentId?: string,
   ) {
     return this.getStudentAnalytics.execute(actor, instituteId, studentId);
+  }
+
+  @Get('reports/students-achievement')
+  studentsAchievementReport(
+    @CurrentUser() actor: Actor,
+    @Param('instituteId', ParseUUIDPipe) instituteId: string,
+    @Query('startDate') startDate?: string,
+    @Query('endDate') endDate?: string,
+    @Query('classId') classId?: string,
+    @Query('track') track?: 'all' | 'regular' | 'intensive',
+  ) {
+    return this.getStudentsAchievementReport.execute(actor, instituteId, {
+      startDate,
+      endDate,
+      classId,
+      track,
+    });
   }
 }

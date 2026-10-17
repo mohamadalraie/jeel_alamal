@@ -739,3 +739,54 @@ export interface AwardDinarInput {
 export interface BulkAwardDinarInput extends AwardDinarInput {
   studentIds: string[];
 }
+
+export interface StudentAchievementItem {
+  studentId: string;
+  name: string;
+  username: string;
+  phone: string | null;
+  schoolGrade: string | null;
+  className: string;
+  classIds: string[];
+  track: 'regular' | 'intensive';
+  attendance: {
+    rate: number;
+    present: number;
+    late: number;
+    justified: number;
+    absent: number;
+    totalSessions: number;
+  };
+  dinars: {
+    gained: number;
+    lost: number;
+    net: number;
+  };
+  recitation: {
+    totalAyahs: number;
+    totalSessions: number;
+    surahsSummary: string;
+    surahs: {
+      number: number;
+      name: string;
+      ayahsRecited: number;
+      surahTotalAyahs: number;
+      percent: number;
+    }[];
+  };
+}
+
+export interface StudentsAchievementReportResponse {
+  instituteId: string;
+  startDate: string;
+  endDate: string;
+  totalStudents: number;
+  summary: {
+    averageAttendanceRate: number;
+    totalDinarsGained: number;
+    totalDinarsLost: number;
+    totalAyahsRecited: number;
+    studentsWithRecitations: number;
+  };
+  students: StudentAchievementItem[];
+}

@@ -18,6 +18,7 @@ import { ListSkeleton } from '@/features/shared/skeletons';
 import { AddMemberDialog } from '@/features/dashboard/add-member-dialog';
 import { GradeLabel } from '@/features/shared/grade-select';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { StudentAchievementReportDialog } from '@/features/students/student-achievement-report-dialog';
 
 export default function StudentsPage() {
   const t = useTranslations('dashboard');
@@ -92,14 +93,21 @@ export default function StudentsPage() {
     <div className="flex flex-col gap-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-2xl font-bold">{t('students')}</h1>
-        <AddMemberDialog
-          instituteId={selected.id}
-          role="student"
-          onCreated={() => {
-            refresh();
-            notify.success(t('addStudent'));
-          }}
-        />
+        <div className="flex items-center gap-2">
+          <StudentAchievementReportDialog
+            instituteId={selected.id}
+            instituteName={selected.name}
+            intensiveTrackEnabled={selected.intensiveTrackEnabled}
+          />
+          <AddMemberDialog
+            instituteId={selected.id}
+            role="student"
+            onCreated={() => {
+              refresh();
+              notify.success(t('addStudent'));
+            }}
+          />
+        </div>
       </div>
 
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
