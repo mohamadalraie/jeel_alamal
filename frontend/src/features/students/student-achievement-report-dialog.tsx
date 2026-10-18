@@ -387,7 +387,7 @@ export function StudentAchievementReportDialog({
       */}
       <DialogContent
         showCloseButton={false}
-        className="fixed inset-0 sm:inset-auto sm:top-1/2 sm:left-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2 sm:[transform:translate(-50%,-50%)] [transform:none] w-full sm:max-w-5xl h-[100dvh] sm:h-auto sm:max-h-[90vh] rounded-none sm:rounded-2xl p-0 flex flex-col bg-background overflow-hidden z-50 border-0 sm:border shadow-2xl"
+        className="fixed inset-2 sm:inset-auto top-2 bottom-2 sm:top-1/2 sm:left-1/2 translate-y-0 sm:-translate-y-1/2 sm:-translate-x-1/2 w-auto sm:w-full sm:max-w-5xl h-auto sm:h-[88vh] max-h-[calc(100dvh-1rem)] sm:max-h-[88vh] rounded-2xl p-0 flex flex-col bg-background overflow-hidden z-50 border shadow-2xl"
       >
         {/* Sticky Header with Title and Quick Actions */}
         <div className="sticky top-0 z-30 bg-card border-b px-4 py-3 sm:px-6 sm:py-4 flex items-center justify-between gap-3 shrink-0">
