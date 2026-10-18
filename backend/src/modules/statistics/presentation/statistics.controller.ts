@@ -1,4 +1,5 @@
-import { Controller, Get, Param, Query, ParseUUIDPipe } from '@nestjs/common';
+import { Controller, Get, Param, Query, ParseUUIDPipe, Res } from '@nestjs/common';
+import type { Response } from 'express';
 import { CurrentUser } from '../../../core/auth/current-user.decorator';
 import type { Actor } from '../../../shared/application/actor';
 import { GetInstituteStatsUseCase } from '../application/get-institute-stats.use-case';
@@ -8,6 +9,7 @@ import {
   GetStudentAnalyticsUseCase,
 } from '../application/get-analytics.use-cases';
 import { GetStudentsAchievementReportUseCase } from '../application/get-students-achievement-report.use-case';
+import { ExportStudentsAchievementExcelUseCase } from '../application/export-students-achievement-excel.use-case';
 
 @Controller('institutes/:instituteId')
 export class StatisticsController {
@@ -17,6 +19,7 @@ export class StatisticsController {
     private readonly getTeacherAnalytics: GetTeacherAnalyticsUseCase,
     private readonly getStudentAnalytics: GetStudentAnalyticsUseCase,
     private readonly getStudentsAchievementReport: GetStudentsAchievementReportUseCase,
+    private readonly exportStudentsAchievementExcel: ExportStudentsAchievementExcelUseCase,
   ) {}
 
   @Get('stats')
@@ -68,5 +71,28 @@ export class StatisticsController {
       classId,
       track,
     });
+  }
+
+  @Get('reports/students-achievement/excel')
+  async exportStudentsAchievementExcelReport(
+    @CurrentUser() actor: Actor,
+    @Param('instituteId', ParseUUIDPipe) instituteId: string,
+    @Res() res: Response,
+    @Query('startDate') startDate?: string,
+    @Query('endDate') endDate?: string,
+    @Query('classId') classId?: string,
+    @Query('track') track?: 'all' | 'regular' | 'intensive',
+  ) {
+    const buffer = await this.exportStudentsAchievementExcel.execute(actor, instituteId, {
+      startDate,
+      endDate,
+      classId,
+      track,
+    });
+
+    const filename = `students-achievement-report-${startDate || 'from'}-${endDate || 'to'}.xlsx`;
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    res.end(buffer);
   }
 }

@@ -394,6 +394,50 @@ export const getStudentsAchievementReport = (
   );
 };
 
+export const downloadStudentsAchievementExcel = async (
+  instituteId: string,
+  params?: {
+    startDate?: string;
+    endDate?: string;
+    classId?: string;
+    track?: 'all' | 'regular' | 'intensive';
+  },
+): Promise<void> => {
+  const q = new URLSearchParams();
+  if (params?.startDate) q.set('startDate', params.startDate);
+  if (params?.endDate) q.set('endDate', params.endDate);
+  if (params?.classId) q.set('classId', params.classId);
+  if (params?.track) q.set('track', params.track);
+  const qs = q.toString();
+
+  const token = getStoredAccessToken();
+  const headers: Record<string, string> = {};
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+
+  const res = await fetch(
+    `${API_URL}/api/institutes/${instituteId}/reports/students-achievement/excel${qs ? `?${qs}` : ''}`,
+    {
+      method: 'GET',
+      credentials: 'include',
+      headers,
+    },
+  );
+
+  if (!res.ok) {
+    throw new Error('فشل تحميل ملف الإكسل');
+  }
+
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `تقرير_إنجاز_الطلاب_${params?.startDate ?? ''}_${params?.endDate ?? ''}.xlsx`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+};
+
 // ── Quran recitation (spec 005) ──
 export const listSurahs = () => request<Surah[]>('/api/quran/surahs');
 export const getStudentRecitation = (studentId: string) =>
