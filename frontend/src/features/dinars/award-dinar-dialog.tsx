@@ -25,6 +25,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { cn } from '@/lib/utils';
 
 /**
  * Award dinars to one or many students (spec 010, US2). A rule from the active
@@ -62,7 +63,7 @@ export function AwardDinarDialog({
   const [amount, setAmount] = useState('');
   const [reason, setReason] = useState('');
   const [selectedStudentIds, setSelectedStudentIds] = useState<string[]>(
-    students.map((s) => s.id),
+    students.length === 1 ? [students[0].id] : [],
   );
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -75,7 +76,7 @@ export function AwardDinarDialog({
     setRuleId('');
     setAmount('');
     setReason('');
-    setSelectedStudentIds(students.map((s) => s.id));
+    setSelectedStudentIds(students.length === 1 ? [students[0].id] : []);
     setError(null);
   };
 
@@ -189,14 +190,19 @@ export function AwardDinarDialog({
 
           {/* Student selection checklist */}
           {isBulk && (
-            <div className="flex flex-col gap-2 rounded-lg border p-2.5 bg-muted/20">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-semibold">{t('selectStudents')}</span>
+            <div className="flex flex-col gap-2 rounded-xl border border-border/80 p-3 bg-muted/20">
+              <div className="flex items-center justify-between pb-1.5 border-b border-border/40">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-bold text-foreground">{t('selectStudents')}</span>
+                  <span className="text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary font-medium">
+                    {selectedStudentIds.length} / {students.length}
+                  </span>
+                </div>
                 <Button
                   type="button"
                   variant="ghost"
                   size="sm"
-                  className="h-6 text-[11px] px-2 text-primary"
+                  className="h-7 text-xs px-2.5 font-semibold text-primary hover:text-primary hover:bg-primary/10"
                   onClick={toggleAllStudents}
                 >
                   {selectedStudentIds.length === students.length
@@ -205,21 +211,26 @@ export function AwardDinarDialog({
                 </Button>
               </div>
 
-              <div className="max-h-36 overflow-y-auto space-y-1 pt-1 border-t border-border/50">
+              <div className="max-h-60 overflow-y-auto space-y-1.5 pt-1">
                 {students.map((s) => {
                   const checked = selectedStudentIds.includes(s.id);
                   return (
                     <label
                       key={s.id}
-                      className="flex items-center gap-2 text-xs p-1 rounded hover:bg-muted/60 cursor-pointer"
+                      className={cn(
+                        'flex items-center gap-3 px-3 py-2.5 rounded-lg border transition-all cursor-pointer min-h-[46px] select-none',
+                        checked
+                          ? 'border-primary/50 bg-primary/10 text-foreground shadow-xs'
+                          : 'border-border/50 hover:bg-muted/60 text-muted-foreground'
+                      )}
                     >
                       <input
                         type="checkbox"
                         checked={checked}
                         onChange={() => toggleStudent(s.id)}
-                        className="rounded border-border size-3.5 accent-primary"
+                        className="rounded border-border size-5 accent-primary shrink-0 cursor-pointer"
                       />
-                      <span className={checked ? 'font-medium text-foreground' : 'text-muted-foreground'}>
+                      <span className={cn('text-sm sm:text-base', checked ? 'font-bold text-foreground' : 'font-medium')}>
                         {s.name}
                       </span>
                     </label>

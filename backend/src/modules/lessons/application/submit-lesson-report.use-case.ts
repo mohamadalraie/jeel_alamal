@@ -92,7 +92,7 @@ export class SubmitLessonReportUseCase {
       (await this.settingsRepo.findByInstitute(lesson.instituteId)) ??
       LessonSettings.defaults(lesson.instituteId);
 
-    // If lesson was in started status, finalize it now
+    // If lesson was in started or pending status, finalize it now
     let actualDurationMinutes: number | null = null;
     if (binding.status === 'started') {
       actualDurationMinutes = binding.end(new Date());
@@ -102,6 +102,11 @@ export class SubmitLessonReportUseCase {
       );
       binding.applyStatus(status);
       await this.lessons.updateBindingLifecycle(binding, 'started');
+    } else if (binding.status === 'pending') {
+      binding.start(new Date());
+      actualDurationMinutes = binding.end(new Date());
+      binding.applyStatus('finished');
+      await this.lessons.updateBindingLifecycle(binding, 'pending');
     } else if (binding.actualStartTime && binding.actualEndTime) {
       const ms = binding.actualEndTime.getTime() - binding.actualStartTime.getTime();
       actualDurationMinutes = Math.max(1, Math.ceil(ms / 60_000));
@@ -118,7 +123,8 @@ export class SubmitLessonReportUseCase {
     });
 
     // Handle Webhook dispatch
-    if (settings.webhookEnabled && settings.webhookUrl) {
+    const webhookUrl = settings.webhookUrl?.trim();
+    if (settings.webhookEnabled && webhookUrl) {
       const [klass, teacherUser, subjects] = await Promise.all([
         this.classes.findById(binding.classId),
         this.users.findById(binding.teacherId),
@@ -170,7 +176,7 @@ export class SubmitLessonReportUseCase {
 
       const result = await this.webhookDispatcher.dispatchReport(
         payload,
-        settings.webhookUrl,
+        webhookUrl,
         settings.webhookSecret,
       );
 

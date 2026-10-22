@@ -36,11 +36,14 @@ function userRepo(users: ReturnType<typeof fakeUser>[]): UserRepository {
 
 function classRepo(config: {
   classOf: Record<string, { id: string; instituteId: string } | null>;
+  intensiveClassOf?: Record<string, { id: string; instituteId: string } | null>;
   teaches: Set<string>;
 }): ClassRepository {
   return {
     findCurrentClassOfStudent: async (sid: string) =>
       config.classOf[sid] ?? null,
+    findCurrentIntensiveClassOfStudent: async (sid: string) =>
+      config.intensiveClassOf?.[sid] ?? null,
     isTeacherOfClass: async (cid: string, tid: string) =>
       config.teaches.has(`${cid}:${tid}`),
   } as unknown as ClassRepository;
@@ -55,7 +58,8 @@ const inClassPolicy = () =>
     }),
   );
 
-const student = (id: string) => fakeUser(id, UserRole.Student, 'inst-1', id);
+const student = (id: string, instituteId = 'inst-1') =>
+  fakeUser(id, UserRole.Student, instituteId, id);
 
 describe('Award dinars (spec 010, US2)', () => {
   it('awards a rule, snapshotting amount and name', async () => {
@@ -106,16 +110,16 @@ describe('Award dinars (spec 010, US2)', () => {
     expect(item.label).toBe('إتلاف أداة');
   });
 
-  it('blocks a teacher awarding a student outside their classes', async () => {
+  it('blocks a teacher awarding a student from another institute unless they teach them', async () => {
     const rules = new InMemoryRuleRepo();
-    const rule = rules.add(manualRule('inst-1', 'x', 5));
+    const rule = rules.add(manualRule('inst-2', 'x', 5));
     const policy = new DinarAwardPolicy(
       fakePolicy({ manager: true }),
       classRepo({ classOf: { s9: null }, teaches: new Set() }),
     );
     const uc = new AwardDinarUseCase(
       policy,
-      userRepo([student('s9'), fakeUser('tch-1', UserRole.Teacher, 'inst-1')]),
+      userRepo([student('s9', 'inst-2'), fakeUser('tch-1', UserRole.Teacher, 'inst-1')]),
       rules,
       new InMemoryTxnRepo(),
     );

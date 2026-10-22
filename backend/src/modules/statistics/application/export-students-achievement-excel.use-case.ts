@@ -18,7 +18,7 @@ export class ExportStudentsAchievementExcelUseCase {
     private readonly getReport: GetStudentsAchievementReportUseCase,
     @Inject(INSTITUTE_REPOSITORY)
     private readonly instituteRepo: InstituteRepository,
-  ) {}
+  ) { }
 
   async execute(actor: Actor, instituteId: string, params: ExportParams): Promise<Buffer> {
     const report = await this.getReport.execute(actor, instituteId, params);
@@ -26,7 +26,7 @@ export class ExportStudentsAchievementExcelUseCase {
     const instituteName = institute?.name ?? 'المعهد';
 
     const wb = new ExcelJS.Workbook();
-    wb.creator = 'جيل الأمل - Jeel Al Amal';
+    wb.creator = 'جيل العمل - Jeel Al Amal';
     wb.created = new Date();
 
     const ws = wb.addWorksheet('تقرير إنجاز الطلاب', {

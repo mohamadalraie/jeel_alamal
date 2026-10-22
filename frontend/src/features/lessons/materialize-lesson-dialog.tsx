@@ -96,7 +96,7 @@ export function MaterializeLessonDialog({
       onDone?.();
 
       if (startImmediately) {
-        router.push(`/dashboard/lessons/timer/${res.lessonClassId}`);
+        router.push(`/dashboard/lesson-timer/${res.lessonClassId}`);
       }
     } catch (err) {
       notify.error(err, tc('error'));

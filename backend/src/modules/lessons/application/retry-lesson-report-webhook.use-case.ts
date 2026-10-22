@@ -63,7 +63,8 @@ export class RetryLessonReportWebhookUseCase {
     if (!lesson) throw new NotFoundError('Lesson not found');
 
     const settings = await this.settingsRepo.findByInstitute(lesson.instituteId);
-    if (!settings || !settings.webhookEnabled || !settings.webhookUrl) {
+    const webhookUrl = settings?.webhookUrl?.trim();
+    if (!settings || !settings.webhookEnabled || !webhookUrl) {
       throw new BusinessRuleError('Webhook is not enabled for this institute');
     }
 
@@ -127,7 +128,7 @@ export class RetryLessonReportWebhookUseCase {
 
     const result = await this.webhookDispatcher.dispatchReport(
       payload,
-      settings.webhookUrl,
+      webhookUrl,
       settings.webhookSecret,
     );
 

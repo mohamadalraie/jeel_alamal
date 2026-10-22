@@ -112,7 +112,7 @@ export class LessonsController {
     private readonly retryWebhook: RetryLessonReportWebhookUseCase,
     @Inject(WEBHOOK_DISPATCHER)
     private readonly webhookDispatcher: WebhookDispatcherPort,
-  ) {}
+  ) { }
 
   // ── Categories ──
   @Post('institutes/:instituteId/lesson-categories')
@@ -435,7 +435,7 @@ export class LessonsController {
         name: 'أستاذ تجريبي',
       },
       report: {
-        mainIdeas: 'تم الاتصال بسيرفر n8n بنجاح عبر نظام جيل الأمل!',
+        mainIdeas: 'تم الاتصال بسيرفر n8n بنجاح عبر نظام جيل العمل!',
         parentMessageFormatted:
           '📌 *تقرير تجريبي لاختبار الربط مع واتساب*\n• تم الاتصال بنجاح بسيرفر n8n ونظام إدارة الحلقات.',
       },

@@ -82,7 +82,20 @@ export function LessonSettingsForm({ instituteId }: { instituteId: string }) {
         secret: webhookSecret.trim() || undefined,
       });
       if (res.success) {
-        notify.success('تم إرسال إشعار تجريبي بنجاح إلى سيرفر n8n والواتساب!');
+        // Automatically save and activate the settings immediately so they take effect
+        const parsed = Number(threshold);
+        const value =
+          Number.isFinite(parsed) && parsed >= 0 ? Math.min(120, Math.floor(parsed)) : 0;
+        await updateLessonSettings(instituteId, {
+          durationThresholdMinutes: value,
+          durationStatusEnabled: enabled,
+          webhookUrl: webhookUrl.trim(),
+          webhookSecret: webhookSecret.trim() || undefined,
+          webhookEnabled: true,
+        });
+        setWebhookEnabled(true);
+        await qc.invalidateQueries({ queryKey: qk.lessonSettings(instituteId) });
+        notify.success('تم فحص الاتصال بسيرفر n8n وحفظ وتفعيل الإعدادات بنجاح!');
       } else {
         notify.error(res.error || 'تعذر الاتصال بسيرفر n8n');
       }

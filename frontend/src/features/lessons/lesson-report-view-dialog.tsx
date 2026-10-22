@@ -10,6 +10,7 @@ import {
   Edit2,
   FileText,
   Loader2,
+  Plus,
   RefreshCw,
   Send,
   Sparkles,
@@ -20,6 +21,7 @@ import {
 import { useLessonReport, useQueryClient, qk } from '@/lib/queries';
 import { retryLessonReportWebhook, updateLessonReport } from '@/lib/api';
 import { notify } from '@/lib/toast';
+import { LessonReportDialog } from './lesson-report-dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Label } from '@/components/ui/label';
@@ -55,6 +57,7 @@ export function LessonReportViewDialog({
   const [editNegatives, setEditNegatives] = useState('');
   const [busy, setBusy] = useState(false);
   const [retrying, setRetrying] = useState(false);
+  const [createReportOpen, setCreateReportOpen] = useState(false);
 
   if (!lessonClassId) return null;
 
@@ -147,8 +150,21 @@ export function LessonReportViewDialog({
             <Loader2 className="text-primary size-6 animate-spin" />
           </div>
         ) : isError || !report ? (
-          <div className="text-muted-foreground py-6 text-center text-sm">
-            {t('reportNotFound')}
+          <div className="flex flex-col items-center justify-center gap-3 py-8 text-center">
+            <div className="rounded-full bg-muted/60 p-3 text-muted-foreground">
+              <FileText className="size-6" />
+            </div>
+            <p className="text-muted-foreground text-sm font-medium">
+              لم يتم تسجيل تقرير لهذا الدرس حتى الآن.
+            </p>
+            <Button
+              size="sm"
+              onClick={() => setCreateReportOpen(true)}
+              className="gap-2 font-semibold"
+            >
+              <Plus className="size-4" />
+              <span>كتابة تقرير الدرس الآن</span>
+            </Button>
           </div>
         ) : (
           <div className="flex flex-col gap-4 py-2">
@@ -191,16 +207,23 @@ export function LessonReportViewDialog({
                     {t('webhookStatusPending')}
                   </Badge>
                 )}
+                {report.webhookStatus === 'disabled' && (
+                  <Badge variant="secondary" className="gap-1 text-[11px] opacity-75">
+                    الواتساب غير مفعّل
+                  </Badge>
+                )}
               </div>
             </div>
 
-            {/* If webhook failed, show retry prompt for authorized staff */}
-            {report.webhookStatus === 'failed' && report.canEdit && (
-              <div className="bg-destructive/10 border-destructive/30 flex items-center justify-between rounded-lg border p-2.5 text-xs text-destructive">
-                <div className="flex flex-col">
-                  <span className="font-semibold">{t('webhookFailedTitle')}</span>
+            {/* If webhook failed or disabled, show dispatch/retry prompt for authorized staff */}
+            {report.canEdit && report.webhookStatus !== 'sent' && (
+              <div className="bg-amber-500/10 border-amber-500/30 flex items-center justify-between rounded-lg border p-2.5 text-xs text-amber-800 dark:text-amber-200">
+                <div className="flex flex-col gap-0.5">
+                  <span className="font-semibold">
+                    {report.webhookStatus === 'failed' ? t('webhookFailedTitle') : 'إرسال التقرير إلى واتساب (n8n)'}
+                  </span>
                   <span className="text-[11px] opacity-90">
-                    {report.webhookError || t('webhookFailedHint')}
+                    {report.webhookError || (report.webhookStatus === 'failed' ? t('webhookFailedHint') : 'يمكنك إرسال هذا التقرير الآن إلى أولياء الأمور عبر الواتساب')}
                   </span>
                 </div>
                 <Button
@@ -208,14 +231,14 @@ export function LessonReportViewDialog({
                   variant="outline"
                   onClick={handleRetryWebhook}
                   disabled={retrying}
-                  className="h-7 shrink-0 gap-1 border-destructive/40 text-xs"
+                  className="h-8 shrink-0 gap-1.5 border-amber-500/40 text-xs font-semibold bg-background hover:bg-amber-500/10 text-amber-900 dark:text-amber-100 cursor-pointer"
                 >
                   {retrying ? (
-                    <Loader2 className="size-3 animate-spin" />
+                    <Loader2 className="size-3.5 animate-spin" />
                   ) : (
-                    <RefreshCw className="size-3" />
+                    <Send className="size-3.5" />
                   )}
-                  {t('retryWebhook')}
+                  <span>{report.webhookStatus === 'failed' ? t('retryWebhook') : 'إرسال إلى واتساب'}</span>
                 </Button>
               </div>
             )}
@@ -339,6 +362,27 @@ export function LessonReportViewDialog({
           </Button>
         </DialogFooter>
       </DialogContent>
+
+      {createReportOpen && (
+        <LessonReportDialog
+          open={createReportOpen}
+          onOpenChange={setCreateReportOpen}
+          lessonClassId={lessonClassId}
+          lessonTitle={report?.lessonTitle || t('lesson')}
+          className={report?.className || ''}
+          onSuccess={() => {
+            qc.invalidateQueries({
+              queryKey: qk.lessonReport(lessonClassId),
+            });
+            qc.invalidateQueries({
+              predicate: (q) =>
+                ['my-lessons', 'class-lessons', 'institute-lessons'].includes(
+                  q.queryKey[0] as string,
+                ),
+            });
+          }}
+        />
+      )}
     </Dialog>
   );
 }

@@ -1,13 +1,14 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { Plus, Check, Search } from 'lucide-react';
+import { Plus, Check, Search, BookOpenCheck, Info, Loader2 } from 'lucide-react';
 import type { RecitationRating, Surah } from '@/lib/types';
 import { addRecitation, ApiError } from '@/lib/api';
 import { notify } from '@/lib/toast';
 import { useStudentRecitation, useQueryClient, qk } from '@/lib/queries';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -69,11 +70,32 @@ export function AddRecitationDialog({
   const [error, setError] = useState<string | null>(null);
 
   // The selected student's current progress (to auto-continue + show what's left).
-  const { data: recitation } = useStudentRecitation(open ? student : undefined);
+  const { data: recitation, isLoading: isLoadingRecitation } = useStudentRecitation(open ? student : undefined);
   const cell = useMemo(
     () => (surah ? recitation?.heart.find((c) => c.number === surah.number) : undefined),
     [recitation, surah],
   );
+
+  const lastReachedAyah = useMemo(() => {
+    if (!cell || !cell.ranges || cell.ranges.length === 0) return 0;
+    return Math.max(...cell.ranges.map(([_, to]) => to));
+  }, [cell]);
+
+  const nextAyah = useMemo(() => {
+    if (!cell) return 1;
+    if (cell.nextAyah && cell.nextAyah <= (surah?.ayahCount ?? 1)) {
+      return cell.nextAyah;
+    }
+    return lastReachedAyah > 0 ? Math.min(lastReachedAyah + 1, surah?.ayahCount ?? 1) : 1;
+  }, [cell, lastReachedAyah, surah]);
+
+  // Synchronize default from/to whenever surah or student progress updates
+  useEffect(() => {
+    if (!surah) return;
+    const defaultStart = lastReachedAyah > 0 ? lastReachedAyah : 1;
+    setFrom(defaultStart);
+    setTo(surah.ayahCount);
+  }, [surah?.number, lastReachedAyah]);
 
   const filtered = useMemo(
     () => (query ? surahs.filter((s) => s.name.includes(query.trim())) : surahs),
@@ -82,10 +104,6 @@ export function AddRecitationDialog({
 
   function pickSurah(s: Surah) {
     setSurah(s);
-    // Continue from where the student reached; full/none → start at 1.
-    const next = recitation?.heart.find((c) => c.number === s.number)?.nextAyah;
-    setFrom(next && next <= s.ayahCount ? next : 1);
-    setTo(s.ayahCount);
     setQuery('');
   }
 
@@ -207,20 +225,79 @@ export function AddRecitationDialog({
             </div>
           </div>
 
-          {/* Progress for the chosen surah */}
-          {surah && cell && cell.coveredAyahs > 0 && (
-            <div className="bg-muted/40 flex flex-col gap-1 rounded-lg p-2.5 text-xs">
-              <div className="flex items-center justify-between">
-                <span className="text-muted-foreground">{t('progress')}</span>
-                <span className="font-medium">
-                  {cell.coveredAyahs}/{surah.ayahCount} · ٪{cell.percent}
-                </span>
-              </div>
-              <div className="bg-border h-1.5 overflow-hidden rounded-full">
-                <div className="bg-primary h-full" style={{ width: `${cell.percent}%` }} />
-              </div>
-              {cell.status !== 'full' && cell.nextAyah && (
-                <span className="text-muted-foreground">{t('continueFrom', { n: cell.nextAyah })}</span>
+          {/* Progress & Last reached ayah for the chosen surah */}
+          {surah && (
+            <div className="flex flex-col gap-2 rounded-xl border border-primary/25 bg-primary/5 p-3 text-xs sm:text-sm">
+              {isLoadingRecitation ? (
+                <div className="flex items-center gap-2 text-muted-foreground py-1">
+                  <Loader2 className="size-4 animate-spin text-primary" />
+                  <span>جارِ تحميل سجل تسميع الطالب...</span>
+                </div>
+              ) : cell && lastReachedAyah > 0 ? (
+                <div className="flex flex-col gap-2">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-1.5 font-bold text-foreground">
+                      <BookOpenCheck className="size-4 text-primary" />
+                      <span>آخر آية سمعها الطالب: الآية {lastReachedAyah} (من {surah.ayahCount})</span>
+                    </div>
+                    <Badge variant="secondary" className="font-semibold text-xs bg-primary/10 text-primary border-primary/20">
+                      ٪{cell.percent} من السورة
+                    </Badge>
+                  </div>
+
+                  <div className="bg-border/60 h-2 overflow-hidden rounded-full">
+                    <div className="bg-primary h-full transition-all duration-300" style={{ width: `${cell.percent}%` }} />
+                  </div>
+
+                  <div className="flex items-center justify-between text-xs text-muted-foreground pt-0.5">
+                    <span>
+                      المسمّع سابقاً: {cell.coveredAyahs} آية
+                      {cell.ranges.length > 0 && ` (${cell.ranges.map(([f, t]) => f === t ? `${f}` : `${f}-${t}`).join('، ')})`}
+                    </span>
+                    <span>المتبقي: {Math.max(0, surah.ayahCount - cell.coveredAyahs)} آية</span>
+                  </div>
+
+                  {/* Quick starting ayah pickers */}
+                  <div className="flex flex-wrap items-center gap-2 pt-1 border-t border-border/40">
+                    <span className="text-[11px] text-muted-foreground font-medium">البدء سريعاً من:</span>
+                    <button
+                      type="button"
+                      onClick={() => setFrom(lastReachedAyah)}
+                      className={cn(
+                        'px-2.5 py-1 rounded-md text-xs font-semibold border transition-all cursor-pointer',
+                        from === lastReachedAyah
+                          ? 'bg-primary text-primary-foreground border-primary shadow-xs'
+                          : 'bg-background hover:bg-muted text-foreground border-border'
+                      )}
+                    >
+                      آخر آية وصلها ({lastReachedAyah})
+                    </button>
+                    {nextAyah <= surah.ayahCount && nextAyah !== lastReachedAyah && (
+                      <button
+                        type="button"
+                        onClick={() => setFrom(nextAyah)}
+                        className={cn(
+                          'px-2.5 py-1 rounded-md text-xs font-semibold border transition-all cursor-pointer',
+                          from === nextAyah
+                            ? 'bg-primary text-primary-foreground border-primary shadow-xs'
+                            : 'bg-background hover:bg-muted text-foreground border-border'
+                        )}
+                      >
+                        الآية التالية ({nextAyah})
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ) : cell && cell.status === 'full' ? (
+                <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400 font-semibold py-1">
+                  <Check className="size-4" />
+                  <span>الطالب أتم حفظ وتسميع سورة {surah.name} بالكامل (100%)</span>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2 text-muted-foreground py-1">
+                  <Info className="size-4 text-primary" />
+                  <span>لم يبدأ الطالب بحفظ أو تسميع سورة {surah.name} بعد (البداية الافتراضية: الآية 1)</span>
+                </div>
               )}
             </div>
           )}

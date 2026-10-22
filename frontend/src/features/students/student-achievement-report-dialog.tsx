@@ -387,7 +387,7 @@ export function StudentAchievementReportDialog({
       */}
       <DialogContent
         showCloseButton={false}
-        className="fixed inset-2 sm:inset-auto top-2 bottom-2 sm:top-1/2 sm:left-1/2 translate-y-0 sm:-translate-y-1/2 sm:-translate-x-1/2 w-auto sm:w-full sm:max-w-5xl h-auto sm:h-[88vh] max-h-[calc(100dvh-1rem)] sm:max-h-[88vh] rounded-2xl p-0 flex flex-col bg-background overflow-hidden z-50 border shadow-2xl"
+        className="fixed inset-auto top-2 bottom-2 left-2 right-2 translate-y-0 translate-x-0 w-auto max-h-[calc(100vh-1rem)] max-h-[calc(100dvh-1rem)] sm:top-1/2 sm:left-1/2 sm:bottom-auto sm:right-auto sm:-translate-x-1/2 sm:-translate-y-1/2 sm:w-full sm:max-w-5xl sm:h-[88vh] sm:max-h-[88vh] rounded-2xl p-0 flex flex-col bg-background overflow-hidden z-50 border shadow-2xl"
       >
         {/* Sticky Header with Title and Quick Actions */}
         <div className="sticky top-0 z-30 bg-card border-b px-4 py-3 sm:px-6 sm:py-4 flex items-center justify-between gap-3 shrink-0">
@@ -437,9 +437,9 @@ export function StudentAchievementReportDialog({
 
         {/* 
           Main Scrollable Body:
-          Everything scrolls naturally inside this container on mobile and desktop!
+          min-h-0 and touch-scroll ensure smooth scrolling on all WebKit / mobile browsers!
         */}
-        <div className="flex-1 overflow-y-auto overscroll-contain p-3 sm:p-5 space-y-4">
+        <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain touch-scroll p-3 sm:p-5 space-y-4">
           {/* Filter Card */}
           <div className="rounded-xl border bg-card p-3 sm:p-4 space-y-3 shadow-xs">
             {/* Horizontal scrollable presets row */}

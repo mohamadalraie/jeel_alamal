@@ -150,4 +150,87 @@ html {
   html {
     @apply font-sans;
   }
+
+  /* ─────────────────────────────────────────────────────────────
+     Universal Fallbacks for Older Mobile Browsers (iOS < 15.4, Chrome < 104)
+     ───────────────────────────────────────────────────────────── */
+
+  /* 1. Dynamic Viewport Fallbacks (dvh -> vh) */
+  .min-h-dvh {
+    min-height: 100vh;
+    min-height: 100dvh;
+  }
+  .h-\[100dvh\] {
+    height: 100vh;
+    height: 100dvh;
+  }
+  .max-h-\[90dvh\] {
+    max-height: 90vh;
+    max-height: 90dvh;
+  }
+  .max-h-\[calc\(100dvh-1rem\)\] {
+    max-height: calc(100vh - 1rem);
+    max-height: calc(100dvh - 1rem);
+  }
+  .max-h-\[calc\(100dvh-2rem\)\] {
+    max-height: calc(100vh - 2rem);
+    max-height: calc(100dvh - 2rem);
+  }
+
+  /* 2. Legacy Transform Fallbacks for centering without modern CSS `translate` property */
+  .-translate-x-1\/2.-translate-y-1\/2 {
+    -webkit-transform: translate(-50%, -50%);
+    transform: translate(-50%, -50%);
+  }
+  .-translate-y-1\/2:not(.-translate-x-1\/2) {
+    -webkit-transform: translateY(-50%);
+    transform: translateY(-50%);
+  }
+  .-translate-x-1\/2:not(.-translate-y-1\/2) {
+    -webkit-transform: translateX(-50%);
+    transform: translateX(-50%);
+  }
+  .translate-y-0 {
+    -webkit-transform: translateY(0);
+    transform: translateY(0);
+  }
+  .translate-x-0 {
+    -webkit-transform: translateX(0);
+    transform: translateX(0);
+  }
+
+  /* 3. Inset Fallbacks for browsers without CSS inset property */
+  .inset-0 {
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+  }
+  .inset-2 {
+    top: 0.5rem;
+    right: 0.5rem;
+    bottom: 0.5rem;
+    left: 0.5rem;
+  }
+  .inset-x-0 {
+    right: 0;
+    left: 0;
+  }
+  .inset-y-0 {
+    top: 0;
+    bottom: 0;
+  }
+  .inset-x-3\.5 {
+    right: 0.875rem;
+    left: 0.875rem;
+  }
+
+  /* 4. Touch momentum scrolling for iOS/WebKit */
+  .overflow-y-auto,
+  .overflow-x-auto,
+  .overflow-auto,
+  .touch-scroll {
+    -webkit-overflow-scrolling: touch;
+  }
 }
+

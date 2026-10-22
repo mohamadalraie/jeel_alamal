@@ -31,11 +31,23 @@ export class DinarAwardPolicy {
       return;
     }
     if (actor.role === UserRole.Teacher) {
-      const klass = await this.classes.findCurrentClassOfStudent(student.id);
+      // 1. Any teacher belonging to the student's institute may award dinars
+      if (actor.instituteId && actor.instituteId === student.instituteId) {
+        return;
+      }
+      // 2. Or a teacher assigned to any regular class of the student
+      const regularClass = await this.classes.findCurrentClassOfStudent(student.id);
       if (
-        klass &&
-        klass.instituteId === actor.instituteId &&
-        (await this.classes.isTeacherOfClass(klass.id, actor.userId))
+        regularClass &&
+        (await this.classes.isTeacherOfClass(regularClass.id, actor.userId))
+      ) {
+        return;
+      }
+      // 3. Or a teacher assigned to any intensive class of the student
+      const intensiveClass = await this.classes.findCurrentIntensiveClassOfStudent(student.id);
+      if (
+        intensiveClass &&
+        (await this.classes.isTeacherOfClass(intensiveClass.id, actor.userId))
       ) {
         return;
       }

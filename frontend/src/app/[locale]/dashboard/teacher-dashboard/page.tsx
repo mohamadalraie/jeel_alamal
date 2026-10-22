@@ -302,7 +302,7 @@ export default function TeacherDashboardPage() {
               asChild
               className="bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm gap-2 font-semibold"
             >
-              <Link href={`/dashboard/lesson-timer?id=${activeLesson.lessonClassId}`}>
+              <Link href={`/dashboard/lesson-timer/${activeLesson.lessonClassId}`}>
                 <Play className="size-4 fill-white" />
                 <span>{t('continueTimer')}</span>
               </Link>
