@@ -56,7 +56,21 @@ export class MaterializeScheduledLessonUseCase {
     });
 
     // Create binding for this class
-    const teacherId = actor.role === UserRole.Teacher ? actor.userId : actor.userId;
+    let teacherId = actor.userId;
+    if (dto.scheduleSlotId) {
+      const schedule = await this.classes.getSchedule(klass.id);
+      const slot = schedule.find((s) => s.id === dto.scheduleSlotId);
+      if (slot?.teacherId) {
+        teacherId = slot.teacherId;
+      }
+    }
+    if (teacherId === actor.userId && actor.role !== UserRole.Teacher) {
+      const membership = await this.classes.getMembership(klass.id);
+      if (membership.teacherIds.length > 0) {
+        teacherId = membership.teacherIds[0];
+      }
+    }
+
     const binding = LessonClassBinding.create({
       lessonId: lesson.id,
       classId: klass.id,

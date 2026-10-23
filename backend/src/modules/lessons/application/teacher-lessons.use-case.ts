@@ -55,16 +55,26 @@ export class GetMyLessonsUseCase {
       }
     }
 
-    const raw = await this.lessons.getTeacherProgram(
-      actor.userId,
-      targetInstituteId,
-    ); // sorted date,sort
+    const isManagerOrAdmin =
+      actor.role === 'institute_manager' || actor.role === 'super_admin';
+
+    // For managers, fetch all materialized lessons across the institute; for teachers, their own.
+    const raw = isManagerOrAdmin && targetInstituteId
+      ? await this.lessons.getInstituteProgram(targetInstituteId)
+      : await this.lessons.getTeacherProgram(actor.userId, targetInstituteId);
     const today = todayISO();
 
-    const materializedEntries: TeacherProgramEntry[] = raw.map((e) => ({
-      ...toEntryView(e, today),
-      isNext: false,
-    }));
+    const materializedEntries: TeacherProgramEntry[] = raw.map((e) => {
+      const entry = toEntryView(e, today);
+      return {
+        ...entry,
+        name:
+          entry.name ||
+          entry.subjectName ||
+          (entry.kind === 'recitation' ? 'جلسة تسميع' : null),
+        isNext: false,
+      };
+    });
 
     // Retrieve candidate classes to surface upcoming template slots (spec 012)
     const teacherClasses = await this.classes.findClassesByTeacher(actor.userId);
@@ -77,15 +87,81 @@ export class GetMyLessonsUseCase {
       candidateMap.set(c.id, c);
     }
 
-    const isManagerOrAdmin =
-      actor.role === 'institute_manager' || actor.role === 'super_admin';
-
     if (targetInstituteId && isManagerOrAdmin) {
       const instituteClasses =
         await this.classes.findAllByInstitute(targetInstituteId);
       for (const ic of instituteClasses) {
         if (!candidateMap.has(ic.id)) {
           candidateMap.set(ic.id, ic);
+        }
+      }
+    }
+
+    // Pre-fetch institute subjects and categories to enrich unmaterialized slots
+    const [subjects, categories] = targetInstituteId
+      ? await Promise.all([
+          this.lessons.listSubjects(targetInstituteId, true),
+          this.lessons.listCategories(targetInstituteId),
+        ])
+      : [[], []];
+
+    const subjectMap = new Map(subjects.map((s) => [s.id, s]));
+    const categoryMap = new Map(categories.map((c) => [c.id, c]));
+
+    // Fetch schedules for all candidate classes and collect all assigned teacher IDs
+    const classSchedules = new Map<
+      string,
+      Awaited<ReturnType<typeof this.classes.getSchedule>>
+    >();
+    const teacherIdsSet = new Set<string>();
+    if (actor.userId) teacherIdsSet.add(actor.userId);
+
+    for (const klass of candidateMap.values()) {
+      if (targetInstituteId && klass.instituteId !== targetInstituteId) {
+        continue;
+      }
+      const schedule = await this.classes.getSchedule(klass.id);
+      classSchedules.set(klass.id, schedule);
+      for (const slot of schedule) {
+        if (slot.teacherId) teacherIdsSet.add(slot.teacherId);
+      }
+    }
+
+    const teacherUsers =
+      teacherIdsSet.size > 0
+        ? await this.users.findManyByIds(Array.from(teacherIdsSet))
+        : [];
+    const teacherMap = new Map(
+      teacherUsers.map((u) => [
+        u.id,
+        u.fullName || `${u.firstName ?? ''} ${u.lastName ?? ''}`.trim(),
+      ]),
+    );
+
+    // Enrich materialized entries with start/end time from recurring schedule if missing
+    for (const entry of materializedEntries) {
+      if (!entry.startTime && entry.classId) {
+        const sched = classSchedules.get(entry.classId) || [];
+        const jsDay = new Date(`${entry.date}T00:00:00Z`).getUTCDay();
+        const dayOfWeek = dayMapping[jsDay];
+        const matched = sched.find(
+          (s) =>
+            s.dayOfWeek === dayOfWeek &&
+            (entry.subjectId
+              ? s.subjectId === entry.subjectId
+              : s.sort === entry.sort),
+        );
+        if (matched) {
+          entry.startTime = {
+            kind: matched.start.kind,
+            value: matched.start.value,
+          };
+          if (matched.end) {
+            entry.endTime = {
+              kind: matched.end.kind,
+              value: matched.end.value,
+            };
+          }
         }
       }
     }
@@ -97,7 +173,7 @@ export class GetMyLessonsUseCase {
       if (targetInstituteId && klass.instituteId !== targetInstituteId) {
         continue;
       }
-      const schedule = await this.classes.getSchedule(klass.id);
+      const schedule = classSchedules.get(klass.id) ?? [];
       const isTeacherOfThisClass = teacherClasses.some((c) => c.id === klass.id);
 
       const teacherSlots = schedule.filter((s) => {
@@ -131,6 +207,37 @@ export class GetMyLessonsUseCase {
           );
 
           if (!exists) {
+            const subject = slot.subjectId ? subjectMap.get(slot.subjectId) : null;
+            const subjectName = subject?.name ?? null;
+
+            // Determine category: slot's category, or subject's color, or null
+            let category: { id: string; name: string; color: string } | null = null;
+            if (slot.categoryId && categoryMap.has(slot.categoryId)) {
+              const cat = categoryMap.get(slot.categoryId)!;
+              category = { id: cat.id, name: cat.name, color: cat.color };
+            } else if (subject) {
+              category = {
+                id: subject.id,
+                name: subject.name,
+                color: subject.color || '#3b82f6',
+              };
+            }
+
+            // Determine assigned teacher
+            const slotTeacherId =
+              slot.teacherId || (isTeacherOfThisClass ? actor.userId : null);
+            const teacherName = slotTeacherId
+              ? teacherMap.get(slotTeacherId) || ''
+              : '';
+
+            // Determine lesson name
+            let lessonName: string | null = null;
+            if (slot.kind === 'recitation') {
+              lessonName = 'جلسة تسميع قرآن كريم';
+            } else if (subjectName) {
+              lessonName = subjectName;
+            }
+
             unmaterializedEntries.push({
               lessonClassId: `slot_${slot.id}_${dateStr}`,
               lessonId: `temp_lesson_${slot.id}_${dateStr}`,
@@ -140,11 +247,11 @@ export class GetMyLessonsUseCase {
                 slot.kind === 'recitation'
                   ? LessonKind.Recitation
                   : LessonKind.Lesson,
-              name: slot.kind === 'recitation' ? 'جلسة تسميع' : null,
+              name: lessonName,
               subjectId: slot.subjectId ?? null,
-              subjectName: null,
+              subjectName,
               description: null,
-              category: null,
+              category,
               date: dateStr,
               sort: slot.sort ?? 0,
               targetTrack: slot.trackType ?? 'regular',
@@ -152,7 +259,10 @@ export class GetMyLessonsUseCase {
               status: 'pending',
               actualStartTime: null,
               actualEndTime: null,
-              teacher: { id: actor.userId, name: '' },
+              teacher: {
+                id: slotTeacherId || actor.userId,
+                name: teacherName,
+              },
               className: klass.name,
               classId: klass.id,
               startTime: { kind: slot.start.kind, value: slot.start.value },

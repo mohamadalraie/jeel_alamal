@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import { useRouter } from '@/i18n/navigation';
 import { BookOpen, Calendar, Clock, Loader2, Play } from 'lucide-react';
@@ -50,10 +50,17 @@ export function MaterializeLessonDialog({
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [categoryId, setCategoryId] = useState<string>('');
-  const [duration, setDuration] = useState<number>(
-    slot?.expectedDurationMinutes ?? 45,
-  );
+  const [duration, setDuration] = useState<number>(45);
   const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    if (open && slot) {
+      setName(slot.name && slot.name !== 'درس' ? slot.name : slot.subjectName || '');
+      setDescription(slot.description || '');
+      setCategoryId(slot.category?.id || '');
+      setDuration(slot.expectedDurationMinutes ?? 45);
+    }
+  }, [open, slot]);
 
   const { data: categories = [] } = useLessonCategories(instituteId);
 

@@ -25,7 +25,7 @@ interface NavItem {
 
 const ITEMS: NavItem[] = [
   { href: '/dashboard/announcements', labelKey: 'announcements', icon: Megaphone },
-  { href: '/dashboard/teacher-dashboard', labelKey: 'teacherDashboard', icon: LayoutDashboard, teacherOnly: true },
+  { href: '/dashboard/teacher-dashboard', labelKey: 'teacherDashboard', icon: LayoutDashboard, hideForStudent: true },
   { href: '/dashboard/my-schedule', labelKey: 'weeklySchedule', icon: CalendarClock, studentOnly: true },
   { href: '/dashboard/my-profile', labelKey: 'myProfile', icon: UserCircle, studentOnly: true },
   { href: '/dashboard/statistics', labelKey: 'statistics', icon: BarChart3, hideForStudent: true, hideForTeacher: true },

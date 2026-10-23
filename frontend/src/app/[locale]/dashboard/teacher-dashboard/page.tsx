@@ -14,6 +14,9 @@ import {
   ChevronLeft,
   Sparkles,
   CalendarPlus,
+  Calendar,
+  Clock,
+  UserCheck,
 } from 'lucide-react';
 import { Link, useRouter } from '@/i18n/navigation';
 import { useInstitute } from '@/features/layout/institute-context';
@@ -36,7 +39,7 @@ import { TakeAttendanceDialog } from '@/features/attendance/take-attendance-dial
 import { AddRecitationDialog } from '@/features/recitation/add-recitation-dialog';
 import { AwardDinarDialog } from '@/features/dinars/award-dinar-dialog';
 import { TeacherAnalyticsView } from '@/features/analytics/teacher-analytics-view';
-import type { TeacherLessonEntry, ClassItem } from '@/lib/types';
+import type { TeacherLessonEntry, ClassItem, Prayer } from '@/lib/types';
 
 /** Component representing a single Class card for the teacher with quick actions. */
 function TeacherClassCard({
@@ -188,10 +191,14 @@ function TeacherClassCard({
 export default function TeacherDashboardPage() {
   const t = useTranslations('dashboard');
   const tLess = useTranslations('lessons');
+  const tp = useTranslations('prayers');
   const tc = useTranslations('common');
   const router = useRouter();
   const { user, selected, loading } = useInstitute();
   const qc = useQueryClient();
+
+  const isManager =
+    user.role === 'institute_manager' || user.role === 'super_admin';
 
   const [startingLessonId, setStartingLessonId] = useState<string | null>(null);
   const [materializeSlot, setMaterializeSlot] = useState<TeacherLessonEntry | null>(null);
@@ -199,9 +206,7 @@ export default function TeacherDashboardPage() {
 
   // Queries - enable for teachers, managers and super admins
   const isTeacherOrManager =
-    user.role === 'teacher' ||
-    user.role === 'institute_manager' ||
-    user.role === 'super_admin';
+    user.role === 'teacher' || isManager;
   const { data: lessonsData, isLoading: lessonsLoading } = useMyLessons(
     selected?.id,
     isTeacherOrManager,
@@ -222,12 +227,10 @@ export default function TeacherDashboardPage() {
   // Ongoing/started lesson banner check
   const activeLesson = entries.find((l) => l.status === 'started');
 
-  // Filter teacher's assigned classes (for managers testing, include institute classes)
+  // Filter teacher's assigned classes (for managers, include all institute classes)
   const teacherClasses = (classes ?? []).filter(
     (c) =>
-      c.teacherIds.includes(user.id) ||
-      user.role === 'super_admin' ||
-      user.role === 'institute_manager',
+      c.teacherIds.includes(user.id) || isManager,
   );
 
   // Filter upcoming lessons (only pending or started, exclude ended/past status: finished, under_time, over_time, not_given)
@@ -253,11 +256,16 @@ export default function TeacherDashboardPage() {
       {/* Header section */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border/50 pb-5">
         <div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             <h1 className="text-2xl font-bold tracking-tight">{t('quickAccess')}</h1>
             <Badge variant="secondary" className="gap-1 font-normal">
               <Sparkles className="size-3 text-amber-500" />
               <span>{user.firstName} {user.lastName}</span>
+              {isManager && (
+                <span className="text-primary font-semibold text-xs ms-1">
+                  ({user.role === 'super_admin' ? 'مدير عام' : 'مدير المعهد'})
+                </span>
+              )}
             </Badge>
           </div>
           <p className="text-muted-foreground text-sm mt-1">{t('quickAccessSubtitle')}</p>
@@ -265,9 +273,9 @@ export default function TeacherDashboardPage() {
 
         <div className="flex items-center gap-2">
           <Button asChild variant="outline" size="sm">
-            <Link href="/dashboard/my-lessons" className="gap-2">
+            <Link href={isManager ? '/dashboard/lessons' : '/dashboard/my-lessons'} className="gap-2">
               <CalendarClock className="size-4" />
-              <span>{t('myLessons')}</span>
+              <span>{isManager ? t('lessons') : t('myLessons')}</span>
             </Link>
           </Button>
         </div>
@@ -311,12 +319,14 @@ export default function TeacherDashboardPage() {
         </Card>
       )}
 
-      {/* Section 1: Teacher's Classes (حلقاتي) */}
+      {/* Section 1: Teacher's Classes (حلقاتي / حلقات المعهد) */}
       <section className="space-y-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <BookOpen className="size-5 text-primary" />
-            <h2 className="text-xl font-bold tracking-tight">{t('myClasses')}</h2>
+            <h2 className="text-xl font-bold tracking-tight">
+              {isManager ? t('instituteClasses') : t('myClasses')}
+            </h2>
             <Badge variant="outline" className="text-xs">
               {teacherClasses.length}
             </Badge>
@@ -347,14 +357,16 @@ export default function TeacherDashboardPage() {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <CalendarClock className="size-5 text-primary" />
-            <h2 className="text-xl font-bold tracking-tight">{t('upcomingLessons')}</h2>
+            <h2 className="text-xl font-bold tracking-tight">
+              {isManager ? t('instituteUpcomingLessons') : t('upcomingLessons')}
+            </h2>
             <Badge variant="outline" className="text-xs">
               {upcomingLessons.length}
             </Badge>
           </div>
 
           <Button asChild variant="ghost" size="sm" className="text-xs gap-1">
-            <Link href="/dashboard/my-lessons">
+            <Link href={isManager ? '/dashboard/lessons' : '/dashboard/my-lessons'}>
               <span>{t('view')}</span>
               <ChevronLeft className="size-3" />
             </Link>
@@ -368,36 +380,61 @@ export default function TeacherDashboardPage() {
           </Card>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {upcomingLessons.slice(0, 4).map((lesson) => {
+            {upcomingLessons.slice(0, 6).map((lesson) => {
               const isStarted = lesson.status === 'started';
               const isPending = lesson.status === 'pending';
               const isUnmaterialized = lesson.isMaterialized === false;
               const isStartingThis = startingLessonId === lesson.lessonClassId;
 
+              const displayTitle =
+                lesson.name && lesson.name !== 'درس'
+                  ? lesson.name
+                  : lesson.subjectName ||
+                    (lesson.kind === 'recitation' ? tLess('recitation') : tLess('lesson'));
+
+              const showSubjectBadge =
+                lesson.subjectName &&
+                lesson.subjectName !== displayTitle &&
+                (!lesson.category || lesson.category.name !== lesson.subjectName);
+
               return (
                 <Card
                   key={lesson.lessonClassId}
                   className={`flex flex-col justify-between p-5 transition-all border ${
-                    lesson.isNext ? 'border-primary/50 shadow-sm bg-primary/5' : 'border-border/60'
+                    lesson.isNext ? 'border-primary/50 shadow-sm bg-primary/5' : 'border-border/60 hover:border-border'
                   }`}
                 >
-                  <div className="space-y-2">
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="space-y-1">
-                        <span className="text-xs font-semibold text-primary">
-                          {lesson.className}
-                        </span>
-                        <h3 className="font-bold text-base leading-tight">
-                          {lesson.name || (lesson.kind === 'recitation' ? tLess('recitation') : tLess('lesson'))}
-                        </h3>
+                  <div className="space-y-3">
+                    {/* Top Badges */}
+                    <div className="flex items-start justify-between gap-2 flex-wrap">
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <Badge
+                          variant="outline"
+                          className="text-xs font-semibold bg-primary/5 text-primary border-primary/20 gap-1"
+                        >
+                          <BookOpen className="size-3" />
+                          <span>{lesson.className}</span>
+                        </Badge>
+
+                        {lesson.targetTrack === 'intensive' && (
+                          <Badge
+                            variant="secondary"
+                            className="text-xs bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/20 font-medium gap-1"
+                          >
+                            <Sparkles className="size-3" />
+                            <span>مسار مكثف</span>
+                          </Badge>
+                        )}
                       </div>
-                      <div className="flex items-center gap-1.5 shrink-0">
+
+                      <div className="flex items-center gap-1.5 shrink-0 flex-wrap">
                         {isUnmaterialized && (
                           <Badge
                             variant="outline"
-                            className="text-xs border-amber-500/40 text-amber-600 bg-amber-500/10 font-semibold"
+                            className="text-xs border-amber-500/40 text-amber-600 bg-amber-500/10 font-semibold gap-1"
                           >
-                            مجدول (غير مثبت)
+                            <CalendarClock className="size-3" />
+                            <span>مجدول (غير مثبت)</span>
                           </Badge>
                         )}
                         {lesson.category && (
@@ -413,20 +450,66 @@ export default function TeacherDashboardPage() {
                             {lesson.category.name}
                           </Badge>
                         )}
+                        {showSubjectBadge && (
+                          <Badge variant="outline" className="text-xs font-medium text-muted-foreground">
+                            {lesson.subjectName}
+                          </Badge>
+                        )}
                       </div>
                     </div>
 
-                    <p className="text-xs text-muted-foreground flex items-center gap-2">
-                      <span>{lesson.date}</span>
-                      {lesson.expectedDurationMinutes && (
-                        <>
-                          <span>•</span>
-                          <span>{tLess('durationMinutes', { n: lesson.expectedDurationMinutes })}</span>
-                        </>
+                    {/* Lesson Title & Description */}
+                    <div className="space-y-1">
+                      <h3 className="font-bold text-base leading-snug text-foreground">
+                        {displayTitle}
+                      </h3>
+                      {lesson.description && (
+                        <p className="text-xs text-muted-foreground line-clamp-1">
+                          {lesson.description}
+                        </p>
                       )}
-                    </p>
+                    </div>
+
+                    {/* Metadata Items: Date, Time/Prayer, Duration, Teacher */}
+                    <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-muted-foreground pt-1">
+                      <div className="flex items-center gap-1">
+                        <Calendar className="size-3.5 text-primary/70" />
+                        <span>{lesson.date}</span>
+                      </div>
+
+                      {lesson.startTime && (
+                        <div className="flex items-center gap-1 font-medium text-foreground/80">
+                          <Clock className="size-3.5 text-primary/70" />
+                          {lesson.startTime.kind === 'prayer' ? (
+                            <span>بعد صلاة {tp(lesson.startTime.value as Prayer)}</span>
+                          ) : (
+                            <span dir="ltr">
+                              {lesson.startTime.value}
+                              {lesson.endTime?.value ? ` - ${lesson.endTime.value}` : ''}
+                            </span>
+                          )}
+                        </div>
+                      )}
+
+                      {lesson.expectedDurationMinutes && (
+                        <div className="flex items-center gap-1">
+                          <Timer className="size-3.5 text-primary/70" />
+                          <span>{tLess('durationMinutes', { n: lesson.expectedDurationMinutes })}</span>
+                        </div>
+                      )}
+
+                      {lesson.teacher?.name && (
+                        <div className="flex items-center gap-1">
+                          <UserCheck className="size-3.5 text-primary/70" />
+                          <span>
+                            الأستاذ: <strong className="font-semibold text-foreground">{lesson.teacher.name}</strong>
+                          </span>
+                        </div>
+                      )}
+                    </div>
                   </div>
 
+                  {/* Footer & Actions */}
                   <div className="mt-4 pt-3 border-t border-border/40 flex items-center justify-between gap-2">
                     <Badge
                       variant={isStarted ? 'default' : 'secondary'}
@@ -477,9 +560,11 @@ export default function TeacherDashboardPage() {
       </section>
 
       {/* Teacher Performance & Student Analytics Section */}
-      <section className="pt-4 border-t border-border/40">
-        <TeacherAnalyticsView instituteId={selected.id} teacherId={user.id} />
-      </section>
+      {(user.role === 'teacher' || teacherClasses.some((c) => c.teacherIds.includes(user.id))) && (
+        <section className="pt-4 border-t border-border/40">
+          <TeacherAnalyticsView instituteId={selected.id} teacherId={user.id} />
+        </section>
+      )}
 
       <MaterializeLessonDialog
         open={materializeOpen}

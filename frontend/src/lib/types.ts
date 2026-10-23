@@ -553,6 +553,7 @@ export interface ProgramEntry {
   category: LessonCategory | null;
   date: string;
   sort: number;
+  targetTrack?: 'regular' | 'intensive';
   expectedDurationMinutes: number | null;
   status: LessonBindingStatus;
   actualStartTime: string | null;
