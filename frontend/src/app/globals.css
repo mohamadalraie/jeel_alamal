@@ -199,6 +199,13 @@ html {
     transform: translateX(0);
   }
 
+  /* Dialog layout stability across all browsers and engines */
+  [data-slot="dialog-content"] {
+    box-sizing: border-box;
+    transform-origin: center center;
+  }
+
+
   /* 3. Inset Fallbacks for browsers without CSS inset property */
   .inset-0 {
     top: 0;
