@@ -46,6 +46,15 @@ export interface ClassRepository {
    * one transaction. Passing null target only removes (un-enroll).
    */
   transferStudent(studentId: string, toClassId: string | null): Promise<void>;
+  /**
+   * Batch transfer: transfer multiple students from one class to another atomically.
+   */
+  transferStudents(
+    fromClassId: string,
+    toClassId: string,
+    studentIds: string[],
+    isIntensive: boolean,
+  ): Promise<void>;
 
   // ── spec 003: class CRUD + schedule ──
   delete(classId: string): Promise<void>;

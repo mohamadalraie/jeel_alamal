@@ -347,6 +347,14 @@ export const removeClassTeacher = (classId: string, teacherId: string) =>
   del<void>(`/api/classes/${classId}/teachers/${teacherId}`);
 export const removeClassStudent = (classId: string, studentId: string) =>
   del<void>(`/api/classes/${classId}/students/${studentId}`);
+export const transferClassStudents = (
+  classId: string,
+  input: { studentIds: string[]; targetClassId: string },
+) =>
+  post<{ transferredCount: number }>(
+    `/api/classes/${classId}/transfer-students`,
+    input,
+  );
 export const addIntensiveStudent = (classId: string, userId: string) =>
   post<void>(`/api/classes/${classId}/intensive-students`, { userId });
 export const removeIntensiveStudent = (classId: string, studentId: string) =>

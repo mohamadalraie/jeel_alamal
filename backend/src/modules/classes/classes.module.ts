@@ -11,6 +11,7 @@ import {
   EnrollStudentUseCase,
   AddIntensiveStudentUseCase,
   RemoveIntensiveStudentUseCase,
+  TransferClassStudentsUseCase,
 } from './application/use-cases/manage-class-members.use-cases';
 import {
   RemoveClassTeacherUseCase,
@@ -38,6 +39,7 @@ import { DrizzleClassRepository } from './infrastructure/persistence/drizzle-cla
     EnrollStudentUseCase,
     AddIntensiveStudentUseCase,
     RemoveIntensiveStudentUseCase,
+    TransferClassStudentsUseCase,
     RemoveClassTeacherUseCase,
     RemoveClassStudentUseCase,
     GetClassProfileUseCase,

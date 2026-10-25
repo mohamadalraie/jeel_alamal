@@ -2,8 +2,10 @@
 
 import { use, useCallback, useEffect, useState } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
-import { ArrowRight, ArrowLeft, ChevronLeft, ChevronRight, Star, Trash2, UserPlus, Zap } from 'lucide-react';
+import { ArrowRight, ArrowLeft, ArrowRightLeft, ChevronLeft, ChevronRight, Star, Trash2, UserPlus, Zap } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import type { ClassProfile, User } from '@/lib/types';
+import { TransferStudentsDialog } from '@/features/classes/transfer-students-dialog';
 import {
   getClassProfile,
   listTeachers,
@@ -69,7 +71,13 @@ export default function ClassProfilePage({
   const [allManagers, setAllManagers] = useState<User[]>([]);
   const [unassignedStudents, setUnassignedStudents] = useState<User[]>([]);
   const [notFound, setNotFound] = useState(false);
+  const [selectedStudentIds, setSelectedStudentIds] = useState<string[]>([]);
+  const [transferDialogOpen, setTransferDialogOpen] = useState(false);
+  const [transferStudentsList, setTransferStudentsList] = useState<{ id: string; name: string }[]>([]);
   const instituteId = selected?.id ?? '';
+
+  const isClassTeacher = profile?.teachers.some((t) => t.id === user.id) ?? false;
+  const canTransfer = canManage || isClassTeacher;
 
   const load = useCallback(() => {
     getClassProfile(classId)
@@ -161,68 +169,151 @@ export default function ClassProfilePage({
       {/* 1 — Students */}
         <TabsContent value="students" className="pt-4">
           <Card>
-            <CardHeader>
-              <CardTitle>{t('tabStudents')}</CardTitle>
-            </CardHeader>
-            <CardContent className="flex flex-col gap-3">
-              <div className="flex justify-end">
-                <ClassAddMemberDialog
-                  classId={classId}
-                  instituteId={instituteId}
-                  role="student"
-                  options={enrollableStudents}
-                  emptyHint={
-                    klass.isIntensive
-                      ? 'لا يوجد طلاب مؤهلون للمسار المكثف (يجب تسجيل الطالب في حلقة أساسية أولاً وألا يكون مسجلاً في حلقة مكثفة أخرى)'
-                      : t('noUnassignedStudents')
-                  }
-                  isIntensive={klass.isIntensive}
-                  onDone={load}
-                />
+            <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div className="flex items-center gap-2">
+                <CardTitle>{t('tabStudents')}</CardTitle>
+                <Badge variant="secondary" className="font-mono text-xs">
+                  {students.length}
+                </Badge>
               </div>
+
+              <div className="flex flex-wrap items-center gap-2">
+                {/* Bulk transfer button if any students selected */}
+                {canTransfer && selectedStudentIds.length > 0 && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="border-primary/50 text-primary hover:bg-primary/10 gap-1.5"
+                    onClick={() => {
+                      const list = students
+                        .filter((s) => selectedStudentIds.includes(s.id))
+                        .map((s) => ({ id: s.id, name: s.name }));
+                      setTransferStudentsList(list);
+                      setTransferDialogOpen(true);
+                    }}
+                  >
+                    <ArrowRightLeft className="size-3.5" />
+                    <span>نقل المحددين ({selectedStudentIds.length})</span>
+                  </Button>
+                )}
+
+                {canManage && (
+                  <ClassAddMemberDialog
+                    classId={classId}
+                    instituteId={instituteId}
+                    role="student"
+                    options={enrollableStudents}
+                    emptyHint={
+                      klass.isIntensive
+                        ? 'لا يوجد طلاب مؤهلون للمسار المكثف (يجب تسجيل الطالب في حلقة أساسية أولاً وألا يكون مسجلاً في حلقة مكثفة أخرى)'
+                        : t('noUnassignedStudents')
+                    }
+                    isIntensive={klass.isIntensive}
+                    onDone={load}
+                  />
+                )}
+              </div>
+            </CardHeader>
+
+            <CardContent className="flex flex-col gap-3">
               {students.length === 0 ? (
                 <p className="text-muted-foreground text-sm">{tc('noData')}</p>
               ) : (
-                <ul className="flex flex-col divide-y">
-                  {students.map((s) => {
-                    const Chevron = locale === 'ar' ? ChevronLeft : ChevronRight;
-                    return (
-                      <li
-                        key={s.id}
-                        className="hover:bg-muted/50 flex cursor-pointer items-center justify-between gap-2 rounded-lg px-2 py-2 transition-colors"
-                        onClick={() => router.push(`/dashboard/students/${s.id}`)}
-                      >
-                        <span className="flex items-center gap-2 text-sm font-medium">
-                          <Chevron className="text-muted-foreground size-3.5 shrink-0" />
-                          {s.name}
+                <>
+                  {/* Select All Bar if user can transfer */}
+                  {canTransfer && students.length > 1 && (
+                    <div className="flex items-center justify-between px-2.5 py-1.5 rounded-lg bg-muted/40 border text-xs text-muted-foreground">
+                      <label className="flex items-center gap-2 cursor-pointer select-none">
+                        <input
+                          type="checkbox"
+                          className="size-4 rounded border-input text-primary accent-primary cursor-pointer"
+                          checked={selectedStudentIds.length === students.length && students.length > 0}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setSelectedStudentIds(students.map((s) => s.id));
+                            } else {
+                              setSelectedStudentIds([]);
+                            }
+                          }}
+                        />
+                        <span className="font-medium text-foreground">
+                          {selectedStudentIds.length === students.length
+                            ? 'إلغاء تحديد الكل'
+                            : 'تحديد جميع الطلاب'}
                         </span>
-                        <span
-                          className="flex items-center gap-2"
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          <Badge variant="outline">
-                            <GradeLabel grade={s.schoolGrade} />
-                          </Badge>
-                          {canManage && (
-                            <MemberRowMenu
-                              memberId={s.id}
-                              onEditHref={`/dashboard/students/${s.id}`}
-                              onRemoveFromClass={async () => {
-                                if (klass.isIntensive) {
-                                  await removeIntensiveStudent(classId, s.id);
-                                } else {
-                                  await removeClassStudent(classId, s.id);
-                                }
-                                load();
-                              }}
-                              onDeleteFromInstitute={() => softDelete(s.id)}
-                            />
+                      </label>
+                      {selectedStudentIds.length > 0 && (
+                        <span>تم تحديد {selectedStudentIds.length} من {students.length}</span>
+                      )}
+                    </div>
+                  )}
+
+                  <ul className="flex flex-col divide-y">
+                    {students.map((s) => {
+                      const isSelected = selectedStudentIds.includes(s.id);
+                      const Chevron = locale === 'ar' ? ChevronLeft : ChevronRight;
+                      return (
+                        <li
+                          key={s.id}
+                          className={cn(
+                            "hover:bg-muted/50 flex cursor-pointer items-center justify-between gap-2 rounded-lg px-2 py-2 transition-colors",
+                            isSelected && "bg-primary/5 hover:bg-primary/10"
                           )}
-                        </span>
-                      </li>
-                    );
-                  })}
-                </ul>
+                          onClick={() => router.push(`/dashboard/students/${s.id}`)}
+                        >
+                          <div className="flex items-center gap-2.5 min-w-0">
+                            {canTransfer && (
+                              <input
+                                type="checkbox"
+                                className="size-4 rounded border-input text-primary accent-primary cursor-pointer shrink-0"
+                                checked={isSelected}
+                                onClick={(e) => e.stopPropagation()}
+                                onChange={(e) => {
+                                  if (e.target.checked) {
+                                    setSelectedStudentIds((prev) => [...prev, s.id]);
+                                  } else {
+                                    setSelectedStudentIds((prev) => prev.filter((id) => id !== s.id));
+                                  }
+                                }}
+                              />
+                            )}
+                            <Chevron className="text-muted-foreground size-3.5 shrink-0" />
+                            <span className="text-sm font-medium truncate">{s.name}</span>
+                          </div>
+
+                          <span
+                            className="flex items-center gap-2 shrink-0"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <Badge variant="outline">
+                              <GradeLabel grade={s.schoolGrade} />
+                            </Badge>
+                            {canTransfer && (
+                              <MemberRowMenu
+                                memberId={s.id}
+                                onEditHref={`/dashboard/students/${s.id}`}
+                                onTransfer={() => {
+                                  setTransferStudentsList([{ id: s.id, name: s.name }]);
+                                  setTransferDialogOpen(true);
+                                }}
+                                onRemoveFromClass={async () => {
+                                  if (klass.isIntensive) {
+                                    await removeIntensiveStudent(classId, s.id);
+                                  } else {
+                                    await removeClassStudent(classId, s.id);
+                                  }
+                                  load();
+                                }}
+                                canDeleteFromInstitute={canManage}
+                                onDeleteFromInstitute={() => softDelete(s.id)}
+                              />
+                            )}
+                          </span>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </>
               )}
             </CardContent>
           </Card>
@@ -378,6 +469,22 @@ export default function ClassProfilePage({
           <Placeholder icon={<UserPlus />} text={t('activitiesComingSoon')} />
         </TabsContent>
       </Tabs>
+
+      <TransferStudentsDialog
+        open={transferDialogOpen}
+        onOpenChange={setTransferDialogOpen}
+        instituteId={instituteId}
+        sourceClass={{
+          id: klass.id,
+          name: klass.name,
+          isIntensive: klass.isIntensive,
+        }}
+        selectedStudents={transferStudentsList}
+        onSuccess={() => {
+          setSelectedStudentIds([]);
+          load();
+        }}
+      />
     </div>
   );
 }
@@ -385,12 +492,16 @@ export default function ClassProfilePage({
 /** Per-row actions for a class member: edit, remove from class, soft-delete. */
 function MemberRowMenu({
   onEditHref,
+  onTransfer,
   onRemoveFromClass,
+  canDeleteFromInstitute = true,
   onDeleteFromInstitute,
 }: {
   memberId: string;
   onEditHref: string;
+  onTransfer?: () => void;
   onRemoveFromClass: () => Promise<void> | void;
+  canDeleteFromInstitute?: boolean;
   onDeleteFromInstitute: () => void;
 }) {
   const t = useTranslations('dashboard');
@@ -408,22 +519,30 @@ function MemberRowMenu({
             {t('edit')}
           </Link>
         </DropdownMenuItem>
+        {onTransfer && (
+          <DropdownMenuItem onClick={onTransfer}>
+            <ArrowRightLeft className="size-4" />
+            <span>نقل إلى حلقة أخرى</span>
+          </DropdownMenuItem>
+        )}
         <DropdownMenuItem onClick={() => void onRemoveFromClass()}>
           {t('removeFromClass')}
         </DropdownMenuItem>
-        <ConfirmDialog
-          title={t('deleteFromInstitute')}
-          message={t('deleteFromInstituteMsg')}
-          onConfirm={onDeleteFromInstitute}
-          trigger={
-            <DropdownMenuItem
-              variant="destructive"
-              onSelect={(e) => e.preventDefault()}
-            >
-              {t('deleteFromInstitute')}
-            </DropdownMenuItem>
-          }
-        />
+        {canDeleteFromInstitute && (
+          <ConfirmDialog
+            title={t('deleteFromInstitute')}
+            message={t('deleteFromInstituteMsg')}
+            onConfirm={onDeleteFromInstitute}
+            trigger={
+              <DropdownMenuItem
+                variant="destructive"
+                onSelect={(e) => e.preventDefault()}
+              >
+                {t('deleteFromInstitute')}
+              </DropdownMenuItem>
+            }
+          />
+        )}
       </DropdownMenuContent>
     </DropdownMenu>
   );

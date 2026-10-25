@@ -286,3 +286,93 @@ export class RemoveIntensiveStudentUseCase extends ClassMembershipBase {
     await this.classes.removeIntensiveStudent(classId, studentId);
   }
 }
+
+/**
+ * Transfer one or more students from a source class to a destination class.
+ * Allowed for:
+ * - Assigned institute manager (or super_admin)
+ * - Teacher of THIS source class (user requirement: "المدير وكذلك أستاذ الحلقة الحالية للطالب")
+ */
+@Injectable()
+export class TransferClassStudentsUseCase extends ClassMembershipBase {
+  constructor(
+    policy: InstituteAccessPolicy,
+    @Inject(CLASS_REPOSITORY) classes: ClassRepository,
+    @Inject(USER_REPOSITORY) users: UserRepository,
+  ) {
+    super(policy, classes, users);
+  }
+
+  async execute(
+    actor: Actor,
+    sourceClassId: string,
+    studentIds: string[],
+    targetClassId: string,
+  ): Promise<{ transferredCount: number }> {
+    if (!studentIds || studentIds.length === 0) {
+      throw new BusinessRuleError('يجب تحديد طالب واحد على الأقل لنقله');
+    }
+
+    if (sourceClassId === targetClassId) {
+      throw new BusinessRuleError('لا يمكن نقل الطالب إلى نفس الحلقة الحالية');
+    }
+
+    const sourceClass = await this.getClassOrFail(sourceClassId);
+    const targetClass = await this.getClassOrFail(targetClassId);
+
+    // Ensure both classes belong to the same institute
+    if (sourceClass.instituteId !== targetClass.instituteId) {
+      throw new BusinessRuleError('الحلقة المستهدفة لا تتبع لنفس المعهد');
+    }
+
+    // Ensure both classes have matching track (regular <-> regular, intensive <-> intensive)
+    if (sourceClass.isIntensive !== targetClass.isIntensive) {
+      throw new BusinessRuleError(
+        sourceClass.isIntensive
+          ? 'لا يمكن نقل طلاب الحلقة المكثفة إلا إلى حلقة مكثفة أخرى'
+          : 'لا يمكن نقل طلاب الحلقة الأساسية إلا إلى حلقة أساسية أخرى',
+      );
+    }
+
+    // Permissions: manager of institute OR teacher of source class
+    const isSourceClassTeacher =
+      actor.role === UserRole.Teacher &&
+      actor.instituteId === sourceClass.instituteId &&
+      (await this.classes.isTeacherOfClass(sourceClassId, actor.userId));
+
+    if (!isSourceClassTeacher) {
+      if (
+        actor.role !== UserRole.InstituteManager &&
+        actor.role !== UserRole.SuperAdmin
+      ) {
+        throw new ForbiddenError(
+          'فقط المدير أو أستاذ هذه الحلقة يملك صلاحية نقل الطلاب منها',
+        );
+      }
+      await this.policy.assertManagerOf(actor, sourceClass.instituteId);
+    }
+
+    // Deduplicate studentIds
+    const uniqueStudentIds = Array.from(new Set(studentIds));
+
+    // Verify all students are members of the institute
+    for (const studentId of uniqueStudentIds) {
+      await this.getMemberOrFail(
+        studentId,
+        UserRole.Student,
+        sourceClass.instituteId,
+      );
+    }
+
+    // Perform the transfer
+    await this.classes.transferStudents(
+      sourceClassId,
+      targetClassId,
+      uniqueStudentIds,
+      sourceClass.isIntensive,
+    );
+
+    return { transferredCount: uniqueStudentIds.length };
+  }
+}
+

@@ -24,6 +24,7 @@ import {
   EnrollStudentUseCase,
   AddIntensiveStudentUseCase,
   RemoveIntensiveStudentUseCase,
+  TransferClassStudentsUseCase,
 } from '../application/use-cases/manage-class-members.use-cases';
 import {
   RemoveClassTeacherUseCase,
@@ -36,7 +37,11 @@ import {
   SetClassScheduleUseCase,
   SetClassLessonsVisibilityUseCase,
 } from '../application/use-cases/class-profile.use-cases';
-import { CreateClassDto, MemberIdDto } from '../application/dto/class.dto';
+import {
+  CreateClassDto,
+  MemberIdDto,
+  TransferStudentsDto,
+} from '../application/dto/class.dto';
 import {
   SetScheduleDto,
   UpdateClassDto,
@@ -53,6 +58,7 @@ export class ClassesController {
     private readonly enrollStudent: EnrollStudentUseCase,
     private readonly addIntensiveStudentUseCase: AddIntensiveStudentUseCase,
     private readonly removeIntensiveStudentUseCase: RemoveIntensiveStudentUseCase,
+    private readonly transferClassStudents: TransferClassStudentsUseCase,
     private readonly removeClassTeacher: RemoveClassTeacherUseCase,
     private readonly removeClassStudent: RemoveClassStudentUseCase,
     private readonly getClassProfile: GetClassProfileUseCase,
@@ -194,6 +200,21 @@ export class ClassesController {
     @Param('studentId', ParseUUIDPipe) studentId: string,
   ) {
     await this.removeClassStudent.execute(actor, classId, studentId);
+  }
+
+  @Post('classes/:classId/transfer-students')
+  @HttpCode(HttpStatus.OK)
+  async transferStudents(
+    @CurrentUser() actor: Actor,
+    @Param('classId', ParseUUIDPipe) classId: string,
+    @Body() dto: TransferStudentsDto,
+  ) {
+    return await this.transferClassStudents.execute(
+      actor,
+      classId,
+      dto.studentIds,
+      dto.targetClassId,
+    );
   }
 
   // ── Intensive Track Students ──

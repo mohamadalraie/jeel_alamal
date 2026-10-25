@@ -284,6 +284,39 @@ export class DrizzleClassRepository implements ClassRepository {
     });
   }
 
+  async transferStudents(
+    fromClassId: string,
+    toClassId: string,
+    studentIds: string[],
+    isIntensive: boolean,
+  ): Promise<void> {
+    if (!studentIds.length) return;
+
+    await this.db.transaction(async (tx) => {
+      const table = isIntensive ? classIntensiveStudents : classStudents;
+
+      // 1. Remove from source class
+      await tx
+        .delete(table)
+        .where(
+          and(
+            eq(table.classId, fromClassId),
+            inArray(table.studentId, studentIds),
+          ),
+        );
+
+      // 2. Add to target class
+      const now = new Date();
+      const rows = studentIds.map((studentId) =>
+        isIntensive
+          ? { classId: toClassId, studentId, addedAt: now }
+          : { classId: toClassId, studentId, enrolledAt: now },
+      );
+
+      await tx.insert(table).values(rows as any).onConflictDoNothing();
+    });
+  }
+
   async delete(classId: string): Promise<void> {
     await this.db.delete(classes).where(eq(classes.id, classId));
   }

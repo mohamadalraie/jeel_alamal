@@ -1,4 +1,5 @@
 import {
+  IsArray,
   IsBoolean,
   IsNotEmpty,
   IsOptional,
@@ -27,6 +28,16 @@ export class MemberIdDto {
   @IsUUID()
   @IsNotEmpty()
   userId: string;
+}
+
+export class TransferStudentsDto {
+  @IsArray()
+  @IsUUID('4', { each: true })
+  studentIds: string[];
+
+  @IsUUID('4')
+  @IsNotEmpty()
+  targetClassId: string;
 }
 
 export class ClassResponseDto {
