@@ -5,7 +5,6 @@ import { useTranslations } from 'next-intl';
 import {
   BookOpen,
   CalendarDays,
-  LayoutList,
   MoreVertical,
   Pencil,
   Plus,
@@ -34,7 +33,6 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { ListSkeleton } from '@/features/shared/skeletons';
 import { ConfirmDialog } from '@/features/shared/confirm-dialog';
-import { LessonProgramList } from './lesson-program-list';
 import { AddLessonDialog, type LessonEditing } from './add-lesson-dialog';
 import { CategoryManager } from './category-manager';
 import { SubjectManager } from './subject-manager';
@@ -44,7 +42,7 @@ import { LessonsFilterBar, type FilterState } from './lessons-filter-bar';
 import { LessonsCalendarView } from './lessons-calendar-view';
 import { LessonsByClassView } from './lessons-by-class-view';
 
-type ViewMode = 'list' | 'calendar' | 'by_class' | 'weekly_plan';
+type ViewMode = 'calendar' | 'by_class' | 'weekly_plan';
 
 /**
  * Convert backend InstituteLesson[] to flat ProgramEntry[]
@@ -95,7 +93,7 @@ export function ManagerLessonsDashboard({ instituteId }: { instituteId: string }
     };
   });
 
-  const [viewMode, setViewMode] = useState<ViewMode>('list');
+  const [viewMode, setViewMode] = useState<ViewMode>('calendar');
 
   // Queries
   const { data, isLoading } = useInstituteLessons(
@@ -253,16 +251,6 @@ export function ManagerLessonsDashboard({ instituteId }: { instituteId: string }
           <div className="flex flex-wrap items-center gap-1 rounded-xl bg-muted/70 p-1">
             <Button
               type="button"
-              variant={viewMode === 'list' ? 'default' : 'ghost'}
-              size="sm"
-              onClick={() => setViewMode('list')}
-              className="h-8 gap-1.5 rounded-lg px-3 text-xs font-semibold"
-            >
-              <LayoutList className="size-3.5" />
-              <span>قائمة الدروس</span>
-            </Button>
-            <Button
-              type="button"
               variant={viewMode === 'calendar' ? 'default' : 'ghost'}
               size="sm"
               onClick={() => setViewMode('calendar')}
@@ -294,7 +282,7 @@ export function ManagerLessonsDashboard({ instituteId }: { instituteId: string }
           </div>
         </div>
 
-        {/* Filter Bar (Active on List, Calendar, and By Class views) */}
+        {/* Filter Bar (Active on Calendar and By Class views) */}
         {viewMode !== 'weekly_plan' && (
           <LessonsFilterBar
             filters={filters}
@@ -309,28 +297,6 @@ export function ManagerLessonsDashboard({ instituteId }: { instituteId: string }
       </div>
 
       {/* ── Views Content ── */}
-      {viewMode === 'list' && (
-        <LessonProgramList
-          entries={filteredEntries}
-          emptyText={t('noLessons')}
-          showTeacher
-          showClass
-          onAddDay={(ymd) => openCreate(ymd)}
-          renderActions={(e) => (
-            <EntryMenu
-              onEdit={() => openEdit(e)}
-              onRemoveFromClass={async () => {
-                await removeLessonClass(e.lessonClassId);
-                refresh();
-              }}
-              onDelete={async () => {
-                await deleteLesson(e.lessonId);
-                refresh();
-              }}
-            />
-          )}
-        />
-      )}
 
       {viewMode === 'calendar' && (
         <LessonsCalendarView
