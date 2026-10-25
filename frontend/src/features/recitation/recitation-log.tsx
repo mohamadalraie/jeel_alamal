@@ -6,6 +6,8 @@ import { Badge } from '@/components/ui/badge';
 import { ratingColor } from './recitation-colors';
 import { formatTeacherName } from '@/lib/utils';
 
+import { useRouter } from '@/i18n/navigation';
+import { cn } from '@/lib/utils';
 import { BookOpen, Calendar, User } from 'lucide-react';
 
 /** Recitation history list. Set `showStudent` for the class view. */
@@ -19,6 +21,7 @@ export function RecitationLog({
   const t = useTranslations('recitation');
   const tr = useTranslations('ratings');
   const locale = useLocale();
+  const router = useRouter();
 
   if (items.length === 0) {
     return <p className="text-muted-foreground text-sm py-4 text-center">{t('noRecitations')}</p>;
@@ -33,10 +36,27 @@ export function RecitationLog({
             <div className="flex flex-col gap-1">
               <div className="flex items-center gap-2">
                 <BookOpen className="size-4 text-primary shrink-0" />
-                <span className="text-sm font-bold text-foreground">
-                  {showStudent && r.studentName ? `${r.studentName} — ` : ''}
-                  {r.surahName}
-                </span>
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  {showStudent && r.studentName ? (
+                    <span
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (r.studentId) {
+                          router.push(`/dashboard/students/${r.studentId}?tab=recitation`);
+                        }
+                      }}
+                      className={cn(
+                        "text-sm font-bold text-foreground",
+                        r.studentId && "cursor-pointer hover:text-primary hover:underline"
+                      )}
+                    >
+                      {r.studentName} —
+                    </span>
+                  ) : null}
+                  <span className="text-sm font-bold text-foreground">
+                    {r.surahName}
+                  </span>
+                </div>
                 <span className="text-[11px] bg-primary/10 text-primary font-semibold px-2 py-0.5 rounded-full">
                   {count} {t('ayahsShort')} ({r.fromAyah}–{r.toAyah})
                 </span>

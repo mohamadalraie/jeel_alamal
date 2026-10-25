@@ -1,12 +1,14 @@
 'use client';
 
-import { use, useCallback, useEffect, useState } from 'react';
+import { Suspense, use, useCallback, useEffect, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import type { StudentProfile } from '@/lib/types';
 import { getStudentProfile, updateStudent } from '@/lib/api';
 import { useRouter } from '@/i18n/navigation';
 import { useInstitute } from '@/features/layout/institute-context';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { ListSkeleton } from '@/features/shared/skeletons';
 import { BasicInfoCard } from '@/features/profiles/basic-info-card';
 import { ChangeClassCard } from '@/features/profiles/change-class-card';
 import { StudentNotesCard } from '@/features/profiles/student-notes-card';
@@ -25,7 +27,35 @@ export default function StudentProfilePage({
 }: {
   params: Promise<{ studentId: string }>;
 }) {
+  return (
+    <Suspense fallback={<ListSkeleton />}>
+      <StudentProfileContent params={params} />
+    </Suspense>
+  );
+}
+
+const VALID_TABS = ['info', 'recitation', 'attendance', 'dinars'] as const;
+type TabKey = (typeof VALID_TABS)[number];
+
+function StudentProfileContent({
+  params,
+}: {
+  params: Promise<{ studentId: string }>;
+}) {
   const { studentId } = use(params);
+  const searchParams = useSearchParams();
+  const tabParam = searchParams.get('tab') as TabKey | null;
+
+  const [activeTab, setActiveTab] = useState<string>(() =>
+    tabParam && VALID_TABS.includes(tabParam) ? tabParam : 'info'
+  );
+
+  useEffect(() => {
+    if (tabParam && VALID_TABS.includes(tabParam)) {
+      setActiveTab(tabParam);
+    }
+  }, [tabParam]);
+
   const t = useTranslations('dashboard');
   const tc = useTranslations('common');
   const tRec = useTranslations('recitation');
@@ -73,7 +103,7 @@ export default function StudentProfilePage({
         backHref="/dashboard/students"
       />
 
-      <Tabs defaultValue="info">
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="w-full max-w-full justify-start overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden [&_[data-slot=tabs-trigger]]:flex-none sm:w-fit">
           <TabsTrigger value="info">{t('basicInfo')}</TabsTrigger>
           <TabsTrigger value="recitation">{tRec('tab')}</TabsTrigger>

@@ -11,6 +11,8 @@ import {
   YAxis,
 } from 'recharts';
 import { formatDateLocale } from '@/lib/utils';
+import { useRouter } from '@/i18n/navigation';
+import { User, Users } from 'lucide-react';
 import { useClassRecitation, useSurahs, useQueryClient, qk } from '@/lib/queries';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ListSkeleton } from '@/features/shared/skeletons';
@@ -21,6 +23,7 @@ import { RecitationLog } from './recitation-log';
 export function ClassRecitationTab({ classId }: { classId: string }) {
   const t = useTranslations('recitation');
   const locale = useLocale();
+  const router = useRouter();
   const qc = useQueryClient();
   const { data, isLoading } = useClassRecitation(classId);
   const { data: surahs = [] } = useSurahs();
@@ -61,6 +64,35 @@ export function ClassRecitationTab({ classId }: { classId: string }) {
                 <Bar dataKey="ayahs" name={t('ayahsShort')} fill="#BE9B5F" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Quick student recitation access */}
+      {data.students.length > 0 && (
+        <Card className="overflow-hidden">
+          <CardHeader className="py-3 bg-muted/20 border-b">
+            <CardTitle className="text-xs font-semibold text-muted-foreground flex items-center justify-between">
+              <span className="flex items-center gap-1.5">
+                <Users className="size-3.5 text-primary" />
+                طلاب الحلقة ({data.students.length}) — اضغط على أي طالب لفتح واجهة تسميعه مباشرة:
+              </span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-3">
+            <div className="flex flex-wrap gap-1.5">
+              {data.students.map((st) => (
+                <button
+                  key={st.id}
+                  type="button"
+                  onClick={() => router.push(`/dashboard/students/${st.id}?tab=recitation`)}
+                  className="flex items-center gap-1.5 rounded-lg border bg-card px-2.5 py-1.5 text-xs font-medium transition-all hover:bg-primary/10 hover:border-primary/40 hover:text-primary active:scale-95 shadow-2xs"
+                >
+                  <User className="size-3 text-muted-foreground" />
+                  <span>{st.name}</span>
+                </button>
+              ))}
+            </div>
           </CardContent>
         </Card>
       )}

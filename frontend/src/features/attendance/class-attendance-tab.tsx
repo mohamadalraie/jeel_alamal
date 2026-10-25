@@ -15,6 +15,7 @@ import {
 import type { AttendanceCounts, StudentAttendanceStats } from '@/lib/types';
 import { useClassAttendance } from '@/lib/queries';
 import { formatDateLocale } from '@/lib/utils';
+import { useRouter } from '@/i18n/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
@@ -45,6 +46,7 @@ type Range = 'all' | '4w' | '12w';
 export function ClassAttendanceTab({ classId }: { classId: string }) {
   const t = useTranslations('attendance');
   const locale = useLocale();
+  const router = useRouter();
   const { data, isLoading } = useClassAttendance(classId);
   const [range, setRange] = useState<Range>('all');
 
@@ -185,7 +187,11 @@ export function ClassAttendanceTab({ classId }: { classId: string }) {
                   {data.students.map((st) => {
                     const low = st.total > 0 && st.rate < LOW_RATE;
                     return (
-                      <TableRow key={st.studentId}>
+                      <TableRow
+                        key={st.studentId}
+                        onClick={() => router.push(`/dashboard/students/${st.studentId}?tab=attendance`)}
+                        className="cursor-pointer hover:bg-muted/50 transition-colors"
+                      >
                         <TableCell className="font-medium">
                           <span className="flex items-center gap-1.5">
                             {low && (
