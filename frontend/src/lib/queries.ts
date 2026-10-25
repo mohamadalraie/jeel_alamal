@@ -25,7 +25,10 @@ export const qk = {
   lessonSubjects: (id: string, includeArchived = false) =>
     ['lesson-subjects', id, includeArchived] as const,
   classLessons: (id: string) => ['class-lessons', id] as const,
-  instituteLessons: (id: string) => ['institute-lessons', id] as const,
+  instituteLessons: (id: string, from?: string, to?: string) =>
+    from || to
+      ? (['institute-lessons', id, from ?? '', to ?? ''] as const)
+      : (['institute-lessons', id] as const),
   studentClassLessons: (id: string) => ['student-class-lessons', id] as const,
   myLessons: (instituteId?: string) =>
     instituteId
@@ -194,10 +197,14 @@ export const useClassLessons = (classId?: string) =>
     enabled: !!classId,
   });
 
-export const useInstituteLessons = (instituteId?: string) =>
+export const useInstituteLessons = (
+  instituteId?: string,
+  from?: string,
+  to?: string,
+) =>
   useQuery({
-    queryKey: qk.instituteLessons(instituteId ?? ''),
-    queryFn: () => api.getInstituteLessons(instituteId!),
+    queryKey: qk.instituteLessons(instituteId ?? '', from, to),
+    queryFn: () => api.getInstituteLessons(instituteId!, from, to),
     enabled: !!instituteId,
   });
 

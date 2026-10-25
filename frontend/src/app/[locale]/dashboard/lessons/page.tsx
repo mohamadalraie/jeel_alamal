@@ -2,10 +2,10 @@
 
 import { useTranslations } from 'next-intl';
 import { useInstitute } from '@/features/layout/institute-context';
-import { InstituteLessonsHub } from '@/features/lessons/institute-lessons-hub';
+import { ManagerLessonsDashboard } from '@/features/lessons/manager-lessons-dashboard';
 import { ListSkeleton } from '@/features/shared/skeletons';
 
-/** Manager hub for the institute-wide lessons program (spec 008). */
+/** Manager hub for the institute-wide lessons program (spec 008 / Advanced view). */
 export default function LessonsPage() {
   const t = useTranslations('dashboard');
   const tc = useTranslations('common');
@@ -18,5 +18,5 @@ export default function LessonsPage() {
   if (loading) return <ListSkeleton />;
   if (!selected) return <p className="text-muted-foreground">{t('selectInstituteFirst')}</p>;
 
-  return <InstituteLessonsHub instituteId={selected.id} />;
+  return <ManagerLessonsDashboard instituteId={selected.id} />;
 }
