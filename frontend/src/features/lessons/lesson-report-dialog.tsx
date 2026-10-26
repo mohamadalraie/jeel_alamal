@@ -43,6 +43,18 @@ export function LessonReportDialog({
   const [teacherNotes, setTeacherNotes] = useState(initialNotes);
   const [busy, setBusy] = useState(false);
 
+  const appendOrSet = (
+    setter: React.Dispatch<React.SetStateAction<string>>,
+    phrase: string,
+  ) => {
+    setter((prev) => {
+      const clean = prev.trim();
+      if (!clean) return phrase;
+      if (clean.includes(phrase)) return clean;
+      return `${clean}، و${phrase}`;
+    });
+  };
+
   async function handleSubmit() {
     if (!mainIdeas.trim()) {
       notify.error(t('mainIdeasRequired'));
@@ -104,6 +116,30 @@ export function LessonReportDialog({
               rows={3}
               autoFocus
             />
+            {/* Quick Templates for Main Ideas */}
+            <div className="flex flex-wrap gap-1.5 pt-0.5">
+              <button
+                type="button"
+                onClick={() => appendOrSet(setMainIdeas, t('templateMainIdeas1'))}
+                className="rounded-md border border-border bg-accent/40 hover:bg-primary/10 hover:border-primary/40 px-2 py-0.5 text-[11px] text-foreground transition text-start"
+              >
+                + {t('templateMainIdeas1')}
+              </button>
+              <button
+                type="button"
+                onClick={() => appendOrSet(setMainIdeas, t('templateMainIdeas2'))}
+                className="rounded-md border border-border bg-accent/40 hover:bg-primary/10 hover:border-primary/40 px-2 py-0.5 text-[11px] text-foreground transition text-start"
+              >
+                + {t('templateMainIdeas2')}
+              </button>
+              <button
+                type="button"
+                onClick={() => appendOrSet(setMainIdeas, t('templateMainIdeas3'))}
+                className="rounded-md border border-border bg-accent/40 hover:bg-primary/10 hover:border-primary/40 px-2 py-0.5 text-[11px] text-foreground transition text-start"
+              >
+                + {t('templateMainIdeas3')}
+              </button>
+            </div>
           </div>
 
           {/* Positives (Optional) */}
@@ -119,6 +155,23 @@ export function LessonReportDialog({
               placeholder={t('positivesPlaceholder')}
               rows={2}
             />
+            {/* Quick Templates for Positives */}
+            <div className="flex flex-wrap gap-1.5 pt-0.5">
+              <button
+                type="button"
+                onClick={() => appendOrSet(setPositives, t('templatePositives1'))}
+                className="rounded-md border border-emerald-500/20 bg-emerald-500/5 hover:bg-emerald-500/15 hover:border-emerald-500/40 px-2 py-0.5 text-[11px] text-emerald-700 dark:text-emerald-400 transition text-start"
+              >
+                + {t('templatePositives1')}
+              </button>
+              <button
+                type="button"
+                onClick={() => appendOrSet(setPositives, t('templatePositives2'))}
+                className="rounded-md border border-emerald-500/20 bg-emerald-500/5 hover:bg-emerald-500/15 hover:border-emerald-500/40 px-2 py-0.5 text-[11px] text-emerald-700 dark:text-emerald-400 transition text-start"
+              >
+                + {t('templatePositives2')}
+              </button>
+            </div>
           </div>
 
           {/* Negatives / Challenges (Optional) */}
@@ -134,6 +187,23 @@ export function LessonReportDialog({
               placeholder={t('negativesPlaceholder')}
               rows={2}
             />
+            {/* Quick Templates for Negatives */}
+            <div className="flex flex-wrap gap-1.5 pt-0.5">
+              <button
+                type="button"
+                onClick={() => appendOrSet(setNegatives, t('templateNegatives1'))}
+                className="rounded-md border border-amber-500/20 bg-amber-500/5 hover:bg-amber-500/15 hover:border-amber-500/40 px-2 py-0.5 text-[11px] text-amber-700 dark:text-amber-400 transition text-start"
+              >
+                + {t('templateNegatives1')}
+              </button>
+              <button
+                type="button"
+                onClick={() => appendOrSet(setNegatives, t('templateNegatives2'))}
+                className="rounded-md border border-amber-500/20 bg-amber-500/5 hover:bg-amber-500/15 hover:border-amber-500/40 px-2 py-0.5 text-[11px] text-amber-700 dark:text-amber-400 transition text-start"
+              >
+                + {t('templateNegatives2')}
+              </button>
+            </div>
           </div>
 
           {/* Teacher session notes (Internal) */}

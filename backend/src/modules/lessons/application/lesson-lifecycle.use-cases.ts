@@ -117,8 +117,10 @@ export class GetLessonTimerUseCase {
     }
     return {
       lessonClassId: view.lessonClassId,
+      lessonId: view.lessonId,
       kind: view.kind,
       name: view.name,
+      description: view.description,
       date: view.date,
       className: view.className,
       expectedDurationMinutes: view.expectedDurationMinutes,
@@ -128,6 +130,7 @@ export class GetLessonTimerUseCase {
       ofTotal: view.ofTotal,
       classId: view.classId,
       instituteId: view.instituteId,
+      sources: view.sources ?? [],
     };
   }
 }

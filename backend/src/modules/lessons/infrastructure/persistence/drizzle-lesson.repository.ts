@@ -318,6 +318,7 @@ export class DrizzleLessonRepository implements LessonRepository {
         teacherId: lessonClasses.teacherId,
         kind: lessons.kind,
         name: lessons.name,
+        description: lessons.description,
         date: lessons.date,
         className: classes.name,
         expectedDurationMinutes: lessons.expectedDurationMinutes,
@@ -344,6 +345,16 @@ export class DrizzleLessonRepository implements LessonRepository {
       .orderBy(asc(lessonClasses.sort));
     const ordinal = dayRows.findIndex((r) => r.id === lessonClassId) + 1;
 
+    const sourcesRows = await this.db
+      .select({
+        kind: lessonSources.kind,
+        url: lessonSources.url,
+        description: lessonSources.description,
+      })
+      .from(lessonSources)
+      .where(eq(lessonSources.lessonId, row.lessonId))
+      .orderBy(asc(lessonSources.sort));
+
     return {
       lessonClassId: row.lessonClassId,
       lessonId: row.lessonId,
@@ -351,6 +362,7 @@ export class DrizzleLessonRepository implements LessonRepository {
       teacherId: row.teacherId,
       kind: row.kind as LessonKind,
       name: row.name,
+      description: row.description,
       date: row.date,
       classId: row.classId,
       className: row.className,
@@ -359,6 +371,11 @@ export class DrizzleLessonRepository implements LessonRepository {
       actualStartTime: row.actualStartTime,
       ordinal: ordinal > 0 ? ordinal : 1,
       ofTotal: dayRows.length,
+      sources: sourcesRows.map((s) => ({
+        kind: s.kind as LessonSourceKind,
+        url: s.url,
+        description: s.description,
+      })),
     };
   }
 

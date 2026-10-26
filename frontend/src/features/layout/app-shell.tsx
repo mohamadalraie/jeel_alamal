@@ -10,6 +10,7 @@ import { Topbar } from './topbar';
 import { SidebarNav } from './sidebar-nav';
 
 import { registerPushSubscription } from '@/features/notifications/device-notifications';
+import { ActiveLessonFloatingBar } from '@/features/lessons/active-lesson-floating-bar';
 
 /**
  * Authenticated app shell: loads the current user from the httpOnly-cookie
@@ -68,6 +69,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </aside>
           <main className="min-w-0 flex-1 px-4 py-6 sm:px-6">{children}</main>
         </div>
+        <ActiveLessonFloatingBar />
       </div>
     </InstituteProvider>
   );

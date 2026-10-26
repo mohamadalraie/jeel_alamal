@@ -293,8 +293,10 @@ export interface LessonSettingsView {
 /** The teacher timer page payload for one binding (spec 009). */
 export interface LessonTimerView {
   lessonClassId: string;
+  lessonId?: string;
   kind: LessonKind;
   name: string | null;
+  description?: string | null;
   date: string;
   className: string;
   expectedDurationMinutes: number | null;
@@ -304,6 +306,7 @@ export interface LessonTimerView {
   ofTotal: number;
   classId?: string;
   instituteId?: string;
+  sources?: { kind: LessonSourceKind; url: string; description: string | null }[];
 }
 
 /** Result of ending a lesson (spec 009). */

@@ -55,6 +55,8 @@ export interface LessonTimerRead {
   expectedDurationMinutes: number | null;
   status: StoredLessonStatus;
   actualStartTime: Date | null;
+  description?: string | null;
+  sources?: SourceRead[];
   /** 1-based position within the class's lessons that day. */
   ordinal: number;
   /** Total lessons for that class on that date. */
