@@ -76,6 +76,13 @@ function toEntries(lessons: InstituteLesson[]): ProgramEntry[] {
   return result;
 }
 
+function isLessonNeedingAttention(e: ProgramEntry, todayYmd: string): boolean {
+  if (e.status === 'not_given') return true;
+  if (e.status === 'pending' && e.date <= todayYmd) return true;
+  if (e.status === 'started') return true;
+  return false;
+}
+
 export function ManagerLessonsDashboard({ instituteId }: { instituteId: string }) {
   const t = useTranslations('lessons');
   const tc = useTranslations('common');
@@ -180,9 +187,19 @@ export function ManagerLessonsDashboard({ instituteId }: { instituteId: string }
     return result;
   }, [allPeriodEntries, filters.classId, filters.teacherId, filters.categoryId, filters.search]);
 
-  // Fully filtered entries (including status)
+  const todayYmd = useMemo(() => new Date().toISOString().slice(0, 10), []);
+
+  const needsAttentionCount = useMemo(() => {
+    return entriesForSummary.filter((e) => isLessonNeedingAttention(e, todayYmd)).length;
+  }, [entriesForSummary, todayYmd]);
+
+  // Fully filtered entries (including status and needs attention)
   const filteredEntries = useMemo(() => {
     let result = entriesForSummary;
+
+    if (filters.needsAttentionOnly) {
+      result = result.filter((e) => isLessonNeedingAttention(e, todayYmd));
+    }
 
     if (filters.status) {
       if (filters.status === 'completed') {
@@ -202,7 +219,7 @@ export function ManagerLessonsDashboard({ instituteId }: { instituteId: string }
     }
 
     return result;
-  }, [entriesForSummary, filters.status]);
+  }, [entriesForSummary, filters.needsAttentionOnly, filters.status, todayYmd]);
 
   if (isLoading) return <ListSkeleton />;
 
@@ -292,6 +309,7 @@ export function ManagerLessonsDashboard({ instituteId }: { instituteId: string }
             categories={categories}
             totalFilteredCount={filteredEntries.length}
             totalAllCount={allPeriodEntries.length}
+            needsAttentionCount={needsAttentionCount}
           />
         )}
       </div>

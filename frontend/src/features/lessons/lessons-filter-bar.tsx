@@ -13,6 +13,7 @@ import {
   School,
   Tag,
   CheckCircle2,
+  AlertTriangle,
 } from 'lucide-react';
 import type { LessonCategory, User as TeacherUser, ClassItem } from '@/lib/types';
 import { formatTeacherName } from '@/lib/utils';
@@ -38,6 +39,7 @@ export interface FilterState {
   categoryId?: string;
   status?: string;
   search?: string;
+  needsAttentionOnly?: boolean;
 }
 
 export interface FilterBarProps {
@@ -48,6 +50,7 @@ export interface FilterBarProps {
   categories: LessonCategory[];
   totalFilteredCount: number;
   totalAllCount: number;
+  needsAttentionCount?: number;
 }
 
 export function LessonsFilterBar({
@@ -58,6 +61,7 @@ export function LessonsFilterBar({
   categories,
   totalFilteredCount,
   totalAllCount,
+  needsAttentionCount,
 }: FilterBarProps) {
   const t = useTranslations('lessons');
   const tc = useTranslations('common');
@@ -123,7 +127,8 @@ export function LessonsFilterBar({
       filters.status ||
       filters.search ||
       filters.fromDate ||
-      filters.toDate
+      filters.toDate ||
+      filters.needsAttentionOnly
   );
 
   const clearAllFilters = () => {
@@ -137,6 +142,7 @@ export function LessonsFilterBar({
       categoryId: undefined,
       status: undefined,
       search: undefined,
+      needsAttentionOnly: undefined,
     });
   };
 
@@ -167,17 +173,44 @@ export function LessonsFilterBar({
           )}
         </div>
 
-        {/* Date presets pill group */}
-        <div className="flex flex-wrap items-center gap-1 rounded-xl bg-muted/60 p-1">
+        {/* Date presets pill group + Needs Attention Filter */}
+        <div className="flex flex-wrap items-center gap-1.5">
           <Button
             type="button"
-            variant={filters.preset === 'this_week' ? 'default' : 'ghost'}
+            variant={filters.needsAttentionOnly ? 'destructive' : 'outline'}
             size="sm"
-            onClick={() => handlePresetChange('this_week')}
-            className="h-7 rounded-lg px-2.5 text-xs font-medium"
+            onClick={() => update({ needsAttentionOnly: !filters.needsAttentionOnly })}
+            className={`h-7.5 rounded-lg px-2.5 text-xs font-semibold gap-1.5 transition-all ${
+              filters.needsAttentionOnly
+                ? 'bg-amber-600 hover:bg-amber-700 text-white border-amber-600 shadow-xs'
+                : 'text-amber-600 dark:text-amber-400 border-amber-500/40 bg-amber-500/5 hover:bg-amber-500/15'
+            }`}
           >
-            هذا الأسبوع
+            <AlertTriangle className="size-3.5" />
+            <span>{t('needsAttentionFilter')}</span>
+            {typeof needsAttentionCount === 'number' && needsAttentionCount > 0 && (
+              <span
+                className={`rounded-full px-1.5 py-0.2 text-[10px] font-bold ${
+                  filters.needsAttentionOnly
+                    ? 'bg-white/25 text-white'
+                    : 'bg-amber-500/20 text-amber-700 dark:text-amber-300'
+                }`}
+              >
+                {needsAttentionCount}
+              </span>
+            )}
           </Button>
+
+          <div className="flex flex-wrap items-center gap-1 rounded-xl bg-muted/60 p-1">
+            <Button
+              type="button"
+              variant={filters.preset === 'this_week' ? 'default' : 'ghost'}
+              size="sm"
+              onClick={() => handlePresetChange('this_week')}
+              className="h-7 rounded-lg px-2.5 text-xs font-medium"
+            >
+              هذا الأسبوع
+            </Button>
           <Button
             type="button"
             variant={filters.preset === 'this_month' ? 'default' : 'ghost'}
@@ -217,6 +250,7 @@ export function LessonsFilterBar({
           </Button>
         </div>
       </div>
+    </div>
 
       {/* Row 2: Custom Date Range (collapsible) */}
       {showCustomDates && (
@@ -397,6 +431,20 @@ export function LessonsFilterBar({
                 <X
                   className="size-3 cursor-pointer hover:text-destructive"
                   onClick={() => update({ status: undefined })}
+                />
+              </Badge>
+            )}
+
+            {filters.needsAttentionOnly && (
+              <Badge
+                variant="secondary"
+                className="gap-1 py-0.5 text-[11px] bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/30 font-semibold"
+              >
+                <AlertTriangle className="size-3 text-amber-500" />
+                {t('needsAttentionFilter')}
+                <X
+                  className="size-3 cursor-pointer hover:text-destructive"
+                  onClick={() => update({ needsAttentionOnly: undefined })}
                 />
               </Badge>
             )}

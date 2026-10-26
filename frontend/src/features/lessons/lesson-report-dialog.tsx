@@ -1,8 +1,16 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useTranslations } from 'next-intl';
-import { FileText, Loader2, Sparkles, ThumbsDown, ThumbsUp } from 'lucide-react';
+import {
+  FileText,
+  Loader2,
+  Sparkles,
+  ThumbsDown,
+  ThumbsUp,
+  AlertCircle,
+  Check,
+} from 'lucide-react';
 import { submitLessonReport } from '@/lib/api';
 import { notify } from '@/lib/toast';
 import { Button } from '@/components/ui/button';
@@ -43,21 +51,61 @@ export function LessonReportDialog({
   const [teacherNotes, setTeacherNotes] = useState(initialNotes);
   const [busy, setBusy] = useState(false);
 
-  const appendOrSet = (
-    setter: React.Dispatch<React.SetStateAction<string>>,
-    phrase: string,
-  ) => {
-    setter((prev) => {
-      const clean = prev.trim();
-      if (!clean) return phrase;
-      if (clean.includes(phrase)) return clean;
-      return `${clean}، و${phrase}`;
-    });
-  };
+  // Word count & quality evaluation
+  const mainWords = useMemo(() => {
+    const text = mainIdeas.trim();
+    return text ? text.split(/\s+/).filter(Boolean).length : 0;
+  }, [mainIdeas]);
+
+  const qualityInfo = useMemo(() => {
+    if (mainWords === 0) {
+      return {
+        level: 'empty',
+        label: '',
+        hint: '',
+        percent: 0,
+        badgeClass: 'text-muted-foreground bg-muted',
+        barClass: 'bg-muted',
+      };
+    }
+    if (mainWords < 5) {
+      return {
+        level: 'low',
+        label: t('reportQualityLow'),
+        hint: t('reportQualityLowHint'),
+        percent: Math.max(15, Math.min(35, mainWords * 8)),
+        badgeClass: 'text-amber-600 dark:text-amber-400 bg-amber-500/10 border-amber-500/30',
+        barClass: 'bg-amber-500',
+      };
+    }
+    if (mainWords < 14) {
+      return {
+        level: 'good',
+        label: t('reportQualityGood'),
+        hint: t('reportQualityGoodHint'),
+        percent: Math.min(80, 40 + (mainWords - 5) * 5),
+        badgeClass: 'text-sky-600 dark:text-sky-400 bg-sky-500/10 border-sky-500/30',
+        barClass: 'bg-sky-500',
+      };
+    }
+    return {
+      level: 'excellent',
+      label: t('reportQualityExcellent'),
+      hint: t('reportQualityExcellentHint'),
+      percent: 100,
+      badgeClass: 'text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border-emerald-500/30',
+      barClass: 'bg-emerald-500',
+    };
+  }, [mainWords, t]);
 
   async function handleSubmit() {
     if (!mainIdeas.trim()) {
       notify.error(t('mainIdeasRequired'));
+      return;
+    }
+
+    if (mainWords < 4) {
+      notify.warning(t('reportTooShortWarning'));
       return;
     }
 
@@ -116,29 +164,45 @@ export function LessonReportDialog({
               rows={3}
               autoFocus
             />
-            {/* Quick Templates for Main Ideas */}
-            <div className="flex flex-wrap gap-1.5 pt-0.5">
-              <button
-                type="button"
-                onClick={() => appendOrSet(setMainIdeas, t('templateMainIdeas1'))}
-                className="rounded-md border border-border bg-accent/40 hover:bg-primary/10 hover:border-primary/40 px-2 py-0.5 text-[11px] text-foreground transition text-start"
-              >
-                + {t('templateMainIdeas1')}
-              </button>
-              <button
-                type="button"
-                onClick={() => appendOrSet(setMainIdeas, t('templateMainIdeas2'))}
-                className="rounded-md border border-border bg-accent/40 hover:bg-primary/10 hover:border-primary/40 px-2 py-0.5 text-[11px] text-foreground transition text-start"
-              >
-                + {t('templateMainIdeas2')}
-              </button>
-              <button
-                type="button"
-                onClick={() => appendOrSet(setMainIdeas, t('templateMainIdeas3'))}
-                className="rounded-md border border-border bg-accent/40 hover:bg-primary/10 hover:border-primary/40 px-2 py-0.5 text-[11px] text-foreground transition text-start"
-              >
-                + {t('templateMainIdeas3')}
-              </button>
+
+            {/* Smart Word Counter & Quality Meter */}
+            <div className="flex flex-col gap-1.5 pt-1">
+              <div className="flex items-center justify-between text-xs">
+                <div className="flex items-center gap-2">
+                  <span className="text-[11px] font-semibold text-muted-foreground">
+                    {t('wordCount')}: <strong className="text-foreground">{mainWords}</strong>
+                  </span>
+                  {qualityInfo.label && (
+                    <span
+                      className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-bold ${qualityInfo.badgeClass}`}
+                    >
+                      {qualityInfo.level === 'excellent' && <Sparkles className="size-3" />}
+                      {qualityInfo.level === 'low' && <AlertCircle className="size-3" />}
+                      {qualityInfo.level === 'good' && <Check className="size-3" />}
+                      <span>{qualityInfo.label}</span>
+                    </span>
+                  )}
+                </div>
+                {qualityInfo.percent > 0 && (
+                  <span className="text-[10px] font-semibold text-muted-foreground">
+                    {qualityInfo.percent}%
+                  </span>
+                )}
+              </div>
+
+              {/* Progress bar */}
+              <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted dark:bg-slate-800">
+                <div
+                  className={`h-full transition-all duration-300 ${qualityInfo.barClass}`}
+                  style={{ width: `${qualityInfo.percent}%` }}
+                />
+              </div>
+
+              {qualityInfo.hint && (
+                <p className="text-[10px] text-muted-foreground leading-tight">
+                  {qualityInfo.hint}
+                </p>
+              )}
             </div>
           </div>
 
@@ -155,23 +219,6 @@ export function LessonReportDialog({
               placeholder={t('positivesPlaceholder')}
               rows={2}
             />
-            {/* Quick Templates for Positives */}
-            <div className="flex flex-wrap gap-1.5 pt-0.5">
-              <button
-                type="button"
-                onClick={() => appendOrSet(setPositives, t('templatePositives1'))}
-                className="rounded-md border border-emerald-500/20 bg-emerald-500/5 hover:bg-emerald-500/15 hover:border-emerald-500/40 px-2 py-0.5 text-[11px] text-emerald-700 dark:text-emerald-400 transition text-start"
-              >
-                + {t('templatePositives1')}
-              </button>
-              <button
-                type="button"
-                onClick={() => appendOrSet(setPositives, t('templatePositives2'))}
-                className="rounded-md border border-emerald-500/20 bg-emerald-500/5 hover:bg-emerald-500/15 hover:border-emerald-500/40 px-2 py-0.5 text-[11px] text-emerald-700 dark:text-emerald-400 transition text-start"
-              >
-                + {t('templatePositives2')}
-              </button>
-            </div>
           </div>
 
           {/* Negatives / Challenges (Optional) */}
@@ -187,23 +234,6 @@ export function LessonReportDialog({
               placeholder={t('negativesPlaceholder')}
               rows={2}
             />
-            {/* Quick Templates for Negatives */}
-            <div className="flex flex-wrap gap-1.5 pt-0.5">
-              <button
-                type="button"
-                onClick={() => appendOrSet(setNegatives, t('templateNegatives1'))}
-                className="rounded-md border border-amber-500/20 bg-amber-500/5 hover:bg-amber-500/15 hover:border-amber-500/40 px-2 py-0.5 text-[11px] text-amber-700 dark:text-amber-400 transition text-start"
-              >
-                + {t('templateNegatives1')}
-              </button>
-              <button
-                type="button"
-                onClick={() => appendOrSet(setNegatives, t('templateNegatives2'))}
-                className="rounded-md border border-amber-500/20 bg-amber-500/5 hover:bg-amber-500/15 hover:border-amber-500/40 px-2 py-0.5 text-[11px] text-amber-700 dark:text-amber-400 transition text-start"
-              >
-                + {t('templateNegatives2')}
-              </button>
-            </div>
           </div>
 
           {/* Teacher session notes (Internal) */}
@@ -231,13 +261,18 @@ export function LessonReportDialog({
             {tc('cancel')}
           </Button>
 
-          <Button
-            type="button"
-            onClick={handleSubmit}
-            disabled={busy || !mainIdeas.trim()}
-          >
-            {busy && <Loader2 className="size-4 animate-spin ltr:mr-2 rtl:ml-2" />}
-            {t('submitReportAndEndLesson')}
+          <Button onClick={handleSubmit} disabled={busy} className="gap-2 font-semibold">
+            {busy ? (
+              <>
+                <Loader2 className="size-4 animate-spin" />
+                {tc('saving')}
+              </>
+            ) : (
+              <>
+                <FileText className="size-4" />
+                {t('submitReportAndEndLesson')}
+              </>
+            )}
           </Button>
         </DialogFooter>
       </DialogContent>

@@ -5,6 +5,9 @@ import { useTranslations, useLocale } from 'next-intl';
 import {
   ChevronDown,
   ChevronUp,
+  ChevronsDown,
+  ChevronsUp,
+  Share2,
   School,
   User,
   CheckCircle2,
@@ -15,6 +18,7 @@ import {
   BookMarked,
   Plus,
   Calendar,
+  CalendarPlus,
 } from 'lucide-react';
 import type { ProgramEntry } from '@/lib/types';
 import { formatTeacherName, formatDateLocale } from '@/lib/utils';
@@ -23,6 +27,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
 import { LessonStatusBadge } from './lesson-status-badge';
 import { LessonDetailsDialog } from './lesson-details-dialog';
+import { ShareClassSummaryDialog } from './share-class-summary-dialog';
 
 export interface ByClassViewProps {
   entries: ProgramEntry[];
@@ -140,6 +145,8 @@ export function LessonsByClassView({
     setExpandedKeys(new Set());
   };
 
+  const [shareGroup, setShareGroup] = useState<ClassGroup | null>(null);
+
   if (classGroups.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center gap-2 rounded-2xl border bg-card/50 p-12 text-center text-muted-foreground shadow-sm">
@@ -151,25 +158,43 @@ export function LessonsByClassView({
 
   return (
     <div className="flex flex-col gap-4">
-      {/* Top Controls */}
-      <div className="flex items-center justify-between text-xs text-muted-foreground px-1">
-        <span>إجمالي الحلقات: {classGroups.length} حلقة</span>
+      {/* Top Controls Toolbar */}
+      <div className="flex flex-wrap items-center justify-between gap-2.5 rounded-xl border border-border/80 dark:border-slate-800 bg-card/80 dark:bg-slate-900/80 p-2.5 px-3.5 text-xs shadow-xs">
+        <div className="flex items-center gap-2 font-medium text-foreground">
+          <span className="flex items-center gap-1.5 font-semibold">
+            <School className="size-4 text-primary" />
+            <span>إجمالي الحلقات:</span>
+            <Badge variant="secondary" className="font-bold text-xs px-2 py-0.5">
+              {classGroups.length}
+            </Badge>
+          </span>
+          <span className="text-muted-foreground">·</span>
+          <span className="text-muted-foreground">
+            {entries.length} درس
+          </span>
+        </div>
+
         <div className="flex items-center gap-2">
-          <button
+          <Button
             type="button"
+            variant="outline"
+            size="sm"
             onClick={expandAll}
-            className="hover:text-primary transition-colors font-medium"
+            className="h-7.5 gap-1.5 text-xs font-semibold rounded-lg hover:border-primary/50"
           >
-            توسيع الكل
-          </button>
-          <span>·</span>
-          <button
+            <ChevronsDown className="size-3.5 text-primary" />
+            <span>توسيع الكل</span>
+          </Button>
+          <Button
             type="button"
+            variant="outline"
+            size="sm"
             onClick={collapseAll}
-            className="hover:text-primary transition-colors font-medium"
+            className="h-7.5 gap-1.5 text-xs font-semibold rounded-lg hover:border-primary/50"
           >
-            طي الكل
-          </button>
+            <ChevronsUp className="size-3.5 text-muted-foreground" />
+            <span>طي الكل</span>
+          </Button>
         </div>
       </div>
 
@@ -181,12 +206,12 @@ export function LessonsByClassView({
           return (
             <Card
               key={group.classKey}
-              className="overflow-hidden rounded-2xl border transition-shadow hover:shadow-sm"
+              className="overflow-hidden rounded-2xl border border-border/80 dark:border-slate-800 bg-card dark:bg-slate-900/90 shadow-sm transition-all hover:shadow-md"
             >
               {/* Header / Click to toggle */}
               <div
                 onClick={() => toggleExpand(group.classKey)}
-                className="flex cursor-pointer flex-col gap-3 p-4 transition-colors hover:bg-muted/30 sm:flex-row sm:items-center sm:justify-between"
+                className="flex cursor-pointer flex-col gap-3 p-4 bg-card dark:bg-slate-900/95 hover:bg-muted/30 dark:hover:bg-slate-850/60 transition-colors sm:flex-row sm:items-center sm:justify-between"
               >
                 {/* Left: Class Info */}
                 <div className="flex items-start gap-3 min-w-0">
@@ -198,7 +223,7 @@ export function LessonsByClassView({
                       <h3 className="font-bold text-sm sm:text-base truncate">
                         {group.className}
                       </h3>
-                      <Badge variant="outline" className="text-[10px] py-0 px-2">
+                      <Badge variant="outline" className="text-[10px] py-0 px-2 font-medium">
                         {group.total} دروس
                       </Badge>
                     </div>
@@ -217,7 +242,7 @@ export function LessonsByClassView({
                 </div>
 
                 {/* Right: Progress & Stats */}
-                <div className="flex flex-wrap items-center gap-3 sm:gap-4 self-end sm:self-center">
+                <div className="flex flex-wrap items-center gap-2.5 sm:gap-3.5 self-end sm:self-center">
                   {/* Status counts mini pills */}
                   <div className="flex items-center gap-2 text-xs">
                     <span className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-medium">
@@ -245,12 +270,12 @@ export function LessonsByClassView({
                   </div>
 
                   {/* Progress Bar */}
-                  <div className="flex w-24 flex-col gap-1 sm:w-28">
+                  <div className="flex w-20 sm:w-24 flex-col gap-1">
                     <div className="flex justify-between text-[10px] font-semibold text-muted-foreground">
                       <span>الإنجاز</span>
                       <span>{group.completionRate}%</span>
                     </div>
-                    <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
+                    <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted dark:bg-slate-800">
                       <div
                         className="h-full bg-emerald-500 transition-all duration-300"
                         style={{ width: `${group.completionRate}%` }}
@@ -258,8 +283,24 @@ export function LessonsByClassView({
                     </div>
                   </div>
 
+                  {/* Share Summary Button */}
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setShareGroup(group);
+                    }}
+                    className="h-7 gap-1 px-2 text-[11px] font-semibold text-primary border-primary/30 hover:bg-primary/10 rounded-lg"
+                    title="مشاركة ملخص الحلقة"
+                  >
+                    <Share2 className="size-3 text-primary" />
+                    <span className="hidden sm:inline">مشاركة</span>
+                  </Button>
+
                   {/* Expand Chevron Button */}
-                  <div className="flex size-7 items-center justify-center rounded-lg border bg-background text-muted-foreground">
+                  <div className="flex size-7 items-center justify-center rounded-lg border border-border/80 dark:border-slate-750 bg-background dark:bg-slate-800 text-muted-foreground">
                     {isExpanded ? (
                       <ChevronUp className="size-4" />
                     ) : (
@@ -271,9 +312,9 @@ export function LessonsByClassView({
 
               {/* Collapsible Content */}
               {isExpanded && (
-                <div className="border-t bg-muted/10 p-3 sm:p-4">
-                  <div className="flex items-center justify-between pb-2 text-xs text-muted-foreground">
-                    <span>قائمة دروس حلقة {group.className}</span>
+                <div className="border-t border-border/70 dark:border-slate-800 bg-muted/20 dark:bg-slate-950/60 p-3 sm:p-4">
+                  <div className="flex items-center justify-between pb-3 text-xs text-muted-foreground font-medium">
+                    <span>قائمة دروس حلقة {group.className} ({group.entries.length})</span>
                     {onAddLessonForClass && (
                       <Button
                         size="sm"
@@ -281,7 +322,7 @@ export function LessonsByClassView({
                         onClick={() =>
                           onAddLessonForClass(group.classId, group.className)
                         }
-                        className="h-7 gap-1 text-xs text-primary"
+                        className="h-7 gap-1 text-xs text-primary hover:bg-primary/10"
                       >
                         <Plus className="size-3.5" />
                         إضافة درس لهذه الحلقة
@@ -289,7 +330,8 @@ export function LessonsByClassView({
                     )}
                   </div>
 
-                  <div className="divide-y divide-border/60 rounded-xl border bg-card overflow-hidden">
+                  {/* High contrast lesson card stack */}
+                  <div className="flex flex-col gap-2.5">
                     {group.entries.map((entry) => (
                       <ClassLessonRow
                         key={entry.lessonClassId}
@@ -304,6 +346,14 @@ export function LessonsByClassView({
           );
         })}
       </div>
+
+      <ShareClassSummaryDialog
+        open={Boolean(shareGroup)}
+        onOpenChange={(open) => {
+          if (!open) setShareGroup(null);
+        }}
+        group={shareGroup}
+      />
     </div>
   );
 }
@@ -328,66 +378,86 @@ function ClassLessonRow({
     month: 'short',
   });
 
+  const title = isRecitation
+    ? t('recitation')
+    : entry.name || entry.subjectName || entry.category?.name || t('scheduledSlot');
+
   return (
     <>
       <div
         onClick={() => setDetailsOpen(true)}
-        className="flex cursor-pointer items-center justify-between gap-3 p-3 transition-colors hover:bg-muted/40"
+        className="group relative flex flex-col gap-2.5 rounded-xl border border-border/80 dark:border-slate-700/80 bg-card dark:bg-slate-800/95 hover:bg-muted/40 dark:hover:bg-slate-750 p-3.5 shadow-sm hover:border-primary/50 dark:hover:border-primary/50 hover:shadow transition-all cursor-pointer"
       >
-        {/* Date + Name */}
-        <div className="flex items-center gap-3 min-w-0">
-          {/* Date pill */}
-          <div className="flex min-w-[70px] flex-col items-center justify-center rounded-lg bg-muted/60 py-1 px-1.5 text-center text-xs">
-            <span className="font-semibold text-foreground/90">{dateFormatted}</span>
+        {/* Top line: Date badge & Status badge */}
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-1.5 rounded-md bg-muted/80 dark:bg-slate-700/80 px-2.5 py-1 text-xs font-semibold text-foreground">
+            <Calendar className="size-3 text-primary shrink-0" />
+            <span>{dateFormatted}</span>
           </div>
 
-          <div className="flex flex-col min-w-0">
-            <div className="flex items-center gap-1.5">
-              {isRecitation ? (
-                <BookMarked className="size-4 shrink-0 text-primary" />
-              ) : (
-                <BookOpen className="size-4 shrink-0 text-muted-foreground" />
-              )}
-              <span className="font-semibold text-xs sm:text-sm truncate hover:text-primary transition-colors">
-                {isRecitation ? t('recitation') : entry.name}
+          <div className="flex items-center gap-1.5">
+            {entry.isMaterialized === false && (
+              <span className="rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 text-[10px] font-semibold px-2 py-0.5">
+                {t('unmaterializedBadge')}
               </span>
-            </div>
-
-            <div className="flex flex-wrap items-center gap-2 text-[11px] text-muted-foreground mt-0.5">
-              <span>{formatTeacherName(entry.teacher.name)}</span>
-              {entry.category && (
-                <>
-                  <span>·</span>
-                  <span
-                    className="inline-flex items-center gap-1"
-                    style={{ color: entry.category.color }}
-                  >
-                    <span
-                      className="size-1.5 rounded-full"
-                      style={{ backgroundColor: entry.category.color }}
-                    />
-                    {entry.category.name}
-                  </span>
-                </>
-              )}
-              {entry.expectedDurationMinutes && (
-                <>
-                  <span>·</span>
-                  <span>{entry.expectedDurationMinutes} د</span>
-                </>
-              )}
-            </div>
+            )}
+            <LessonStatusBadge status={entry.status} className="text-[10px]" />
           </div>
         </div>
 
-        {/* Status + Actions */}
-        <div className="flex items-center gap-2 shrink-0">
-          <LessonStatusBadge status={entry.status} className="text-[10px]" />
+        {/* Middle: Title & Meta info */}
+        <div className="flex flex-col gap-1 min-w-0">
+          <div className="flex items-center gap-2">
+            {isRecitation ? (
+              <BookMarked className="size-4 shrink-0 text-primary" />
+            ) : entry.isMaterialized === false ? (
+              <CalendarPlus className="size-4 shrink-0 text-amber-500 dark:text-amber-400" />
+            ) : (
+              <BookOpen className="size-4 shrink-0 text-muted-foreground group-hover:text-primary transition-colors" />
+            )}
 
-          {renderActions && (
-            <div onClick={(e) => e.stopPropagation()}>{renderActions(entry)}</div>
-          )}
+            <span className="font-bold text-sm sm:text-base text-foreground truncate group-hover:text-primary transition-colors">
+              {title}
+            </span>
+          </div>
+
+          {/* Teacher, Category, Duration row with ample space */}
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground pt-0.5">
+            <span className="inline-flex items-center gap-1">
+              <User className="size-3 text-muted-foreground/70" />
+              <span>{formatTeacherName(entry.teacher.name)}</span>
+            </span>
+
+            {entry.category && (
+              <span className="inline-flex items-center gap-1.5">
+                <span
+                  className="size-2 rounded-full shrink-0"
+                  style={{ backgroundColor: entry.category.color }}
+                />
+                <span style={{ color: entry.category.color }} className="font-medium">
+                  {entry.category.name}
+                </span>
+              </span>
+            )}
+
+            {entry.expectedDurationMinutes && (
+              <span className="inline-flex items-center gap-1">
+                <Clock className="size-3 text-muted-foreground/70" />
+                <span>{entry.expectedDurationMinutes} د</span>
+              </span>
+            )}
+          </div>
         </div>
+
+        {/* Bottom: Action buttons if any */}
+        {renderActions && (
+          <div
+            className="flex items-center justify-end pt-2 border-t border-border/40 dark:border-slate-700/50"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {renderActions(entry)}
+          </div>
+        )}
       </div>
 
       <LessonDetailsDialog
